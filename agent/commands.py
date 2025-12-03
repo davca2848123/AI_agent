@@ -2844,6 +2844,10 @@ _{description}_
                 async def advanced(self, interaction: discord.Interaction, button: discord.ui.Button):
                     await interaction.response.send_message("Vyber Advanced téma:", view=AdvancedView(self), ephemeral=True)
 
+                @discord.ui.button(label="🆘 Troubleshooting", style=discord.ButtonStyle.danger)
+                async def troubleshooting(self, interaction: discord.Interaction, button: discord.ui.Button):
+                    await self._send_doc(interaction, "documentation/troubleshooting.md", "Troubleshooting")
+
             # Send initial message with embed
             embed = discord.Embed(
                 title="📚 AI Agent Dokumentace",
@@ -2856,6 +2860,7 @@ _{description}_
             embed.add_field(name="🧠 Core", value="Dokumentace jádra systému (Autonomní chování, Paměť, LLM, atd.).", inline=False)
             embed.add_field(name="📜 Scripts", value="Deployment guide, Batch scripts reference, RPI setup a údržba.", inline=False)
             embed.add_field(name="🎓 Advanced", value="Pokročilá témata: Fuzzy matching algoritmus, Queue system, atd.", inline=False)
+            embed.add_field(name="🆘 Troubleshooting", value="Řešení problémů: Agent, LLM, Database, Discord, Resources, Network.", inline=False)
             
             await self.agent.discord.send_message(channel_id, embed=embed, view=DocumentationView(self))
 

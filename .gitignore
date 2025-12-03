@@ -26,6 +26,7 @@ Thumbs.db
 *.log
 agent.log
 agent_tools.log
+reports.json
 
 # Database
 *.db
@@ -33,6 +34,7 @@ agent_tools.log
 *.db-wal
 agent_memory.db
 optimized_memory.db
+optimized_memory.sql
 
 # Secrets and config
 config_secrets.py

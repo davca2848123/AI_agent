@@ -4,7 +4,7 @@
 
 ## 📊 Statistiky
 
-- **✅ 17 dokumentačních souborů**
+- **✅ 18 dokumentačních souborů**
 - **✅ 24 Discord příkazů** zdokumentováno
 - **✅ 14 nástrojů** zdokumentováno
 - **✅ 5 core systémů** zdokumentováno
@@ -255,10 +255,11 @@ Oblasti které můžou být přidány v budoucnu:
 - [ ] Boredom mechanism (deep dive)
 
 ### Troubleshooting
-- [ ] Common issues guide
-- [ ] LLM troubleshooting
-- [ ] Discord connection issues
-- [ ] RPI specific problems
+- [x] [Complete troubleshooting guide](troubleshooting.md)
+- [x] Common issues guide
+- [x] LLM troubleshooting
+- [x] Discord connection issues
+- [x] RPI specific problems
 
 ### Scripts & Deployment
 - [x] SSH scripts documentation

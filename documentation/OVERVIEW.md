@@ -49,7 +49,7 @@ documentation/
 
 ### Pokryté Komponenty
 
-- **✅ 21 Discord příkazů** - Všechny příkazy zdokumentovány
+- **✅ 24 Discord příkazů** - Všechny příkazy zdokumentovány
 - **✅ 14 nástrojů** - FileTool, WebTool, MathTool, atd.
 - **✅ 4 core systémy** - Autonomous, Memory, LLM, Resources
 - **✅ Fuzzy matching** - Automatická korekce překlepů
@@ -150,10 +150,10 @@ documentation/
 Sekce které zatím nejsou dokončeny:
 
 - [ ] API Reference (podrobná)
-- [ ] Troubleshooting guide
-- [ ] Advanced topics (detailní)
+- [x] Troubleshooting guide
+- [x] Advanced topics (fuzzy matching)
 - [x] Scripts documentation
-- [ ] Configuration guide
+- [x] Configuration guide
 - [ ] Installation guide
 
 ---
@@ -171,5 +171,6 @@ Po každé změně v kódu nezapomeň aktualizovat příslušnou dokumentaci!
 ---
 
 **Vytvořeno:** 2025-12-02  
-**Verze Dokumentace:** 1.0.0  
-**Autor:** AI Agent Documentation System
+**Poslední aktualizace:** 2025-12-03  
+**Verze Dokumentace:** 1.1.0  
+**Soubory:** 19 dokumentačních souborů

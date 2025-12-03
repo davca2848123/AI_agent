@@ -9,6 +9,7 @@
 | `!ask` | Tools & Learning | Zeptej se AI na otázku | [→](commands/tools-learning.md#ask) |
 | `!cmd` | Admin | Spusť shell příkaz | [→](commands/admin.md#cmd) |
 | `!config` | Interaction | Zobraz konfiguraci | [→](commands/interaction.md#config) |
+| `!documentation` | Basic | Interaktivní dokumentace | [→](commands/basic.md#documentation) |
 | `!debug` | Admin | Pokročilá diagnostika | [→](commands/admin.md#debug) |
 | `!export` | Data Management | Export dat | [→](commands/data-management.md#export) |
 | `!goals` | Interaction | Správa cílů | [→](commands/interaction.md#goals) |
@@ -20,6 +21,7 @@
 | `!memory` | Data Management | Statistiky paměti | [→](commands/data-management.md#memory) |
 | `!monitor` | Admin | Resource monitoring | [→](commands/admin.md#monitor) |
 | `!mood` | Interaction | Zobraz náladu agenta | [→](commands/interaction.md#mood) |
+| `!report` | Admin | Generate topics report | [→](commands/admin.md#report) |
 | `!restart` | Admin | Restart agenta | [→](commands/admin.md#restart) |
 | `!search` | Tools & Learning | Vyhledej informace | [→](commands/tools-learning.md#search) |
 | `!ssh` | Admin | Správa SSH tunelu | [→](commands/admin.md#ssh) |
@@ -27,6 +29,7 @@
 | `!status` | Basic | Stav agenta | [→](commands/basic.md#status) |
 | `!teach` | Tools & Learning | Nauč AI něco | [→](commands/tools-learning.md#teach) |
 | `!tools` | Tools & Learning | Seznam nástrojů | [→](commands/tools-learning.md#tools) |
+| `!topic` | Admin | Manage discussion topics | [→](commands/admin.md#topic) |
 
 ## 🛠️ Nástroje (A-Z)
 
