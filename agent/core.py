@@ -577,6 +577,10 @@ class AutonomousAgent:
                 query = f"What is {activity_name} video game?"
                 search_result = await web_tool._execute_with_logging(action='search', query=query)
                 
+                # Track usage
+                self.tool_usage_count['web_tool'] = self.tool_usage_count.get('web_tool', 0) + 1
+                self._save_tool_stats()
+                            
                 # Store in memory
                 content = f"Activity: {activity_name}\nInfo: {search_result[:500]}...\nPlayed by: {user_name} (ID: {user_id})"
                 self.memory.add_memory(
@@ -731,6 +735,10 @@ class AutonomousAgent:
                         tool = self.tools.get_tool(target_tool_name)
                         if tool:
                             result = await tool._execute_with_logging(**args)
+                            
+                            # Track usage
+                            self.tool_usage_count[target_tool_name] = self.tool_usage_count.get(target_tool_name, 0) + 1
+                            self._save_tool_stats()
                             
                             # Store result
                             self.memory.add_memory(
@@ -930,6 +938,11 @@ class AutonomousAgent:
                 await self.discord.update_activity(activity_desc)
                 
                 result = await tool._execute_with_logging(**args)
+                
+                # Track usage
+                self.tool_usage_count[tool_name] = self.tool_usage_count.get(tool_name, 0) + 1
+                self._save_tool_stats()
+                
                 self.actions_without_tools = 0  # Reset counter
                 self.last_tool_used = tool_name
                 self.last_tool_time = time.time()

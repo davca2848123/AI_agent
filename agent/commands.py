@@ -436,7 +436,7 @@ class CommandHandler:
         os.execv(sys.executable, [sys.executable] + sys.argv)
     
     async def cmd_learn(self, channel_id: int, args: list = None):
-        """Force AI to learn. Usage: !learn [tool_name|all|stop]"""
+        """Force AI to learn. Usage: !learn [tool_name|all|stop|queue]"""
         
         if not args:
             # Single forced learning (original behavior)
@@ -447,6 +447,22 @@ class CommandHandler:
             return
 
         subcommand = args[0].lower()
+        
+        # Queue command - show current learning queue
+        if subcommand == 'queue':
+            if not self.agent.learning_queue:
+                await self.agent.discord.send_message(channel_id, "📋 **Learning Queue: Empty**\nUse `!learn all` to start learning all tools.")
+                return
+            
+            queue_list = "\n".join([f"{i+1}. `{tool}`" for i, tool in enumerate(self.agent.learning_queue)])
+            total = len(self.agent.learning_queue)
+            status = "🔄 Active" if self.agent.is_learning_mode else "⏸️ Paused"
+            
+            await self.agent.discord.send_message(channel_id, 
+                f"📋 **Learning Queue Status:** {status}\n\n"
+                f"**Remaining Tools ({total}):**\n{queue_list}\n\n"
+                f"💡 *Use `!learn stop` to cancel the queue*")
+            return
         
         # Stop command
         if subcommand == 'stop':
