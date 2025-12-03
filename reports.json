@@ -1,0 +1,18 @@
+[
+    {
+        "timestamp": 1764797866.2889626,
+        "user": "literally_davca",
+        "user_id": 512658574875557889,
+        "user_command": "!docs",
+        "agent_output": "📚 **AI Agent Dokumentace**\n\n# 📚 Dokumentace - Rychlý Přehled\n\n> Stručné shrnutí všech dokumentovaných částí projektu\n\n## ✅ Dokončené Sekce\n\n### 📖 Hlavní Dokumentace\n- ✅ **[README.md](README.md)** - Hlavní dokumentace s kompletním obsahem\n\n### 💬 Příkazy (Commands)\n- ✅ **[Základní příkazy](commands/basic.md)** - help, status, stats, intelligence\n- ✅ **[Nástroje a učení](commands/tools-learning.md)** - tools, learn, ask, teach, search\n- ✅ **[Správa dat](commands/data-management.md)** - memory, logs, live logs, export\n- ✅ **[Interakce](commands/interaction.md)** - mood, goals, config\n- ✅ **[Administrace](commands/admin.md)** - restart, cmd, monitor, ssh, debug\n\n### 🛠️ Nástroje (Tools)\n- ✅ **[Všechny nástroje](tools/all-tools.md)** - Kompletní dokumentace všech 14 nástrojů\n\n### 🧠 Core Funkcionality\n- ✅ **[Autonomní chování](core/autonomous-behavior.md)** - Boredom, decision making, learning mode\n- ✅ **[Paměťový systém](core/memory-system.md)** - VectorStore, FTS5, backup/restore\n- ✅ **[LLM integrace](core/llm-integrat\n\n... (pokračování v tlačítkách)",
+        "agent_outputs": [
+            {
+                "id": 1445891345939038219,
+                "content": "📚 **AI Agent Dokumentace**\n\n# 📚 Dokumentace - Rychlý Přehled\n\n> Stručné shrnutí všech dokumentovaných částí projektu\n\n## ✅ Dokončené Sekce\n\n### 📖 Hlavní Dokumentace\n- ✅ **[README.md](README.md)** - Hlavní dokumentace s kompletním obsahem\n\n### 💬 Příkazy (Commands)\n- ✅ **[Základní příkazy](commands/basic.md)** - help, status, stats, intelligence\n- ✅ **[Nástroje a učení](commands/tools-learning.md)** - tools, learn, ask, teach, search\n- ✅ **[Správa dat](commands/data-management.md)** - memory, logs, live logs, export\n- ✅ **[Interakce](commands/interaction.md)** - mood, goals, config\n- ✅ **[Administrace](commands/admin.md)** - restart, cmd, monitor, ssh, debug\n\n### 🛠️ Nástroje (Tools)\n- ✅ **[Všechny nástroje](tools/all-tools.md)** - Kompletní dokumentace všech 14 nástrojů\n\n### 🧠 Core Funkcionality\n- ✅ **[Autonomní chování](core/autonomous-behavior.md)** - Boredom, decision making, learning mode\n- ✅ **[Paměťový systém](core/memory-system.md)** - VectorStore, FTS5, backup/restore\n- ✅ **[LLM integrace](core/llm-integrat\n\n... (pokračování v tlačítkách)",
+                "timestamp": 1764797760.358141,
+                "edits": []
+            }
+        ],
+        "reported_by": 512658574875557889
+    }
+]

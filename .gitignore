@@ -1,0 +1,66 @@
+# Git and Python cache
+.git
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+agent.log
+agent_tools.log
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+agent_memory.db
+optimized_memory.db
+
+# Secrets and config
+config_secrets.py
+
+# Runtime state
+tool_stats.json
+tool_timestamps.json
+.agent_state.json
+agent_state.json
+.restart_flag
+.shutdown_incomplete
+
+# Backups and temporary
+backup/
+workspace/
+models/
+*.backup
+*.tmp
+release.zip
+boredom_topics.json.test_backup
+
+# Tests
+tests/
+test_*.py
+
+# Documentation drafts
+*.draft.md
+
+__pycache__
+venv
+.env

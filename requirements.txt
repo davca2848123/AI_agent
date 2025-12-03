@@ -1,0 +1,16 @@
+llama-cpp-python
+discord.py
+psutil
+aiohttp
+beautifulsoup4
+duckduckgo-search
+feedparser
+deep-translator
+wikipedia-api
+scapy
+numpy
+PyGithub
+
+# Optional dependencies
+# dulwich  # For git_tool (currently disabled)
+PyNaCl  # For Discord voice support (optional)
