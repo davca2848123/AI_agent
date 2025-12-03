@@ -4,8 +4,8 @@
 
 ## 📊 Statistiky
 
-- **✅ 14 dokumentačních souborů**
-- **✅ 21 Discord příkazů** zdokumentováno
+- **✅ 17 dokumentačních souborů**
+- **✅ 24 Discord příkazů** zdokumentováno
 - **✅ 14 nástrojů** zdokumentováno
 - **✅ 5 core systémů** zdokumentováno
 - **✅ Kompletní TOC** v hlavním README
@@ -53,6 +53,7 @@ documentation/
 | README.md | 8.1 KB | Hlavní index, TOC, Quick Start |
 | OVERVIEW.md | 5.4 KB | Rychlý přehled, statistiky |
 | architecture.md | 10.5 KB | Architektura, diagramy, data flow |
+| INDEX.md | 6.0 KB | Alternativní index |
 
 ### 2. **Commands (Příkazy)**
 
@@ -152,6 +153,23 @@ Všechny příkazy s detailní dokumentací:
 - Event handlers
 - Mock mode
 
+### 5. **Scripts & Deployment**
+
+**scripts/deployment-guide.md:**
+- RPI hardware/software požadavky
+- Počáteční nastavení a konfigurace
+- Systemd service autostart
+- SWAP configuration
+- Údržba a monitoring
+- Troubleshooting guide
+
+**scripts/batch-scripts-reference.md:**
+- Všechny Windows batch skripty
+- Maintenance scripts (restart, health check, cleanup)
+- Setup scripts (SWAP, LED, sudoers)
+- SSH connection management
+- Advanced scripts reference
+
 ---
 
 ## 📝 Každý Dokument Obsahuje
@@ -232,7 +250,7 @@ Oblasti které můžou být přidány v budoucnu:
 
 ### Advanced Topics
 - [ ] Command queue system (detaily)
-- [ ] Fuzzy matching algorithm
+- [x] [Fuzzy matching algorithm](advanced/fuzzy-matching-algorithm.md)
 - [ ] Learning mode internals
 - [ ] Boredom mechanism (deep dive)
 
@@ -243,16 +261,16 @@ Oblasti které můžou být přidány v budoucnu:
 - [ ] RPI specific problems
 
 ### Scripts & Deployment
-- [ ] SSH scripts documentation
-- [ ] Deployment guide
-- [ ] Maintenance procedures
-- [ ] Backup strategies
+- [x] SSH scripts documentation
+- [x] [Deployment guide](scripts/deployment-guide.md)
+- [x] Maintenance procedures
+- [x] Backup strategies
 
 ### Configuration
 - [ ] config_settings.py reference
 - [ ] config_secrets.py template
 - [ ] Environment variables
-- [ ] Customization guide
+- [x] [Customization guide](configuration/customization-guide.md)
 
 ---
 
@@ -260,10 +278,10 @@ Oblasti které můžou být přidány v budoucnu:
 
 Vytvořena **kompletní, profesionální dokumentace** která pokrývá:
 
-- ✅ Všechny funkcionality agenta
+- ✅ Všechny funkcionality agenta (24 příkazů)
 - ✅ Všechny příkazy s příklady
-- ✅ Všechny nástroje s použitím
-- ✅ Core systémy s implementací
+- ✅ Všechny nástroje s použitím (14 nástrojů)
+- ✅ Core systémy s implementací (5 tříd)
 - ✅ Architekturu a data flow
 - ✅ Cross-reference odkazy
 - ✅ Praktické příklady
@@ -273,6 +291,6 @@ Vytvořena **kompletní, profesionální dokumentace** která pokrývá:
 ---
 
 **Vytvořeno:** 2025-12-02  
-**Celkový čas:** ~30 minut  
-**Verze:** 1.0.0  
-**Status:** ✅ DOKONČENO
+**Poslední aktualizace:** 2025-12-03  
+**Verze:** 1.1.0  
+**Status:** ✅ AKTUALIZOVÁNO

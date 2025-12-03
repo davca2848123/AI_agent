@@ -310,22 +310,47 @@ Bot: ✅ Got it! I've learned: "My favorite color is blue"
 ### 🔧 Implementace
 
 ```python
-# Store in memory
-memory.add_memory(
-    content=info,
-    metadata={
-        "type": "user_teaching",
-        "source": "!teach command",
-        "timestamp": time.time()
-    }
-)
+async def cmd_teach(self, channel_id: int, info: str):
+    # Store as a high-priority memory
+    self.agent.memory.add_memory(
+        content=f"User taught me: {info}",
+        metadata={"type": "user_teaching", "importance": "high"}
+    )
+    
+    self.agent.successful_learnings += 1
 ```
 
+**⭐ Důležité:** `!teach` memories **VŽDY** projdou bez ohledu na scoring!
+
+```python
+# V memory.py - add_memory()
+metadata_type = metadata.get("type") if metadata else None
+
+if metadata_type == "user_teaching":
+    # BYPASS scoring system!
+    # User teaching is always valuable
+    logger.info("user_teaching type - bypassing score check")
+    # Save directly to database
+```
+
+### 🔓 Scoring Bypass
+
+Zatímco normální vzpomínky musí projít [scoring systémem](../core/memory-system.md#advanced-scoring-system), `!teach` příkaz má **garantované uložení**:
+
+| Typ Vzpomínky | Scoring | Uloženo? |
+|---------------|---------|----------|
+| Normální akce | ✅ Ano (min 70 pts) | ❓ Možná |
+| LLM response | ✅ Ano (min 70 pts) | ❓ Možná |
+| **!teach příkaz** | ❌ **BYPASS** | ✅ **Vždy** |
+| user_teaching | ❌ **BYPASS** | ✅ **Vždy** |
+
+**Důvod:** Uživatelské učení je vždy cenné a nesmí být odmítnuto kvůli nízkému skóre.
+
 ### ⚠️ Poznámky
-- Informace se ukládá do SQLite databáze
+- **Informace se VŽDY uloží** - Není filtrováno scoring systémem
 - Agent může použít tuto informaci později v konverzaci
 - Paměť je prohledávatelná pomocí FTS5
-- Nepodstatné informace se mohou automaticky filtrovat
+- Každé `!teach` zvýší `successful_learnings` counter
 
 ### 🔗 Související
 - [Memory System](../core/memory-system.md) - Jak paměť funguje
@@ -400,5 +425,6 @@ agent.execute_action(action)
 
 ---
 
-**Poslední aktualizace:** 2025-12-02  
-**Platné pro verzi:** 1.0.0
+**Poslední aktualizace:** 2025-12-03  
+**Platné pro verzi:** 1.1.0  
+**Změny:** Přidána dokumentace scoring bypass pro !teach

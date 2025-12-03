@@ -196,16 +196,13 @@ def create_release(github_token, repo_name, branch="main"):
         )
         logger.info(f"Release {new_version} created")
 
-        # 5. Upload ZIP asset
-        zip_name = "project_source.zip"
-        zip_folder(zip_name)
-        
-        logger.info("Uploading ZIP to release...")
-        release.upload_asset(zip_name, label="Source Code (Project)")
-        
-        # Cleanup
-        if os.path.exists(zip_name):
-            os.remove(zip_name)
+        # 5. Upload ZIP asset - SKIPPED as per user request (relying on git repo)
+        # zip_name = "project_source.zip"
+        # zip_folder(zip_name)
+        # logger.info("Uploading ZIP to release...")
+        # release.upload_asset(zip_name, label="Source Code (Project)")
+        # if os.path.exists(zip_name):
+        #     os.remove(zip_name)
         
         logger.info("GitHub release completed successfully!")
         return True

@@ -2766,6 +2766,46 @@ _{description}_
                 async def discord_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
                     await self._send_file(interaction, "documentation/core/discord-client.md")
 
+            class AdvancedView(discord.ui.View):
+                def __init__(self, parent_view):
+                    super().__init__(timeout=300)
+                    self.parent_view = parent_view
+
+                async def _send_file(self, interaction, path):
+                    try:
+                        if os.path.exists(path):
+                            await interaction.response.send_message(file=discord.File(path), ephemeral=True)
+                        else:
+                            await interaction.response.send_message(f"❌ Soubor {path} nebyl nalezen.", ephemeral=True)
+                    except Exception as e:
+                        await interaction.response.send_message(f"❌ Chyba při odesílání: {e}", ephemeral=True)
+
+                @discord.ui.button(label="🔍 Fuzzy Matching", style=discord.ButtonStyle.secondary)
+                async def fuzzy_matching(self, interaction: discord.Interaction, button: discord.ui.Button):
+                    await self._send_file(interaction, "documentation/advanced/fuzzy-matching-algorithm.md")
+
+            class ScriptsView(discord.ui.View):
+                def __init__(self, parent_view):
+                    super().__init__(timeout=300)
+                    self.parent_view = parent_view
+
+                async def _send_file(self, interaction, path):
+                    try:
+                        if os.path.exists(path):
+                            await interaction.response.send_message(file=discord.File(path), ephemeral=True)
+                        else:
+                            await interaction.response.send_message(f"❌ Soubor {path} nebyl nalezen.", ephemeral=True)
+                    except Exception as e:
+                        await interaction.response.send_message(f"❌ Chyba při odesílání: {e}", ephemeral=True)
+
+                @discord.ui.button(label="🚀 Deployment", style=discord.ButtonStyle.secondary)
+                async def deployment(self, interaction: discord.Interaction, button: discord.ui.Button):
+                    await self._send_file(interaction, "documentation/scripts/deployment-guide.md")
+
+                @discord.ui.button(label="📜 Batch Scripts", style=discord.ButtonStyle.secondary)
+                async def batch_scripts(self, interaction: discord.Interaction, button: discord.ui.Button):
+                    await self._send_file(interaction, "documentation/scripts/batch-scripts-reference.md")
+
             class DocumentationView(discord.ui.View):
                 def __init__(self, command_handler):
                     super().__init__(timeout=300)
@@ -2796,6 +2836,14 @@ _{description}_
                 async def core(self, interaction: discord.Interaction, button: discord.ui.Button):
                     await interaction.response.send_message("Vyber sekci Core:", view=CoreView(self), ephemeral=True)
 
+                @discord.ui.button(label="📜 Scripts", style=discord.ButtonStyle.secondary)
+                async def scripts(self, interaction: discord.Interaction, button: discord.ui.Button):
+                    await interaction.response.send_message("Vyber Scripts dokumentaci:", view=ScriptsView(self), ephemeral=True)
+
+                @discord.ui.button(label="🎓 Advanced", style=discord.ButtonStyle.secondary)
+                async def advanced(self, interaction: discord.Interaction, button: discord.ui.Button):
+                    await interaction.response.send_message("Vyber Advanced téma:", view=AdvancedView(self), ephemeral=True)
+
             # Send initial message with embed
             embed = discord.Embed(
                 title="📚 AI Agent Dokumentace",
@@ -2803,9 +2851,11 @@ _{description}_
                 color=0x3498db
             )
             embed.add_field(name="📖 Overview", value="Základní přehled systému, architektura a rychlý start.", inline=False)
-            embed.add_field(name="💬 Commands", value="Seznam všech příkazů rozdělený do kategorií (Basic, Tools, Data, Admin...).", inline=False)
-            embed.add_field(name="🛠️ Tools", value="Detailní popis všech dostupných nástrojů a jejich použití.", inline=False)
+            embed.add_field(name="💬 Commands", value="Seznam všech 24 příkazů rozdělený do kategorií.", inline=False)
+            embed.add_field(name="🛠️ Tools", value="Detailní popis všech 14 dostupných nástrojů a jejich použití.", inline=False)
             embed.add_field(name="🧠 Core", value="Dokumentace jádra systému (Autonomní chování, Paměť, LLM, atd.).", inline=False)
+            embed.add_field(name="📜 Scripts", value="Deployment guide, Batch scripts reference, RPI setup a údržba.", inline=False)
+            embed.add_field(name="🎓 Advanced", value="Pokročilá témata: Fuzzy matching algoritmus, Queue system, atd.", inline=False)
             
             await self.agent.discord.send_message(channel_id, embed=embed, view=DocumentationView(self))
 

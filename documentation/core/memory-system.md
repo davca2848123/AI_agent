@@ -4,7 +4,7 @@
 
 ## 📋 Přehled
 
-Agent používá SQLite databázi s FTS5 (Full-Text Search) pro ukládání a vyhledávání vzpomínek.
+Agent používá SQLite databázi s FTS5 (Full-Text Search) pro ukládání a vyhledávání vzpomínek. **Nově** obsahuje pokročilý scoring systém pro inteligentní filtrování vzpomínek.
 
 ---
 
@@ -50,22 +50,193 @@ memory.add_memory(
 )
 ```
 
-### 💡 Relevance Filtering
+### ⭐ Advanced Scoring System (NEW!)
 
-Ne všechny vzpomínky stojí za uložení. Systém filtruje:
+Agent používá **pokročilý scoring systém** pro rozhodování, které vzpomínky ukládat.
+
+#### Konfigurace
+
+Parametry v `config_settings.py`:
+
+```python
+MEMORY_CONFIG = {
+    'MIN_SCORE_TO_SAVE': 70,        # Minimální skóre pro uložení
+    'ERROR_PENALTY': -20,            # Penalizace za error slova
+    'KEYWORD_BONUS': 10,             # Bonus za každé klíčové slovo
+    'UNIQUENESS_BONUS': 30,          # Bonus pokud je vzpomínka unikátní
+    'UNIQUENESS_THRESHOLD': 0.90,    # Práh pro považování za duplicitu (90%)
+    'KEYWORDS': [                    # Důležitá klíčová slova
+        'python', 'discord', 'tool', 'learned', 'user', 
+        'command', 'function', 'error', 'fix', 'create'
+    ],
+    'BLACKLIST': [                   # Okamžité zamítnutí
+        'discord.gateway', 'discord.client', 'Keep Alive',
+        'WebSocket', 'Heartbeat'
+    ]
+}
+```
+
+#### Scoring Process (5 kroků)
+
+**1. Blacklist Check** → Okamžité zamítnutí
+
+```python
+BLACKLIST = ['discord.gateway', 'WebSocket Event', ...]
+
+if any(blacklisted in content.lower() for blacklisted in BLACKLIST):
+    logger.debug(f"Memory rejected (blacklist): {content[:50]}...")
+    return None  # Není uloženo
+```
+
+**2. Error Detection** → -20 bodů
+
+```python
+error_words = ['error', 'exception', 'failed', 'traceback']
+if any(word in content_lower for word in error_words):
+    score += ERROR_PENALTY  # -20 bodů
+    logger.debug(f"Error detected, penalty: -20 pts")
+```
+
+**3. Keyword Matching** → +10 bodů za každé keyword
+
+```python
+KEYWORDS = ['python', 'discord', 'tool', 'learned', ...]
+
+keyword_matches = 0
+for keyword in KEYWORDS:
+    if keyword.lower() in content_lower:
+        keyword_matches += 1
+        score += KEYWORD_BONUS  # +10
+
+logger.debug(f"Keywords matched: {keyword_matches}, bonus: +{keyword_matches * 10} pts")
+```
+
+**4. Uniqueness Check** → +30 bodů pokud unikátní
+
+```python
+# Porovná s existujícími vzpomínkami
+similar_memories = self.search_relevant_memories(content, limit=1)
+
+for mem in similar_memories:
+    # Vypočítá word overlap
+    content_words = set(content_lower.split())
+    similar_words = set(mem['content'].lower().split())
+    
+    overlap = len(content_words.intersection(similar_words)) / len(content_words)
+    
+    if overlap > UNIQUENESS_THRESHOLD:  # > 90%
+        is_unique = False
+        logger.debug(f"Similar memory found (overlap: {overlap:.0%}), not unique")
+        break
+
+if is_unique:
+    score += UNIQUENESS_BONUS  # +30 bodů
+```
+
+**5. Final Decision** → Uložit pokud `score >= MIN_SCORE`
+
+```python
+MIN_SCORE_TO_SAVE = 70
+
+if score >= MIN_SCORE_TO_SAVE:
+    logger.info(f"Memory accepted (score: {score}), saving...")
+    # Save to database
+else:
+    logger.info(f"Memory rejected (low score {score} < {MIN_SCORE_TO_SAVE})")
+    return None
+```
+
+#### Příklady Scoring
+
+**Příklad 1: Zamítnutá vzpomínka**
+
+```
+Content: "Learned to use web_tool for searching Python documentation"
+
+1. Blacklist: None ✓
+2. Errors: None → 0 pts
+3. Keywords: 'learned' (+10), 'tool' (+10), 'python' (+10) → +30 pts
+4. Uniqueness: Podobná vzpomínka existuje → 0 pts
+5. Total Score: 30 pts
+
+Decision: ❌ REJECTED (30 < 70)
+```
+
+**Příklad 2: Přijatá vzpomínka**
+
+```
+Content: "User taught me: Discord bots can use slash commands with discord.py"
+
+1. Blacklist: None ✓
+2. Errors: None → 0 pts
+3. Keywords: 'discord' (+10), 'command' (+10), 'python' (+10) → +30 pts  
+4. Uniqueness: Unikátní → +30 pts
+5. Total Score: 60 pts
+
+Decision: ❌ REJECTED (60 < 70)
+
+⚠️ Ale 'user_teaching' metadata → BYPASS scoring! ✅ SAVED
+```
+
+**Příklad 3: High-score vzpomínka**
+
+```
+Content: "Successfully created Python function to fix Discord command parsing error"
+
+1. Blacklist: None ✓
+2. Errors: 'error' → -20 pts
+3. Keywords: 'python' (+10), 'function' (+10), 'fix' (+10), 
+             'discord' (+10), 'command' (+10) → +50 pts
+4. Uniqueness: Unikátní → +30 pts
+5. Total Score: 60 pts (-20 + 50 + 30)
+
+Decision: ❌ REJECTED (60 < 70)
+```
+
+### 🔓 Scoring Bypass
+
+**Některé typy vzpomínek VŽDY projdou bez ohledu na skóre:**
+
+```python
+metadata = {
+    "type": "user_teaching",  # !teach příkaz
+    "importance": "high"       # Vysoká důležitost
+}
+```
+
+**Bypass typy:**
+- `!teach` příkaz → `type: "user_teaching"` → **Vždy uloženo**
+- `importance: "high"` → **Vždy uloženo**
+- Admin metadata → **Vždy uloženo**
+
+**Implementace v `!teach`:**
+
+```python
+async def cmd_teach(self, channel_id: int, info: str):
+    # !teach VŽDY uloží bez scoring check
+    self.agent.memory.add_memory(
+        content=f"User taught me: {info}",
+        metadata={"type": "user_teaching", "importance": "high"}
+    )
+```
+
+⚠️ **Poznámka:** `user_teaching` typ dostává bypass, protože uživatelské učení je vždy cenné.
+
+### 💡 Basic Relevance Filter (Pre-Scoring)
+
+Před scoring systémem běží **basic filter**:
 
 ```python
 def is_relevant_memory(self, content: str, metadata: dict = None) -> bool:
-    """Check if memory content is relevant and worth storing."""
+    """Check if memory content is relevant (runs BEFORE scoring)."""
     
     # Skip if too short
     if len(content.strip()) < 10:
         return False
     
-    # Skip spam patterns
+    # Skip obvious spam
     spam_patterns = [
         "LLM not available",
-        "Error:",
         "boredom",
         "waiting",
         "checking"
@@ -75,12 +246,14 @@ def is_relevant_memory(self, content: str, metadata: dict = None) -> bool:
     if any(pattern in content_lower for pattern in spam_patterns):
         return False
     
-    # Skip if metadata marks it as irrelevant
+    # Skip internal memories
     if metadata and metadata.get("type") == "internal":
         return False
     
     return True
 ```
+
+**Tento basic filter běží PŘED scoring systémem a rychle odfiltruje spam.**
 
 ---
 
@@ -138,7 +311,7 @@ def search_relevant_memories(self, query: str, limit: int = 5):
     return results[:limit]
 ```
 
-### 📊 Scoring
+### 📊 Search Scoring
 
 Skóre = počet matching keywords v content.
 
@@ -198,7 +371,7 @@ memory.create_backup()
 
 Vytvoří kopii databáze:
 ```
-backup/agent_memory_20251202_130500.db
+backup/agent_memory_20251203_230000.db
 ```
 
 ### 🔄 restore_from_backup()
@@ -207,7 +380,7 @@ backup/agent_memory_20251202_130500.db
 memory.restore_from_backup()
 ```
 
-Obnoví z nejnovějšího zálohy.
+Obnoví z nejnovější zálohy.
 
 ---
 
@@ -215,23 +388,23 @@ Obnoví z nejnovějšího zálohy.
 
 ### 📝 Standardní Typy
 
-| Type | Popis | Příklad |
-|------|-------|---------|
-| `learning` | Naučená věc | "Learned web_tool" |
-| `action` | Provedená akce | "Searched for Python" |
-| `user_teaching` | Od uživatele (`!teach`) | "Python is a language" |
-| `conversation` | Z konverzace | "User asked about weather" |
-| `discovery` | Objevená aktivita | "Discovered Minecraft game" |
-| `internal` | Interní (neukládá se) | "Boredom check" |
+| Type | Popis | Scoring Bypass | Příklad |
+|------|-------|----------------|---------|
+| `learning` | Naučená věc | ❌ Ne | "Learned web_tool" |
+| `action` | Provedená akce | ❌ Ne | "Searched for Python" |
+| `user_teaching` | Od uživatele (`!teach`) | ✅ **Ano** | "Python is a language" |
+| `conversation` | Z konverzace | ❌ Ne | "User asked about weather" |
+| `discovery` | Objevená aktivita | ❌ Ne | "Discovered Minecraft" |
+| `internal` | Interní (pre-filtered) | N/A | "Boredom check" |
 
 ### 🔧 Příklad Metadata
 
 ```json
 {
-  "type": "learning",
-  "tool": "web_tool",
-  "source": "autonomous_action",
-  "timestamp": 1733140123.45,
+  "type": "user_teaching",
+  "importance": "high",
+  "source": "!teach_command",
+  "timestamp": 1733257523.45,
   "user_id": 123456789
 }
 ```
@@ -244,6 +417,7 @@ Obnoví z nejnovějšího zálohy.
 
 ```python
 learning_count = memory.count_memories_by_type("learning")
+teaching_count = memory.count_memories_by_type("user_teaching")
 ```
 
 ```sql
@@ -305,10 +479,16 @@ def _initialize_db(self):
 # Initialize memory
 self.memory = VectorStore()
 
-# Add memory during actions
+# Add memory during actions (projde scoring)
 self.memory.add_memory(
     content=f"Used {tool_name}: {result}",
     metadata={"type": "action", "tool": tool_name}
+)
+
+# Add user teaching (BYPASS scoring)
+self.memory.add_memory(
+    content=f"User taught me: {info}",
+    metadata={"type": "user_teaching", "importance": "high"}
 )
 
 # Search for relevant context
@@ -323,8 +503,10 @@ context = "\n".join([m['content'] for m in memories])
 - [Autonomous Behavior](autonomous-behavior.md) - Jak agent používá paměť pro rozhodování
 - [`!memory`](../commands/data-management.md#memory) - Příkaz pro statistiky
 - [`!export memory`](../commands/data-management.md#export) - Export paměti
+- [`!teach`](../commands/tools-learning.md#teach) - Učení agenta (bypass scoring)
 
 ---
 
-**Poslední aktualizace:** 2025-12-02  
-**Verze:** 1.0.0
+**Poslední aktualizace:** 2025-12-03  
+**Verze:** 1.1.0  
+**Změny:** Přidán pokročilý scoring systém, scoring bypass pro user_teaching
