@@ -168,6 +168,17 @@ def create_release(github_token, repo_name, branch="main"):
 
         # 2. Update .gitignore and push
         update_gitignore()
+        
+        # Update remote with token to ensure push works
+        auth_url = f"https://{github_token}@github.com/{repo_name}.git"
+        try:
+            subprocess.run(["git", "remote", "set-url", "origin", auth_url], check=True)
+        except subprocess.CalledProcessError:
+            try:
+                subprocess.run(["git", "remote", "add", "origin", auth_url], check=True)
+            except subprocess.CalledProcessError as e:
+                logger.error(f"Failed to configure git remote: {e}")
+
         if not git_push_changes(branch):
             logger.warning("Git push failed, continuing with release...")
 
