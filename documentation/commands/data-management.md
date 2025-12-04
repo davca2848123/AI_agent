@@ -1,28 +1,39 @@
 # Správa Dat - Data Management Commands
 
-> Příkazy pro správu logů, paměti a export dat
+> **Navigace:** [📂 Dokumentace](../README.md) | [💬 Příkazy](../README.md#commands-příkazy) | [Správa dat](data-management.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
 
+> Příkazy pro správu logů, paměti a export dat.
+> **Verze:** Alpha
+
+---
+
+<a name="přehled"></a>
 ## 📋 Přehled
 
 Tyto příkazy umožňují monitorovat a spravovat data agenta včetně logů, paměti a exportu statistik.
 
 ---
 
+<a name="memory"></a>
 ## `!memory`
 
+<a name="popis"></a>
 ### 📋 Popis
 Zobrazí statistiky paměťového systému.
 
+<a name="použití"></a>
 ### ⚙️ Použití
 ```
 !memory
 ```
 
+<a name="co-zobrazuje"></a>
 ### 💡 Co zobrazuje
 
 - **Total Memories** - Počet vzpomínek v databázi
 - **Action History** - Počet uložených akcí
 
+<a name="příklad"></a>
 ### 📝 Příklad
 ```
 User: !memory
@@ -35,6 +46,7 @@ Bot: 💾 **Memory Statistics:**
 🚧 More detailed memory stats coming soon!
 ```
 
+<a name="implementace"></a>
 ### 🔧 Implementace
 
 ```python
@@ -42,17 +54,21 @@ mem_count = len(agent.memory.get_recent_memories(limit=1000))
 history_count = len(agent.action_history)
 ```
 
+<a name="související"></a>
 ### 🔗 Související
-- [Memory System](../core/memory-system.md) - Jak paměť funguje
+- [📖 Memory System](../core/memory-system.md) - Jak paměť funguje
 - [VectorStore API](../api/vector-store.md) - Memory API
 
 ---
 
+<a name="logs"></a>
 ## `!logs`
 
+<a name="popis"></a>
 ### 📋 Popis
 Zobrazí nedávné záznamy z logů s možností filtrování.
 
+<a name="použití"></a>
 ### ⚙️ Použití
 
 **Základní:**
@@ -71,6 +87,7 @@ Zobrazí nedávné záznamy z logů s možností filtrování.
 !logs <N> <level>
 ```
 
+<a name="parametry"></a>
 ### 🔧 Parametry
 
 | Parametr | Popis | Příklad |
@@ -79,11 +96,13 @@ Zobrazí nedávné záznamy z logů s možností filtrování.
 | `level` | ERROR/WARNING/INFO/DEBUG | `!logs error` |
 | Combined | Obojí | `!logs 100 error` |
 
+<a name="chování"></a>
 ### 💡 Chování
 
 **≤ 50 řádků** - Zobrazí v Discord message  
 **\> 50 řádků** - Pošle jako soubor (`.txt`)
 
+<a name="příklady"></a>
 ### 📝 Příklady
 
 **Poslední 20 řádků (default):**
@@ -119,6 +138,7 @@ Bot: 📋 **Last 50 log entries (WARNING only):**
 ```[warning logs]```
 ```
 
+<a name="implementace"></a>
 ### 🔧 Implementace
 
 **Čtení logů:**
@@ -141,22 +161,27 @@ if len(recent_lines) > 50:
     # Send as file
 ```
 
+<a name="poznámky"></a>
 ### ⚠️ Poznámky
 - Log soubor: `agent.log`
 - Discord limit: 2000 znaků (truncate pokud více)
 - Temp soubory se automaticky mažou po odeslání
 
+<a name="související"></a>
 ### 🔗 Související
 - [`!live logs`](#live-logs) - Live streaming logů
 - [`!debug`](admin.md#debug) - Pokročilá diagnostika
 
 ---
 
+<a name="live-logs"></a>
 ## `!live logs`
 
+<a name="popis"></a>
 ### 📋 Popis
 Live stream logů v reálném čase s auto-refresh.
 
+<a name="použití"></a>
 ### ⚙️ Použití
 
 **Default (60 sekund):**
@@ -169,6 +194,7 @@ Live stream logů v reálném čase s auto-refresh.
 !live logs <duration>
 ```
 
+<a name="formáty-délky"></a>
 ### 🔧 Formáty délky
 
 | Format | Popis | Příklad |
@@ -178,6 +204,7 @@ Live stream logů v reálném čase s auto-refresh.
 | `Nm` | N minut | `!live logs 2m` |
 | `Nh` | N hodin | `!live logs 1h` |
 
+<a name="jak-to-funguje"></a>
 ### 💡 Jak to funguje
 
 1. **Vytvoří zprávu** - Placeholder zpráva
@@ -186,6 +213,7 @@ Live stream logů v reálném čase s auto-refresh.
 4. **Filtruje spam** - Discord internal logs
 5. **Ukončí po době** - Finální zpráva po timeout
 
+<a name="příklady"></a>
 ### 📝 Příklady
 
 **1 minuta live:**
@@ -212,6 +240,7 @@ Last Update: 13:01:00
 ```
 ```
 
+<a name="implementace"></a>
 ### 🔧 Implementace
 
 **Loop:**
@@ -249,23 +278,28 @@ def should_show_log(line):
     return True
 ```
 
+<a name="poznámky"></a>
 ### ⚠️ Poznámky
 - Běží jako background task (neblokuje další příkazy)
 - Max 30 řádků v bufferu
 - Aktualizace každé 2s
 - Pokud je zpráva smazána, vytvoří novou
 
+<a name="související"></a>
 ### 🔗 Související
 - [`!logs`](#logs) - Statické logy
 - [`!monitor`](admin.md#monitor) - Resource monitoring
 
 ---
 
+<a name="export"></a>
 ## `!export`
 
+<a name="popis"></a>
 ### 📋 Popis
 Exportuje data agenta (historie, paměť, statistiky).
 
+<a name="použití"></a>
 ### ⚙️ Použití
 
 **All data:**
@@ -279,6 +313,7 @@ Exportuje data agenta (historie, paměť, statistiky).
 !export <type>
 ```
 
+<a name="typy"></a>
 ### 🔧 Typy
 
 | Type | Co exportuje |
@@ -288,6 +323,7 @@ Exportuje data agenta (historie, paměť, statistiky).
 | `memory` | Memory dump |
 | `stats` | Tool statistics |
 
+<a name="export-formáty"></a>
 ### 💡 Export formáty
 
 **history** → JSON
@@ -331,6 +367,7 @@ Exportuje data agenta (historie, paměť, statistiky).
 }
 ```
 
+<a name="příklady"></a>
 ### 📝 Příklady
 
 ```
@@ -349,6 +386,7 @@ Bot: 📦 Exporting all data...
      ✅ Complete export ready
 ```
 
+<a name="poznámky"></a>
 ### ⚠️ Poznámky
 - Soubory se posílají jako Discord attachment
 -  Velké exporty mohou trvat několik sekund
@@ -356,6 +394,7 @@ Bot: 📦 Exporting all data...
 
 ---
 
+<a name="souhrn"></a>
 ## 📊 Souhrn
 
 | Příkaz | Účel | Příklad |
@@ -366,6 +405,6 @@ Bot: 📦 Exporting all data...
 | `!export` | Export dat | `!export memory` |
 
 ---
-
-**Poslední aktualizace:** 2025-12-02  
-**Platné pro verzi:** 1.0.0
+Poslední aktualizace: 2025-12-04  
+Verze: Alpha  
+Tip: Použij Ctrl+F pro vyhledávání

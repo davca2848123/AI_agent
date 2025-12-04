@@ -73,6 +73,28 @@ async def shutdown(sig=None):
 async def main():
     global agent_instance
     
+    # Check startup failure tracking
+    import config_settings
+    from startup_tracker import check_should_wait, record_failure, record_success
+    
+    should_wait, wait_time = check_should_wait(
+        retry_limit=config_settings.STARTUP_RETRY_LIMIT,
+        wait_hours=config_settings.STARTUP_FAILURE_WAIT // 3600
+    )
+    
+    if should_wait:
+        hours = int(wait_time // 3600)
+        minutes = int((wait_time % 3600) // 60)
+        logger.critical(
+            f"🛑 STARTUP BLOCKED: Too many consecutive failures. "
+            f"Waiting {hours}h {minutes}m before retry. "
+            f"(Retry limit: {config_settings.STARTUP_RETRY_LIMIT})"
+        )
+        # Wait and exit
+        await asyncio.sleep(wait_time)
+        logger.info("Wait period complete, exiting for restart...")
+        return
+    
     logger.info("Starting Autonomous Embedded AI Agent (Windows Prototype)...")
     
     # Load Secrets
@@ -85,40 +107,64 @@ async def main():
         discord_token = None
         github_token = None
 
-    # GitHub Auto-Release (async, non-blocking)
-    if github_token:
-        async def run_github_release():
-            """Run GitHub release in background"""
-            try:
-                from scripts.github_release import create_release
-                logger.info("Starting GitHub auto-release...")
-                success = create_release(
-                    github_token=github_token,
-                    repo_name="davca2848123/AI_agent"
-                )
-                if success:
-                    logger.info("GitHub release completed successfully")
-                else:
-                    logger.warning("GitHub release failed")
-            except Exception as e:
-                logger.error(f"GitHub release error: {e}")
-        
-        # Start release in background (don't wait for it)
-        asyncio.create_task(run_github_release())
-    else:
-        logger.info("GitHub token not found, skipping  auto-release")
-
-    # Initialize Agent
-    from agent.core import AutonomousAgent
-    agent_instance = AutonomousAgent(discord_token=discord_token)
+    # GitHub Auto-Release - DISABLED to prevent restart loop
+    # Now available only via !upload command with rate limiting
+    # if github_token:
+    #     async def run_github_release():
+    #         """Run GitHub release in background"""
+    #         try:
+            #             from scripts.github_release import create_release
+    #             logger.info("Starting GitHub auto-release...")
+    #             success = create_release(
+    #                 github_token=github_token,
+    #                 repo_name="davca2848123/AI_agent"
+    #             )
+    #             if success:
+    #                 logger.info("GitHub release completed successfully")
+    #             else:
+    #                 logger.warning("GitHub release failed")
+    #         except Exception as e:
+    #             logger.error(f"GitHub release error: {e}")
+    #     
+    #     # Start release in background (don't wait for it)
+    #     asyncio.create_task(run_github_release())
+    # else:
+    #     logger.info("GitHub token not found, skipping  auto-release")
     
-    # Run the agent
-    await agent_instance.start()
+    logger.info("GitHub auto-release disabled. Use !upload command for manual releases.")
+
+    # Initialize Agent with comprehensive error handling
+    try:
+        from agent.core import AutonomousAgent
+        logger.info("Importing AutonomousAgent...")
+        agent_instance = AutonomousAgent(discord_token=discord_token)
+        logger.info("Agent instance created successfully")
+    except ImportError as e:
+        logger.critical(f"FATAL: Failed to import agent.core: {e}", exc_info=True)
+        record_failure()
+        raise
+    except Exception as e:
+        logger.critical(f"FATAL: Failed to initialize AutonomousAgent: {e}", exc_info=True)
+        record_failure()
+        raise
+    
+    # Run the agent with error handling
+    try:
+        logger.info("Starting agent...")
+        await agent_instance.start()
+        logger.info("Agent started successfully, entering main loop")
+        # Record successful startup
+        record_success()
+    except Exception as e:
+        logger.critical(f"FATAL: Agent.start() failed: {e}", exc_info=True)
+        record_failure()
+        raise
     
     try:
         while True:
             await asyncio.sleep(1)
     except (KeyboardInterrupt, asyncio.CancelledError):
+        logger.info("Received shutdown signal")
         await shutdown()
 
 if __name__ == "__main__":

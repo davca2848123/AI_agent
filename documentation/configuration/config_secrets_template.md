@@ -1,13 +1,24 @@
 # 🔐 config_secrets.py Template
 
-> Šablona pro soubor s tajnými klíči. Tento soubor **NIKDY** necommitujte do Gitu!
+> **Navigace:** [📂 Dokumentace](../README.md) | [⚙️ Konfigurace](../README.md#konfigurace) | [config_secrets.py Template](config_secrets_template.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
 
+> Šablona pro soubor s tajnými klíči. Tento soubor **NIKDY** necommitujte do Gitu!
+> **Verze:** Alpha
+
+---
+
+<a name="použití"></a>
 ## 📝 Použití
 
 1. Vytvořte soubor `config_secrets.py` v kořenovém adresáři (vedle `main.py`).
 2. Zkopírujte obsah níže.
 3. Nahraďte hodnoty svými skutečnými klíči.
 
+---
+
+<a name="template"></a>
+
+<a name="šablona"></a>
 ## 📄 Šablona
 
 ```python
@@ -37,6 +48,11 @@ GITHUB_TOKEN = "your_github_token_here"
 # Add any future API keys here
 ```
 
+---
+
+<a name="getting-discord-token"></a>
+
+<a name="získání-discord-bot-tokenu"></a>
 ## 🔐 Získání Discord Bot Tokenu
 
 1. **Jdi na:** https://discord.com/developers/applications
@@ -52,6 +68,9 @@ GITHUB_TOKEN = "your_github_token_here"
    - `applications.commands`
    - Permissions: `Send Messages`, `Read Messages`, `Embed Links`, `Attach Files`
 
+---
+
+<a name="security-best-practices"></a>
 ## 🛡️ Security Best Practices
 
 Ujistěte se, že váš `.gitignore` obsahuje:
@@ -60,3 +79,8 @@ config_secrets.py
 *.db
 agent.log
 ```
+
+---
+Poslední aktualizace: 2025-12-04  
+Verze: Alpha  
+Tip: Použij Ctrl+F pro vyhledávání

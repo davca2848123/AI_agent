@@ -1,7 +1,13 @@
 # ⚙️ Configuration Guide
 
-> Kompletní průvodce konfigurací RPI AI Agenta
+> **Navigace:** [📂 Dokumentace](../README.md) | [⚙️ Konfigurace](../README.md#konfigurace) | [Configuration Guide](complete-configuration-guide.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
 
+> Kompletní průvodce konfigurací RPI AI Agenta.
+> **Verze:** Alpha
+
+---
+
+<a name="obsah"></a>
 ## 📋 Obsah
 
 1. [config_settings.py](#config_settingspy)
@@ -15,8 +21,12 @@
 
 ---
 
+<a name="config-settings"></a>
+
+<a name="config_settingspy"></a>
 ## 🔧 config_settings.py
 
+<a name="hlavní-nastavení"></a>
 ### Hlavní Nastavení
 
 ```python
@@ -89,6 +99,7 @@ WORKSPACE_DIR = "."           # FileTool workspace
 BACKUP_DIR = "./backup/"      # Database backups
 ```
 
+<a name="získání-discord-user-id"></a>
 ### Získání Discord User ID
 
 **Metoda 1: Discord Settings**
@@ -104,8 +115,12 @@ Najdi sekci "User Info"
 
 ---
 
+<a name="config-secrets"></a>
+
+<a name="config_secretspy"></a>
 ## 🔐 config_secrets.py
 
+<a name="template"></a>
 ### Template
 
 ```python
@@ -130,6 +145,7 @@ NGROK_AUTH_TOKEN = "your_ngrok_token_here"
 # Add any future API keys here
 ```
 
+<a name="získání-discord-bot-tokenu"></a>
 ### Získání Discord Bot Tokenu
 
 1. **Jdi na:** https://discord.com/developers/applications
@@ -145,6 +161,7 @@ NGROK_AUTH_TOKEN = "your_ngrok_token_here"
    - `applications.commands`
    - Permissions: `Send Messages`, `Read Messages`, `Embed Links`, `Attach Files`
 
+<a name="security-best-practices"></a>
 ### Security Best Practices
 
 ```bash
@@ -165,8 +182,10 @@ DISCORD_BOT_TOKEN = "YOUR_DISCORD_BOT_TOKEN_HERE"
 
 ---
 
+<a name="environment-variables"></a>
 ## 🌍 Environment Variables
 
+<a name="systémové-proměnné"></a>
 ### Systémové Proměnné
 
 ```bash
@@ -184,6 +203,7 @@ export LOG_FILE="custom_agent.log"
 export RAM_TIER1_THRESHOLD=80
 ```
 
+<a name="v-systemd-service"></a>
 ### V Systemd Service
 
 ```ini
@@ -196,8 +216,10 @@ Environment="LOG_LEVEL=INFO"
 
 ---
 
+<a name="llm-configuration"></a>
 ## 🧠 LLM Configuration
 
+<a name="model-selection"></a>
 ### Model Selection
 
 ```python
@@ -218,6 +240,7 @@ class LLMClient:
 3. **Smaž starý:** `rm models/*.gguf`
 4. **Restart:** Agent automaticky stáhne nový
 
+<a name="context-window-tuning"></a>
 ### Context Window Tuning
 
 ```python
@@ -235,6 +258,7 @@ LLM_CONTEXT_NORMAL = 512    # Nižší context = méně paměti
 - **1024 tokens:** ~800 MB RAM, ~250ms latence
 - **512 tokens:** ~400 MB RAM, ~150ms latence
 
+<a name="thread-configuration"></a>
 ### Thread Configuration
 
 ```python
@@ -249,8 +273,10 @@ n_threads = 4  # Use 4 CPU threads
 
 ---
 
+<a name="memory-configuration"></a>
 ## 💾 Memory Configuration
 
+<a name="scoring-parameters"></a>
 ### Scoring Parameters
 
 ```python
@@ -270,6 +296,7 @@ MEMORY_CONFIG = {
 | `MIN_SCORE: 70` | Balanced | **Production** |
 | `MIN_SCORE: 90` | Jen vysoká kvalita | Low storage |
 
+<a name="keyword-customization"></a>
 ### Keyword Customization
 
 ```python
@@ -284,6 +311,7 @@ MEMORY_CONFIG = {
 }
 ```
 
+<a name="blacklist-expansion"></a>
 ### Blacklist Expansion
 
 ```python
@@ -299,8 +327,10 @@ MEMORY_CONFIG = {
 
 ---
 
+<a name="resource-manager-configuration"></a>
 ## 📊 Resource Manager Configuration
 
+<a name="ram-tiers"></a>
 ### RAM Tiers
 
 ```python
@@ -327,6 +357,7 @@ RAM 91% → Tier 2 (512 tokens)
 RAM 96% → Tier 3 (256 tokens)
 ```
 
+<a name="check-interval"></a>
 ### Check Interval
 
 ```python
@@ -341,8 +372,10 @@ RESOURCE_CHECK_INTERVAL = 120
 
 ---
 
+<a name="discord-configuration"></a>
 ## 💬 Discord Configuration
 
+<a name="command-prefix"></a>
 ### Command Prefix
 
 ```python
@@ -355,6 +388,7 @@ COMMAND_PREFIX = "?"  # ?help, ?status
 COMMAND_PREFIX = "."  # .help, .status
 ```
 
+<a name="fuzzy-matching"></a>
 ### Fuzzy Matching
 
 ```python
@@ -367,6 +401,7 @@ FUZZY_MATCH_THRESHOLD = 3  # !statusss → !status (3 chars)
 FUZZY_MATCH_THRESHOLD = 1  # Only 1 char typos
 ```
 
+<a name="activity-status"></a>
 ### Activity Status
 
 ```python
@@ -389,8 +424,10 @@ await client.change_presence(
 
 ---
 
+<a name="boredom-system-configuration"></a>
 ## 🤖 Boredom System Configuration
 
+<a name="rates-thresholds"></a>
 ### Rates & Thresholds
 
 ```python
@@ -411,6 +448,7 @@ BOREDOM_INCREASE_RATE = 0.2     # Pomalejší nuda
 BOREDOM_THRESHOLD_ACTION = 90   # Akce později
 ```
 
+<a name="action-frequency"></a>
 ### Action Frequency
 
 ```python
@@ -427,8 +465,10 @@ await asyncio.sleep(120) # Check every 2min
 
 ---
 
+<a name="advanced-settings"></a>
 ## 🔍 Advanced Settings
 
+<a name="database-optimization"></a>
 ### Database Optimization
 
 ```python
@@ -452,6 +492,7 @@ PRAGMA synchronous=FULL
 PRAGMA cache_size=5000   # 5MB
 ```
 
+<a name="command-queue"></a>
 ### Command Queue
 
 ```python
@@ -466,6 +507,7 @@ maxsize=200
 maxsize=50
 ```
 
+<a name="logging-verbosity"></a>
 ### Logging Verbosity
 
 ```python
@@ -482,6 +524,7 @@ LOG_LEVEL = "WARNING"  # Only warnings/errors
 
 ---
 
+<a name="file-structure"></a>
 ## 📁 File Structure
 
 ```
@@ -500,8 +543,10 @@ rpi_ai/rpi_ai/
 
 ---
 
+<a name="common-customizations"></a>
 ## 🎯 Common Customizations
 
+<a name="1-change-admin"></a>
 ### 1. Change Admin
 
 ```python
@@ -511,6 +556,7 @@ ADMIN_USER_IDS = [
 ]
 ```
 
+<a name="2-reduce-memory-usage"></a>
 ### 2. Reduce Memory Usage
 
 ```python
@@ -519,6 +565,7 @@ LLM_CONTEXT_NORMAL = 512  # Lower context
 RAM_TIER1_THRESHOLD = 80  # Earlier resource reduction
 ```
 
+<a name="3-more-selective-memory"></a>
 ### 3. More Selective Memory
 
 ```python
@@ -527,6 +574,7 @@ MEMORY_CONFIG = {
 }
 ```
 
+<a name="4-faster-responses"></a>
 ### 4. Faster Responses
 
 ```python
@@ -534,6 +582,7 @@ MEMORY_CONFIG = {
 self.current_max_tokens = 64  # Instead of 128
 ```
 
+<a name="5-custom-command-prefix"></a>
 ### 5. Custom Command Prefix
 
 ```python
@@ -542,14 +591,17 @@ COMMAND_PREFIX = "$"  # $help, $status, $ask
 
 ---
 
+<a name="applying-changes"></a>
 ## 🔄 Applying Changes
 
+<a name="option-1-restart-service"></a>
 ### Option 1: Restart Service
 
 ```bash
 sudo systemctl restart rpi-agent.service
 ```
 
+<a name="option-2-manual-restart"></a>
 ### Option 2: Manual Restart
 
 ```bash
@@ -565,6 +617,7 @@ python3 main.py
 sudo systemctl start rpi-agent.service
 ```
 
+<a name="option-3-from-discord-admin"></a>
 ### Option 3: From Discord (Admin)
 
 ```
@@ -573,8 +626,10 @@ sudo systemctl start rpi-agent.service
 
 ---
 
+<a name="configuration-validation"></a>
 ## 🆘 Configuration Validation
 
+<a name="check-syntax"></a>
 ### Check Syntax
 
 ```bash
@@ -583,6 +638,7 @@ python3 -c "import config_settings; print('OK')"
 python3 -c "import config_secrets; print('OK')"
 ```
 
+<a name="test-discord-token"></a>
 ### Test Discord Token
 
 ```python
@@ -599,6 +655,7 @@ async def on_ready():
 client.run("YOUR_TOKEN_HERE")
 ```
 
+<a name="verify-intents"></a>
 ### Verify Intents
 
 ```bash
@@ -613,8 +670,10 @@ print('Intents OK')
 
 ---
 
+<a name="environment-specific-configs"></a>
 ## 📝 Environment-Specific Configs
 
+<a name="development"></a>
 ### Development
 
 ```python
@@ -624,6 +683,7 @@ BOREDOM_INCREASE_RATE = 5.0  # Fast boredom for testing
 MIN_SCORE_TO_SAVE = 30       # Save everything
 ```
 
+<a name="production"></a>
 ### Production
 
 ```python
@@ -641,15 +701,15 @@ ln -sf config_settings_prod.py config_settings.py
 
 ---
 
+<a name="related-documentation"></a>
 ## 🔗 Related Documentation
 
-- [Deployment Guide](../scripts/deployment-guide.md) - Initial setup
-- [Troubleshooting](../troubleshooting.md) - Common config issues
-- [Memory System](../core/memory-system.md) - Memory scoring details
-- [Resource Manager](../core/resource-manager.md) - Tier system
+- [📖 Deployment Guide](../scripts/deployment-guide.md) - Initial setup
+- [📖 Troubleshooting](../troubleshooting.md) - Common config issues
+- [📖 Memory System](../core/memory-system.md) - Memory scoring details
+- [📖 Resource Manager](../core/resource-manager.md) - Tier system
 
 ---
-
-**Last Updated:** 2025-12-03  
-**Version:** 1.1.0  
-**Config Files:** config_settings.py, config_secrets.py
+Poslední aktualizace: 2025-12-04  
+Verze: Alpha  
+Tip: Použij Ctrl+F pro vyhledávání

@@ -1,13 +1,19 @@
 # Architektura Systému
 
-> Celkový přehled architektury RPI AI Agenta
+> **Navigace:** [📂 Dokumentace](README.md) | [📄 Přehled (OVERVIEW)](OVERVIEW.md) | [🔍 Index (INDEX)](INDEX.md) | [📋 API Tasklist (SUMMARY)](SUMMARY.md) | [🏗️ Architektura](architecture.md) | [🆘 Troubleshooting](troubleshooting.md) | [🔍 Hledat](INDEX.md#vyhledavani)
 
+> Celkový přehled architektury RPI AI Agenta.
+> **Verze:** Alpha
+
+---
+
+<a name="high-level-overview"></a>
 ## 📋 High-Level Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                        Discord Server                        │
-│                   (Uživatelské rozhraní)                     │
+│                        Discord Server                       │
+│                   (Uživatelské rozhraní)                    │
 └────────────────────────┬────────────────────────────────────┘
                          │
                          ▼
@@ -37,7 +43,7 @@
 │  • Decision Making (LLM)                                    │
 │  • Goal Management                                          │
 │  • Action Execution                                         │
-└──┬─────────┬───────────┬────────────┬──────────┬───────────┘
+└──┬─────────┬───────────┬────────────┬──────────┬────────────┘
    │         │           │            │          │
    ▼         ▼           ▼            ▼          ▼
 ┌─────┐  ┌──────┐  ┌─────────┐  ┌────────┐  ┌──────────┐
@@ -54,8 +60,10 @@
 
 ---
 
+<a name="komponenty"></a>
 ## 🏗️ Komponenty
 
+<a name="1-discord-layer"></a>
 ### 1. Discord Layer
 
 **Účel:** Komunikace s uživateli
@@ -72,6 +80,7 @@ User → Discord Server → Bot → Message Queue → Command Handler
 
 ---
 
+<a name="2-command-layer"></a>
 ### 2. Command Layer
 
 **Účel:** Zpracování příkazů
@@ -82,14 +91,15 @@ User → Discord Server → Bot → Message Queue → Command Handler
 - Command Queue - Worker loop
 
 **Kategorie příkazů:**
-- Basic (help, status, stats)
-- Tools & Learning (tools, learn, ask)
-- Data Management (memory, logs, export)
-- Interaction (mood, goals, config)
-- Admin (restart, monitor, debug)
+- [Basic](commands/basic.md) (help, status, stats)
+- [Tools & Learning](commands/tools-learning.md) (tools, learn, ask)
+- [Data Management](commands/data-management.md) (memory, logs, export)
+- [Interaction](commands/interaction.md) (mood, goals, config)
+- [Admin](commands/admin.md) (restart, monitor, debug)
 
 ---
 
+<a name="3-agent-core"></a>
 ### 3. Agent Core
 
 **Účel:** Autonomní rozhodování a akce
@@ -119,6 +129,7 @@ while learning_queue:
 
 ---
 
+<a name="4-llm-integration"></a>
 ### 4. LLM Integration
 
 **Účel:** AI inference
@@ -140,6 +151,7 @@ Tier 3: ctx=256, threads=1
 
 ---
 
+<a name="5-memory-system"></a>
 ### 5. Memory System
 
 **Účel:** Perzistentní vzpomínky
@@ -165,6 +177,7 @@ memories_fts (
 
 ---
 
+<a name="6-tool-registry"></a>
 ### 6. Tool Registry
 
 **Účel:** Registr a správa nástrojů
@@ -190,6 +203,7 @@ class Tool(ABC):
 
 ---
 
+<a name="7-resource-manager"></a>
 ### 7. Resource Manager
 
 **Účel:** Správa systémových zdrojů
@@ -210,6 +224,7 @@ class Tool(ABC):
 
 ---
 
+<a name="8-network-monitor"></a>
 ### 8. Network Monitor
 
 **Účel:** Sledování připojení
@@ -222,8 +237,12 @@ class Tool(ABC):
 
 ---
 
+<a name="datove-toky"></a>
+
+<a name="datové-toky"></a>
 ## 🔄 Datové Toky
 
+<a name="command-flow"></a>
 ### Command Flow
 
 ```
@@ -237,6 +256,7 @@ class Tool(ABC):
 8. Discord sends → response to user
 ```
 
+<a name="autonomous-action-flow"></a>
 ### Autonomous Action Flow
 
 ```
@@ -249,24 +269,27 @@ class Tool(ABC):
 7. Report        → Discord channel (optional)
 ```
 
+<a name="learning-mode-flow"></a>
 ### Learning Mode Flow
 
 ```
 1. User: !learn all
 2. Queue: [web_tool, math_tool, ...]
 3. Loop:
-   a. Pop tool from queue
-   b. LLM generates usage
-   c. Execute tool
-   d. Store in memory
-   e. Next tool
+    a. Pop tool from queue
+    b. LLM generates usage
+    c. Execute tool
+    d. Store in memory
+    e. Next tool
 4. End: is_learning_mode = False
 ```
 
 ---
 
+<a name="state-management"></a>
 ## 📊 State Management
 
+<a name="agent-state"></a>
 ### Agent State
 
 ```python
@@ -280,6 +303,7 @@ class Tool(ABC):
 
 **Persistence:** `.agent_state.json`
 
+<a name="tool-stats"></a>
 ### Tool Stats
 
 ```python
@@ -292,6 +316,7 @@ class Tool(ABC):
 
 **Persistence:** `tool_stats.json`
 
+<a name="tool-timestamps"></a>
 ### Tool Timestamps
 
 ```python
@@ -306,8 +331,10 @@ class Tool(ABC):
 
 ---
 
+<a name="security-layers"></a>
 ## 🔐 Security Layers
 
+<a name="1-file-access"></a>
 ### 1. File Access
 
 ```python
@@ -317,6 +344,7 @@ if not safe_path.startswith(workspace_dir):
     return "Error: Access denied"
 ```
 
+<a name="2-code-execution"></a>
 ### 2. Code Execution
 
 ```python
@@ -329,6 +357,7 @@ safe_globals = {
 exec(code, safe_globals, {})
 ```
 
+<a name="3-database"></a>
 ### 3. Database
 
 ```python
@@ -337,6 +366,7 @@ if not query.strip().upper().startswith("SELECT"):
     return "Error: Only SELECT queries allowed"
 ```
 
+<a name="4-admin-commands"></a>
 ### 4. Admin Commands
 
 ```python
@@ -347,8 +377,10 @@ if author_id not in config_settings.ADMIN_USER_IDS:
 
 ---
 
+<a name="performance"></a>
 ## 🚀 Performance
 
+<a name="asynchronní-operace"></a>
 ### Asynchronní Operace
 
 - Command processing (queue worker)
@@ -356,6 +388,7 @@ if author_id not in config_settings.ADMIN_USER_IDS:
 - Discord I/O (asyncio)
 - Background loops (boredom, monitoring)
 
+<a name="resource-optimization"></a>
 ### Resource Optimization
 
 - **Tier-based LLM** - Adaptivní parametry
@@ -365,14 +398,15 @@ if author_id not in config_settings.ADMIN_USER_IDS:
 
 ---
 
+<a name="související"></a>
 ## 🔗 Související
 
-- [Autonomous Behavior](core/autonomous-behavior.md)
-- [Memory System](core/memory-system.md)
-- [Resource Manager](core/resource-manager.md)
-- [All Commands](commands/)
+- [📖 Autonomous Behavior](core/autonomous-behavior.md)
+- [📖 Memory System](core/memory-system.md)
+- [📖 Resource Manager](core/resource-manager.md)
+- [📂 All Commands](commands/)
 
 ---
-
-**Poslední aktualizace:** 2025-12-02  
-**Verze:** 1.0.0
+Poslední aktualizace: 2025-12-04  
+Verze: Alpha  
+Tip: Použij Ctrl+F pro vyhledávání

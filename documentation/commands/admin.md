@@ -1,7 +1,13 @@
 # Administrační Příkazy
 
-> Admin-only příkazy pro správu a diagnostiku systému
+> **Navigace:** [📂 Dokumentace](../README.md) | [💬 Příkazy](../README.md#commands-příkazy) | [Administrační příkazy](admin.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
 
+> Admin-only příkazy pro správu a diagnostiku systému.
+> **Verze:** Alpha
+
+---
+
+<a name="přístupová-práva"></a>
 ## ⚠️ Přístupová práva
 
 Všechny příkazy v této sekci jsou **pouze pro administrátory**.
@@ -14,16 +20,20 @@ if author_id not in config_settings.ADMIN_USER_IDS:
 
 ---
 
+<a name="restart"></a>
 ## `!restart`
 
+<a name="popis"></a>
 ### 📋 Popis
 Restartuje agenta s graceful shutdown.
 
+<a name="použití"></a>
 ### ⚙️ Použití
 ```
 !restart
 ```
 
+<a name="jak-to-funguje"></a>
 ### 💡 Jak to funguje
 
 1. **Vytvoří restart flag** - S channel_id pro notifikaci
@@ -31,6 +41,7 @@ Restartuje agenta s graceful shutdown.
 3. **Pokud úspěch** - Restart pomocí `os.execv()`
 4. **Pokud selže** - Nabídne Force Restart tlačítko
 
+<a name="příklady"></a>
 ### 📝 Příklady
 
 **Úspěšný restart:**
@@ -61,6 +72,7 @@ Bot: ⚠️ **Graceful shutdown failed or timed out**
      [Force Restart] [Cancel]
 ```
 
+<a name="implementace"></a>
 ### 🔧 Implementace
 
 **Restart flag:**
@@ -84,6 +96,7 @@ shutdown_success = await agent.graceful_shutdown(timeout=10)
 os.execv(sys.executable, [sys.executable] + sys.argv)
 ```
 
+<a name="poznámky"></a>
 ### ⚠️ Poznámky
 - Pouze admin
 - Graceful shutdown může selhat pokud jsou zablokované zdroje
@@ -92,16 +105,20 @@ os.execv(sys.executable, [sys.executable] + sys.argv)
 
 ---
 
+<a name="cmd"></a>
 ## `!cmd`
 
+<a name="popis"></a>
 ### 📋 Popis
 Spustí shell příkaz přímo na serveru.
 
+<a name="použití"></a>
 ### ⚙️ Použití
 ```
 !cmd <příkaz>
 ```
 
+<a name="bezpečnost"></a>
 ### 💡 Bezpečnost
 
 **⚠️ EXTRÉMNĚ NEBEZPEČNÉ**
@@ -110,6 +127,7 @@ Spustí shell příkaz přímo na serveru.
 - Žádná sanitizace
 - Může poškodit systém
 
+<a name="příklady"></a>
 ### 📝 Příklady
 
 ```
@@ -133,6 +151,7 @@ Python 3.11.5
 ```
 ```
 
+<a name="varování"></a>
 ### ⚠️ VAROVÁNÍ
 - Použij pouze pokud víš co děláš
 - Může bricknout systém
@@ -141,11 +160,14 @@ Python 3.11.5
 
 ---
 
+<a name="monitor"></a>
 ## `!monitor`
 
+<a name="popis"></a>
 ### 📋 Popis
 Monitoruje systémové zdroje (CPU, RAM, Disk, Swap) v reálném čase.
 
+<a name="použití"></a>
 ### ⚙️ Použití
 
 **Snapshot (okamžitě):**
@@ -158,6 +180,7 @@ Monitoruje systémové zdroje (CPU, RAM, Disk, Swap) v reálném čase.
 !monitor <duration>
 ```
 
+<a name="formáty-délky"></a>
 ### 🔧 Formáty délky
 
 Stejné jako `!live logs`:
@@ -165,6 +188,7 @@ Stejné jako `!live logs`:
 - `2m` - 2 minuty
 - `1h` - 1 hodina
 
+<a name="příklady"></a>
 ### 📝 Příklady
 
 **Snapshot:**
@@ -202,6 +226,7 @@ Last: 13:05:12
 [Updates every 2s]
 ```
 
+<a name="implementace"></a>
 ### 🔧 Implementace
 
 **Resource check:**
@@ -219,6 +244,7 @@ result = subprocess.run(['vcgencmd', 'measure_temp'], capture_output=True)
 temp = result.stdout.decode() # temp=54.2'C
 ```
 
+<a name="poznámky"></a>
 ### ⚠️ Poznámky
 - Live mode běží jako background task
 - Aktualizace každé 2s
@@ -226,11 +252,14 @@ temp = result.stdout.decode() # temp=54.2'C
 
 ---
 
+<a name="ssh"></a>
 ## `!ssh`
 
+<a name="popis"></a>
 ### 📋 Popis
 Spravuje SSH tunel pomocí ngrok.
 
+<a name="použití"></a>
 ### ⚙️ Použití
 
 **Start tunnel:**
@@ -253,6 +282,7 @@ Spravuje SSH tunel pomocí ngrok.
 !ssh
 ```
 
+<a name="příklady"></a>
 ### 📝 Příklady
 
 **Start:**
@@ -293,6 +323,7 @@ Bot: 📡 **SSH Status:**
      • Uptime: 2h 15m
 ```
 
+<a name="implementace"></a>
 ### 🔧 Implementace
 
 **Start ngrok:**
@@ -312,6 +343,7 @@ async with aiohttp.ClientSession() as session:
         public_url = data['tunnels'][0]['public_url']
 ```
 
+<a name="poznámky"></a>
 ### ⚠️ Poznámky
 - Vyžaduje ngrok nainstalovaný
 - Pouze pro admin
@@ -320,11 +352,14 @@ async with aiohttp.ClientSession() as session:
 
 ---
 
+<a name="debug"></a>
 ## `!debug`
 
+<a name="popis"></a>
 ### 📋 Popis
 Pokročilá diagnostika systému s detailními kontrolami.
 
+<a name="použití"></a>
 ### ⚙️ Použití
 
 **All checks:**
@@ -338,6 +373,7 @@ Pokročilá diagnostika systému s detailními kontrolami.
 !debug <area>
 ```
 
+<a name="oblasti"></a>
 ### 🔧 Oblasti
 
 | Area | Co kontroluje |
@@ -352,6 +388,7 @@ Pokročilá diagnostika systému s detailními kontrolami.
 | `filesystem` | Disk space a permissions |
 | `memory` | Python memory usage |
 
+<a name="příklady"></a>
 ### 📝 Příklady
 
 **Quick check:**
@@ -405,6 +442,7 @@ Bot: 💾 **Database Diagnostic:**
 ✅ Pass
 ```
 
+<a name="poznámky"></a>
 ### ⚠️ Poznámky
 - Pouze admin
 - Některé testy mohou trvat několik sekund
@@ -412,6 +450,7 @@ Bot: 💾 **Database Diagnostic:**
 
 ---
 
+<a name="souhrn"></a>
 ## 📊 Souhrn
 
 | Příkaz | Účel | Příklad |
@@ -423,6 +462,6 @@ Bot: 💾 **Database Diagnostic:**
 | `!debug` | Diagnostika | `!debug llm` |
 
 ---
-
-**Poslední aktualizace:** 2025-12-02  
-**Platné pro verzi:** 1.0.0
+Poslední aktualizace: 2025-12-04  
+Verze: Alpha  
+Tip: Použij Ctrl+F pro vyhledávání

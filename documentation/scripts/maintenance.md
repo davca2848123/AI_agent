@@ -1,18 +1,29 @@
 # Údržbové Skripty
 
-> Skripty pro údržbu a správu agenta
+> **Navigace:** [📂 Dokumentace](../README.md) | [📜 Scripts](../README.md#scripts-skripty) | [Maintenance Scripts](maintenance.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
 
+> Skripty pro údržbu a správu agenta.
+> **Verze:** Alpha
+
+---
+
+<a name="přehled"></a>
 ## 📝 Přehled
 
 Údržbové skripty slouží k pravidelnému čištění a údržbě AI agenta, včetně správy logů, databáze a systémových zdrojů.
 
 ---
 
+<a name="cleanup-logs"></a>
+
+<a name="cleanup_logspy"></a>
 ## `cleanup_logs.py`
 
+<a name="popis"></a>
 ### 📋 Popis
 Smaže staré logy z obou log souborů (`agent.log` a `agent_tools.log`). Skript automaticky detekuje timestamp v každém řádku logu a smaže záznamy starší než 2 dny.
 
+<a name="použití"></a>
 ### ⚙️ Použití
 
 **Manuální spuštění na RPI:**
@@ -33,6 +44,7 @@ rpi_cleanup_logs.bat
 
 > **Poznámka:** `.bat` skript se automaticky připojí přes SSH na RPI (192.168.1.200) a spustí cleanup script.
 
+<a name="jak-to-funguje"></a>
 ### 💡 Jak to funguje
 
 1. **Vypočítá cutoff datum** - Dnešní datum - 2 dny (od 00:00)
@@ -41,6 +53,7 @@ rpi_cleanup_logs.bat
 4. **Filtruje řádky** - Odstraní řádky starší než cutoff datum
 5. **Přepíše soubory** - S čistými logy
 
+<a name="logika"></a>
 ### 🔧 Logika
 
 **Cutoff datum:**
@@ -61,6 +74,7 @@ if timestamp_match:
 - `agent.log` - Hlavní log agenta
 - `agent_tools.log` - Logy použití nástrojů
 
+<a name="příklad-výstupu"></a>
 ### 📝 Příklad výstupu
 
 ```
@@ -81,6 +95,7 @@ Done cleaning agent_tools.log
 All log files processed.
 ```
 
+<a name="poznámky"></a>
 ### ⚠️ Poznámky
 
 - **Bezpečné parsování** - Pokud timestamp nelze parsovat, řádek se zachová
@@ -88,14 +103,18 @@ All log files processed.
 - **Automatická detekce** - Skript hledá logy v aktuálním adresáři i v parent
 - **Pouze ruční spuštění** - Není automatizováno, spouští se manuálně
 
+<a name="související"></a>
 ### 🔗 Související
 
-- **Zobrazení logů:** `!logs <count>` - [→](../commands/data-management.md#logs)
-- **Live logs:** `!live logs <duration>` - [→](../commands/data-management.md#live-logs)
-- **Monitoring:** `!monitor` - [→](../commands/admin.md#monitor)
+- **Zobrazení logů:** `!logs <count>` - [📖 Data Management](../commands/data-management.md#logs)
+- **Live logs:** `!live logs <duration>` - [📖 Data Management](../commands/data-management.md#live-logs)
+- **Monitoring:** `!monitor` - [📖 Admin Commands](../commands/admin.md#monitor)
 
 ---
 
+<a name="future-scripts"></a>
+
+<a name="budoucí-skripty"></a>
 ## Budoucí Skripty
 
 Plánované utility skripty:
@@ -107,6 +126,6 @@ Plánované utility skripty:
 - [ ] `manage_swap.py` - Správa SWAP souboru
 
 ---
-
-**Poslední aktualizace:** 2025-12-02  
-**Platné pro verzi:** 1.0.0
+Poslední aktualizace: 2025-12-04  
+Verze: Alpha  
+Tip: Použij Ctrl+F pro vyhledávání

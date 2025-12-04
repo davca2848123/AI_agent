@@ -1,7 +1,13 @@
 # Všechny Nástroje (Tools) - Kompletní Přehled
 
-> Detailní dokumentace všech dostupných nástrojů agenta
+> **Navigace:** [📂 Dokumentace](../README.md) | [🛠️ Nástroje](../README.md#tools-nástroje) | [Všechny nástroje](all-tools.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
 
+> Detailní dokumentace všech dostupných nástrojů agenta.
+> **Verze:** Alpha
+
+---
+
+<a name="seznam-nástrojů"></a>
 ## 📋 Seznam Nástrojů
 
 Agent má k dispozici následující nástroje:
@@ -23,11 +29,14 @@ Agent má k dispozici následující nástroje:
 
 ---
 
+<a name="filetool"></a>
 ## FileTool
 
+<a name="popis"></a>
 ### 📋 Popis
 Umožňuje číst, zapisovat a listovat soubory v projektu.
 
+<a name="parametry"></a>
 ### 🔧 Parametry
 
 **Action types:**
@@ -40,6 +49,7 @@ Umožňuje číst, zapisovat a listovat soubory v projektu.
 - `filename` *(optional)* - Cesta k souboru
 - `content` *(optional)* - Obsah pro zápis
 
+<a name="příklady"></a>
 ### 💡 Příklady
 
 ```python
@@ -53,6 +63,7 @@ file_tool.execute(action="write", filename="test.txt", content="Hello World")
 file_tool.execute(action="list_files", filename=".")
 ```
 
+<a name="security"></a>
 ### ⚠️ Security
 - Přístup pouze v rámci workspace directory
 - Filtruje hidden files (.*)
@@ -60,17 +71,21 @@ file_tool.execute(action="list_files", filename=".")
 
 ---
 
+<a name="systemtool"></a>
 ## SystemTool
 
+<a name="popis"></a>
 ### 📋 Popis
 Poskytuje informace o systému (CPU, RAM, Disk, Procesy).
 
+<a name="parametry"></a>
 ### 🔧 Parametry
 
 **Actions:**
 - `info` - Základní systémové info
 - `process_list` - Top 5 procesů podle paměti
 
+<a name="příklady"></a>
 ### 💡 Příklady
 
 ```python
@@ -85,11 +100,14 @@ system_tool.execute(action="process_list")
 
 ---
 
+<a name="webtool"></a>
 ## WebTool
 
+<a name="popis"></a>
 ### 📋 Popis
 Vyhledává na webu pomocí DuckDuckGo a čte obsah webových stránek.
 
+<a name="parametry"></a>
 ### 🔧 Parametry
 
 **Actions:**
@@ -101,6 +119,7 @@ Vyhledává na webu pomocí DuckDuckGo a čte obsah webových stránek.
 - `url` - URL stránky (pro read)
 - `limit` - Max délka textu (default 1000)
 
+<a name="příklady"></a>
 ### 💡 Příklady
 
 ```python
@@ -111,6 +130,7 @@ web_tool.execute(action="search", query="Python tutorial")
 web_tool.execute(action="read", url="https://example.com")
 ```
 
+<a name="poznámky"></a>
 ### ⚠️ Poznámky
 - Vyžaduje `duckduckgo_search`, `bs4`, `aiohttp`
 - Search vrací max 3 výsledky
@@ -118,11 +138,14 @@ web_tool.execute(action="read", url="https://example.com")
 
 ---
 
+<a name="timetool"></a>
 ## TimeTool
 
+<a name="popis"></a>
 ### 📋 Popis
 Práce s časem - aktuální čas, formátování, rozdíly.
 
+<a name="parametry"></a>
 ### 🔧 Parametry
 
 **Actions:**
@@ -134,6 +157,7 @@ Práce s časem - aktuální čas, formátování, rozdíly.
 - `format_str` - Formát (např. "%Y-%m-%d %H:%M:%S")
 - `time1`, `time2` - ISO formát časů pro diff
 
+<a name="příklady"></a>
 ### 💡 Příklady
 
 ```python
@@ -149,11 +173,14 @@ time_tool.execute(action="diff", time1="2025-12-01T10:00:00", time2="2025-12-02T
 
 ---
 
+<a name="mathtool"></a>
 ## MathTool
 
+<a name="popis"></a>
 ### 📋 Popis
 Matematické výpočty, konverze jednotek.
 
+<a name="parametry"></a>
 ### 🔧 Parametry
 
 **Actions:**
@@ -168,6 +195,7 @@ Matematické výpočty, konverze jednotek.
 - `base`, `exponent` - Pro mocninu
 - `unit`, `to_unit` - Pro konverzi
 
+<a name="příklady"></a>
 ### 💡 Příklady
 
 ```python
@@ -184,21 +212,26 @@ math_tool.execute(action="pow", base=2, exponent=10)
 math_tool.execute(action="convert", value=25, unit="C", to_unit="F")
 ```
 
+<a name="poznámky"></a>
 ### ⚠️ Poznámky
 - Calc používá `eval()` s omezeným scope (bezpečné)
 - Podporované funkce: abs, round, min, max, sum, sqrt, sin, cos, tan
 
 ---
 
+<a name="weathertool"></a>
 ## WeatherTool
 
+<a name="popis"></a>
 ### 📋 Popis
 Získá aktuální počasí pro zadanou lokaci pomocí wttr.in.
 
+<a name="parametry"></a>
 ### 🔧 Parametry
 
 - `location` *(optional)* - Název města (default z config)
 
+<a name="příklady"></a>
 ### 💡 Příklady
 
 ```python
@@ -210,11 +243,13 @@ weather_tool.execute(location="London")
 weather_tool.execute()
 ```
 
+<a name="poznámky"></a>
 ### ⚠️ Poznámky
 - Používá wttr.in (zdarma, bez API klíče)
 - Timeout 30s (wttr.in může být pomalý)
 - Default lokace: `config_settings.DEFAULT_LOCATION`
 
+<a name="výstup-format"></a>
 ### 📝 Výstup Format
 
 ```
@@ -223,15 +258,19 @@ Weather: Praha: Clear +5°C 78% ↓15km/h
 
 ---
 
+<a name="codetool"></a>
 ## CodeTool
 
+<a name="popis"></a>
 ### 📋 Popis
 Bezpečné spouštění Python kódu v omezeném sandboxu.
 
+<a name="parametry"></a>
 ### 🔧 Parametry
 
 - `code` *(required)* - Python kód ke spuštění
 
+<a name="příklady"></a>
 ### 💡 Příklady
 
 ```python
@@ -245,6 +284,7 @@ for i in range(5):
 """)
 ```
 
+<a name="security"></a>
 ### ⚠️ Security
 - Velmi omezený sandbox
 - Povolené built-ins: print, len, range, str, int, float, list, dict, sum, max, min, abs
@@ -253,11 +293,14 @@ for i in range(5):
 
 ---
 
+<a name="notetool"></a>
 ## NoteTool
 
+<a name="popis"></a>
 ### 📋 Popis
 Ukládání a správa poznámek do JSON souboru.
 
+<a name="parametry"></a>
 ### 🔧 Parametry
 
 **Actions:**
@@ -269,6 +312,7 @@ Ukládání a správa poznámek do JSON souboru.
 - `content` - Text poznámky
 - `tag` - Štítek (optional, default "general")
 
+<a name="příklady"></a>
 ### 💡 Příklady
 
 ```python
@@ -282,17 +326,21 @@ note_tool.execute(action="list")
 note_tool.execute(action="search", content="logs")
 ```
 
+<a name="storage"></a>
 ### 📝 Storage
 - Soubor: `workspace/notes.json`
 - Format: JSON array s ID, content, tag, timestamp
 
 ---
 
+<a name="gittool"></a>
 ## GitTool
 
+<a name="popis"></a>
 ### 📋 Popis
 Základní Git operace (status, log) pomocí dulwich.
 
+<a name="parametry"></a>
 ### 🔧 Parametry
 
 **Actions:**
@@ -302,6 +350,7 @@ Základní Git operace (status, log) pomocí dulwich.
 **Parameters:**
 - `repo_path` *(optional)* - Cesta k repozitáři (default ".")
 
+<a name="příklady"></a>
 ### 💡 Příklady
 
 ```python
@@ -312,6 +361,7 @@ git_tool.execute(action="status")
 git_tool.execute(action="log")
 ```
 
+<a name="poznámky"></a>
 ### ⚠️ Poznámky
 - Vyžaduje `dulwich` balíček
 - Pouze read-only operace
@@ -319,15 +369,19 @@ git_tool.execute(action="log")
 
 ---
 
+<a name="databasetool"></a>
 ## DatabaseTool
 
+<a name="popis"></a>
 ### 📋 Popis
 Spouštění SELECT dotazů na SQLite databázi.
 
+<a name="parametry"></a>
 ### 🔧 Parametry
 
 - `query` *(required)* - SQL SELECT dotaz
 
+<a name="příklady"></a>
 ### 💡 Příklady
 
 ```python
@@ -338,6 +392,7 @@ database_tool.execute(query="SELECT * FROM users LIMIT 10")
 database_tool.execute(query="SELECT name, email FROM users WHERE active=1")
 ```
 
+<a name="security"></a>
 ### ⚠️ Security
 - **POUZE SELECT dotazy**
 - INSERT/UPDATE/DELETE/DROP jsou zakázány
@@ -346,15 +401,19 @@ database_tool.execute(query="SELECT name, email FROM users WHERE active=1")
 
 ---
 
+<a name="rsstool"></a>
 ## RSSTool
 
+<a name="popis"></a>
 ### 📋 Popis
 Čtení RSS/Atom feedů pomocí feedparser.
 
+<a name="parametry"></a>
 ### 🔧 Parametry
 
 - `url` *(required)* - URL RSS feedu
 
+<a name="příklady"></a>
 ### 💡 Příklady
 
 ```python
@@ -362,26 +421,32 @@ database_tool.execute(query="SELECT name, email FROM users WHERE active=1")
 rss_tool.execute(url="https://example.com/feed.xml")
 ```
 
+<a name="výstup"></a>
 ### 📝 Výstup
 - Název feedu
 - 5 nejnovějších článků (title + link)
 
+<a name="poznámky"></a>
 ### ⚠️ Poznámky
 - Vyžaduje `feedparser` balíček
 
 ---
 
+<a name="translatetool"></a>
 ## TranslateTool
 
+<a name="popis"></a>
 ### 📋 Popis
 Překládá text mezi jazyky pomocí Google Translate API.
 
+<a name="parametry"></a>
 ### 🔧 Parametry
 
 - `text` *(required)* - Text k překladu
 - `source` *(optional)* - Zdrojový jazyk (default "auto")
 - `target` *(optional)* - Cílový jazyk (default "en")
 
+<a name="příklady"></a>
 ### 💡 Příklady
 
 ```python
@@ -392,22 +457,27 @@ translate_tool.execute(text="Ahoj světe")
 translate_tool.execute(text="Dobrý den", source="cs", target="de")
 ```
 
+<a name="poznámky"></a>
 ### ⚠️ Poznámky
 - Vyžaduje `deep-translator` balíček
 - Používá Google Translate (zdarma, s limity)
 
 ---
 
+<a name="wikipediatool"></a>
 ## WikipediaTool
 
+<a name="popis"></a>
 ### 📋 Popis
 Vyhledává články na Wikipedii.
 
+<a name="parametry"></a>
 ### 🔧 Parametry
 
 - `query` *(required)* - Vyhledávací dotaz
 - `lang` *(optional)* - Jazyk Wikipedia (default "en")
 
+<a name="příklady"></a>
 ### 💡 Příklady
 
 ```python
@@ -418,25 +488,31 @@ wikipedia_tool.execute(query="Python programming")
 wikipedia_tool.execute(query="Albert Einstein", lang="cs")
 ```
 
+<a name="výstup"></a>
 ### 📝 Výstup
 - Název článku
 - Summary (prvních 500 znaků)
 - URL článku
 
+<a name="poznámky"></a>
 ### ⚠️ Poznámky
 - Vyžaduje `wikipediaapi` balíček
 - Pokud článek neexistuje, vrátí chybu
 
 ---
 
+<a name="discordactivitytool"></a>
 ## DiscordActivityTool
 
+<a name="popis"></a>
 ### 📋 Popis
 Sleduje aktivity (hry) uživatelů na Discord serveru.
 
+<a name="parametry"></a>
 ### 🔧 Parametry
 *(žádné)*
 
+<a name="příklady"></a>
 ### 💡 Příklady
 
 ```python
@@ -444,6 +520,7 @@ Sleduje aktivity (hry) uživatelů na Discord serveru.
 discord_activity_tool.execute()
 ```
 
+<a name="výstup"></a>
 ### 📝 Výstup
 
 ```
@@ -452,6 +529,7 @@ Current User Activities:
 - Sarah is playing/doing: Spotify
 ```
 
+<a name="poznámky"></a>
 ### ⚠️ Poznámky
 - Vyžaduje Discord připojení
 - Vyžaduje internet
@@ -460,6 +538,7 @@ Current User Activities:
 
 ---
 
+<a name="tool-registry"></a>
 ## 🔧 Tool Registry
 
 Všechny nástroje jsou registrovány v `ToolRegistry` třídě:
@@ -480,6 +559,7 @@ class ToolRegistry:
         # Zvýší počítadlo použití
 ```
 
+<a name="registrace-v-agentovi"></a>
 ### Registrace v Agentovi
 
 ```python
@@ -493,6 +573,7 @@ self.tools.register(WebTool())
 
 ---
 
+<a name="tool-execution-wrapper"></a>
 ## 📊 Tool Execution Wrapper
 
 Každý nástroj má wrapper `_execute_with_logging()` který:
@@ -503,6 +584,7 @@ Každý nástroj má wrapper `_execute_with_logging()` který:
 4. **Zachytává errors** - Type hned nebo obecné exceptions
 5. **Loguje výsledky** - S truncated output
 
+<a name="příklad-logu"></a>
 ### Příklad logu
 
 ```
@@ -513,13 +595,14 @@ INFO: web_tool: Completed in 1.23s - Result: Search Results:
 
 ---
 
+<a name="související"></a>
 ## 🔗 Související
 
-- [Commands - Tools & Learning](../commands/tools-learning.md) - Příkazy pro práci s nástroji
-- [Autonomous Behavior](../core/autonomous-behavior.md) - Jak agent vybírá nástroje
-- [LLM Integration](../core/llm-integration.md) - Jak LLM volá nástroje
+- [📖 Commands - Tools & Learning](../commands/tools-learning.md) - Příkazy pro práci s nástroji
+- [📖 Autonomous Behavior](../core/autonomous-behavior.md) - Jak agent vybírá nástroje
+- [📖 LLM Integration](../core/llm-integration.md) - Jak LLM volá nástroje
 
 ---
-
-**Poslední aktualizace:** 2025-12-02  
-**Verze:** 1.0.0
+Poslední aktualizace: 2025-12-04  
+Verze: Alpha  
+Tip: Použij Ctrl+F pro vyhledávání

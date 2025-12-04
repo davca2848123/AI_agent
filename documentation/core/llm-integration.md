@@ -1,15 +1,23 @@
 # LLM Integrace
 
-> Lokální LLM pomocí llama-cpp-python
+> **Navigace:** [📂 Dokumentace](../README.md) | [🧠 Core](../README.md#core-jádro) | [LLM Integrace](llm-integration.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
 
+> Lokální LLM pomocí llama-cpp-python.
+> **Verze:** Alpha
+
+---
+
+<a name="přehled"></a>
 ## 📋 Přehled
 
 Agent používá lokální LLM model (Qwen 2.5) běžící přes `llama-cpp-python` pro rozhodování a generování odpovědí.
 
 ---
 
+<a name="llmclient-class"></a>
 ## LLMClient Class
 
+<a name="inicializace"></a>
 ### 🔧 Inicializace
 
 ```python
@@ -21,6 +29,7 @@ llm = LLMClient(
 )
 ```
 
+<a name="model-download"></a>
 ### 📦 Model Download
 
 Model se automaticky stahuje z Hugging Face:
@@ -44,8 +53,10 @@ def _verify_model_cache(self):
 
 ---
 
+<a name="model-loading"></a>
 ## Model Loading
 
+<a name="_load_model"></a>
 ### 🔧 _load_model()
 
 ```python
@@ -71,6 +82,7 @@ def _load_model(self, n_ctx=2048, n_threads=4):
     logger.info(f"LLM loaded: {self.model_filename} (ctx={n_ctx}, threads={n_threads})")
 ```
 
+<a name="dynamické-parametry"></a>
 ### ⚙️ Dynamické Parametry
 
 Parametry se mění podle resource tier:
@@ -94,8 +106,12 @@ def update_parameters(self, resource_tier: int):
 
 ---
 
+<a name="generating-responses"></a>
+
+<a name="generování-odpovědí"></a>
 ## Generování Odpovědí
 
+<a name="generate_response"></a>
 ### 🔧 generate_response()
 
 ```python
@@ -105,6 +121,7 @@ response = await llm.generate_response(
 )
 ```
 
+<a name="implementace"></a>
 ### 💡 Implementace
 
 ```python
@@ -135,6 +152,7 @@ async def generate_response(self, prompt: str, system_prompt: str = "You are an 
     return response
 ```
 
+<a name="parametry-generování"></a>
 ### ⚙️ Parametry Generování
 
 | Parametr | Hodnota | Popis |
@@ -146,8 +164,12 @@ async def generate_response(self, prompt: str, system_prompt: str = "You are an 
 
 ---
 
+<a name="decision-making"></a>
+
+<a name="rozhodování-o-akcích"></a>
 ## Rozhodování o Akcích
 
+<a name="decide_action"></a>
 ### 🎯 decide_action()
 
 ```python
@@ -158,6 +180,7 @@ action = await llm.decide_action(
 )
 ```
 
+<a name="implementace"></a>
 ### 🔧 Implementace
 
 ```python
@@ -190,8 +213,10 @@ Decide what action to take based on your current state."""
 
 ---
 
+<a name="tool-call-parsing"></a>
 ## Tool Call Parsing
 
+<a name="parse_tool_call"></a>
 ### 🔧 parse_tool_call()
 
 Extrahuje tool call z LLM odpovědi:
@@ -201,6 +226,7 @@ tool_call = llm.parse_tool_call(response)
 # Returns: {"tool": "web_tool", "params": {"action": "search", "query": "Python"}}
 ```
 
+<a name="implementace"></a>
 ### 💡 Implementace
 
 ```python
@@ -245,8 +271,10 @@ def parse_tool_call(self, response: str):
 
 ---
 
+<a name="provider-type"></a>
 ## Provider Type
 
+<a name="provider_type-property"></a>
 ### 🔧 provider_type Property
 
 ```python
@@ -265,8 +293,10 @@ LLM: ✅ Online (245ms) [Local]
 
 ---
 
+<a name="error-handling"></a>
 ## Error Handling
 
+<a name="graceful-degradation"></a>
 ### ⚠️ Graceful Degradation
 
 ```python
@@ -282,8 +312,10 @@ Pokud LLM selže:
 
 ---
 
+<a name="performance"></a>
 ## Performance
 
+<a name="typické-latence"></a>
 ### 📊 Typické Latence
 
 | Operace | Latence | Poznámka |
@@ -293,6 +325,7 @@ Pokud LLM selže:
 | Tool selection | 300-500ms | JSON output |
 | Long response | 1-2s | Max tokens |
 
+<a name="optimalizace"></a>
 ### ⚡ Optimalizace
 
 **CPU Threads:**
@@ -307,8 +340,10 @@ Pokud LLM selže:
 
 ---
 
+<a name="model-specs"></a>
 ## Model Specs
 
+<a name="qwen-25-05b-instruct"></a>
 ### 📊 Qwen 2.5-0.5B-Instruct
 
 | Vlastnost | Hodnota |
@@ -320,6 +355,7 @@ Pokud LLM selže:
 | Vocabulary | 151,936 tokens |
 | Max Context | 32,768 tokens (omezeno na 2048) |
 
+<a name="proč-qwen-25"></a>
 ### 🎯 Proč Qwen 2.5?
 
 - **Malý** - Běží na RPI
@@ -330,13 +366,16 @@ Pokud LLM selže:
 
 ---
 
+<a name="související"></a>
 ## 🔗 Související
 
-- [Autonomous Behavior](autonomous-behavior.md) - Jak agent používá LLM
+- [📖 Autonomous Behavior](autonomous-behavior.md) - Jak agent používá LLM
 - [`!ask`](../commands/tools-learning.md#ask) - Příkaz s LLM
-- [Resource Manager](resource-manager.md) - Adaptivní parametry LLM
+- [📖 Resource Manager](resource-manager.md) - Adaptivní parametry LLM
+- [📚 API Reference](../api/llm-integration.md) - Technická dokumentace tříd a metod
+
 
 ---
-
-**Poslední aktualizace:** 2025-12-02  
-**Verze:** 1.0.0
+Poslední aktualizace: 2025-12-04  
+Verze: Alpha  
+Tip: Použij Ctrl+F pro vyhledávání

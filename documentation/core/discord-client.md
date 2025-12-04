@@ -1,15 +1,25 @@
 # Discord Client
 
-> Integrace s Discord API pro komunikaci
+> **Navigace:** [📂 Dokumentace](../README.md) | [🧠 Core](../README.md#core-jádro) | [Discord Client](discord-client.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
 
+> Integrace s Discord API pro komunikaci.
+> **Verze:** Alpha
+
+---
+
+<a name="přehled"></a>
 ## 📋 Přehled
 
 `DiscordClient` třída poskytuje asynchronní rozhraní pro komunikaci s Discord serverem.
 
 ---
 
+<a name="initialization"></a>
+
+<a name="inicializace"></a>
 ## Inicializace
 
+<a name="constructor"></a>
 ### 🔧 Constructor
 
 ```python
@@ -23,8 +33,12 @@ discord = DiscordClient(token="DISCORD_TOKEN")
 
 ---
 
+<a name="starting"></a>
+
+<a name="spuštění"></a>
 ## Spuštění
 
+<a name="start"></a>
 ### ⚙️ start()
 
 ```python
@@ -33,6 +47,7 @@ await discord.start()
 
 Spustí Discord klienta v background task a registruje event handlery.
 
+<a name="event-handlers"></a>
 ### 💡 Event Handlers
 
 **on_ready:**
@@ -64,8 +79,12 @@ async def on_message(message):
 
 ---
 
+<a name="sending-messages"></a>
+
+<a name="posílání-zpráv"></a>
 ## Posílání Zpráv
 
+<a name="send_message"></a>
 ### 📤 send_message()
 
 ```python
@@ -86,6 +105,7 @@ msg = await discord.send_message(
 **Vrací:**
 - Discord Message object (pro editaci)
 
+<a name="příklady"></a>
 ### 💡 Příklady
 
 **Jednoduchá zpráva:**
@@ -122,8 +142,12 @@ await discord.send_message(
 
 ---
 
+<a name="receiving-messages"></a>
+
+<a name="příjem-zpráv"></a>
 ## Příjem Zpráv
 
+<a name="get_messages"></a>
 ### 📥 get_messages()
 
 ```python
@@ -146,8 +170,10 @@ Vrátí všechny zprávy z fronty (FIFO).
 
 ---
 
+<a name="activity-status"></a>
 ## Activity Status
 
+<a name="update_activity"></a>
 ### 🎮 update_activity()
 
 ```python
@@ -167,8 +193,12 @@ await discord.update_activity("Learning web_tool")
 
 ---
 
+<a name="online-activities"></a>
+
+<a name="online-aktivity"></a>
 ## Online Aktivity
 
+<a name="get_online_activities"></a>
 ### 👥 get_online_activities()
 
 ```python
@@ -200,8 +230,12 @@ Vrátí seznam aktivit (her, aplikací) online uživatelů.
 
 ---
 
+<a name="configuration"></a>
+
+<a name="konfigurace"></a>
 ## Konfigurace
 
+<a name="intents"></a>
 ### 🔧 Intents
 
 ```python
@@ -219,8 +253,10 @@ client = discord.Client(intents=intents, max_messages=10)
 
 ---
 
+<a name="mock-mode"></a>
 ## Mock Mode
 
+<a name="běh-bez-discord-tokenu"></a>
 ### 🧪 Běh Bez Discord Tokenu
 
 Pokud token není poskytnut, klient běží v mock mode:
@@ -240,8 +276,10 @@ await discord.send_message(123, "Hello")
 
 ---
 
+<a name="error-handling"></a>
 ## Error Handling
 
+<a name="graceful-degradation"></a>
 ### ⚠️ Graceful Degradation
 
 ```python
@@ -268,8 +306,10 @@ async def send_message(self, channel_id, content, ...):
 
 ---
 
+<a name="integration"></a>
 ## Integration
 
+<a name="v-corepy"></a>
 ### 🔧 V core.py
 
 ```python
@@ -293,13 +333,25 @@ while True:
 
 ---
 
+<a name="související"></a>
 ## 🔗 Související
 
-- [Commands](../commands/) - Příkazy přes Discord
-- [Autonomous Behavior](autonomous-behavior.md) - Agent posílá updates
-- [Admin Commands](../commands/admin.md#ssh) - SSH notifications
+- [📂 Commands](../commands/README.md) - Příkazy přes Discord
+- [📖 Autonomous Behavior](autonomous-behavior.md) - Agent posílá updates
+- [`!ssh`](../commands/admin.md#ssh) - SSH notifications
 
 ---
+Poslední aktualizace: 2025-12-04  
+Verze: Alpha  
+Tip: Použij Ctrl+F pro vyhledávání
 
-**Poslední aktualizace:** 2025-12-02  
-**Verze:** 1.0.0
+<a name="související"></a>
+## 🔗 Související
+
+- [📖 Autonomous Behavior](autonomous-behavior.md) - Jak agent používá Discord
+- [📚 API Reference](../api/discord-client.md) - Technická dokumentace tříd a metod
+
+---
+Poslední aktualizace: 2025-12-04  
+Verze: Alpha  
+Tip: Použij Ctrl+F pro vyhledávání

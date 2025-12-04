@@ -1,7 +1,13 @@
 # 📜 Batch Scripts Reference
 
-> Kompletní reference všech Windows batch skriptů pro RPI správu
+> **Navigace:** [📂 Dokumentace](../README.md) | [📜 Scripts](../README.md#scripts-skripty) | [Batch Scripts Reference](batch-scripts-reference.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
 
+> Kompletní reference všech Windows batch skriptů pro RPI správu.
+> **Verze:** Alpha
+
+---
+
+<a name="obsah"></a>
 ## 📋 Obsah
 
 - [Přehled](#přehled)
@@ -13,10 +19,14 @@
 
 ---
 
+<a name="overview"></a>
+
+<a name="přehled"></a>
 ## Přehled
 
 Všechny batch skripty se nacházejí v `scripts/` adresáři a slouží k vzdálené správě Raspberry Pi z Windows počítače přes SSH.
 
+<a name="před-použitím"></a>
 ### Před Použitím
 
 **1. Nastav SSH připojení:**
@@ -34,8 +44,12 @@ Skripty vyžadují passwordless SSH. Viz: `Windows_SSH_Permissions_Fix.md`
 
 ---
 
+<a name="configuration"></a>
+
+<a name="konfigurace"></a>
 ## Konfigurace
 
+<a name="ssh_configbat"></a>
 ### `ssh_config.bat`
 
 **Účel:** Nastavení SSH connection parametrů
@@ -54,8 +68,10 @@ ssh_config.bat
 
 ---
 
+<a name="maintenance-scripts"></a>
 ## Maintenance Scripts
 
+<a name="rpi_restart_servicebat"></a>
 ### `rpi_restart_service.bat`
 
 **Účel:** Restartuje AI Agent service na RPi
@@ -85,6 +101,7 @@ ssh davca@rpi 'sudo systemctl status rpi-agent.service'
 
 ---
 
+<a name="rpi_health_checkbat"></a>
 ### `rpi_health_check.bat`
 
 **Účel:** Komplexní health check RPi
@@ -128,6 +145,7 @@ Recent Logs:
 
 ---
 
+<a name="rpi_cleanup_logsbat"></a>
 ### `rpi_cleanup_logs.bat`
 
 **Účel:** Vyčistí staré logy, ponechá pouze posledních 40%
@@ -155,7 +173,7 @@ agent.log.old: 30 MB (backup)
 ```
 
 **Kdy použít:**
-- `agent.log` \u003e 50 MB
+- `agent.log` > 50 MB
 - Systém je pomalý (high IO)
 - Před důležitými operacemi
 
@@ -163,6 +181,7 @@ agent.log.old: 30 MB (backup)
 
 ---
 
+<a name="rpi_cleanup_memorybat"></a>
 ### `rpi_cleanup_memory.bat`
 
 **Účel:** Vyčistí spam záznamy z memory database
@@ -182,7 +201,7 @@ Vyber [1-2]:
 **Co odstran í:**
 - Duplicitní záznamy
 - Systémový spam (Discord events)
-- Nízko-skóre memorie (\u003c 0.3)
+- Nízko-skóre memorie (< 0.3)
 
 **Příklad:**
 ```
@@ -196,14 +215,16 @@ Backup created: backup/agent_memory_2025-12-03.db
 ```
 
 **Kdy použít:**
-- Database \u003e 10 MB
+- Database > 10 MB
 - Pomalé queries v `!memory`
 - Pravidelně měsíčně
 
 ---
 
+<a name="setup-scripts"></a>
 ## Setup Scripts
 
+<a name="rpi_setup_swapbat"></a>
 ### `rpi_setup_swap.bat`
 
 **Účel:** Nastaví sudo bez hesla pro SWAP management
@@ -229,6 +250,7 @@ davca ALL=(ALL) NOPASSWD: /bin/dd, /sbin/mkswap, /sbin/swapon, /sbin/swapoff
 
 ---
 
+<a name="rpi_setup_ledbat"></a>
 ### `rpi_setup_led.bat`
 
 **Účel:** Nastaví GPIO LED indikátory
@@ -251,6 +273,7 @@ rpi_setup_led.bat
 
 ---
 
+<a name="rpi_test_ledbat"></a>
 ### `rpi_test_led.bat`
 
 **Účel:** Test LED funkcional ity
@@ -272,6 +295,7 @@ Test complete!
 
 ---
 
+<a name="setup_rpi_sudoersbat"></a>
 ### `setup_rpi_sudoers.bat`
 
 **Účel:** Komplexní sudo setup (hlavní  script)
@@ -292,6 +316,7 @@ Tento script poskytuje široké sudo permissions. Použij pouze na důvěryhodn�
 
 ---
 
+<a name="setup_ssh_passwordlessbat"></a>
 ### `setup_ssh_passwordless.bat`
 
 **Účel:** Nastaví SSH klíče pro passwordless login
@@ -318,8 +343,10 @@ Testing connection...
 
 ---
 
+<a name="ssh-connection"></a>
 ## SSH & Connection
 
+<a name="ssh_connectbat"></a>
 ### `ssh_connect.bat`
 
 **Účel:** Rychlé SSH připojení k RPi
@@ -343,8 +370,10 @@ ssh davca@0.tcp.ngrok.io -p 12345
 
 ---
 
+<a name="advanced-scripts"></a>
 ## Advanced Scripts
 
+<a name="rpi_rebuild_pythonbat"></a>
 ### `rpi_rebuild_python.bat`
 
 **Účel:** Přeinstaluje všechny Python závislosti
@@ -370,6 +399,7 @@ pip3 install -r requirements.txt --break-system-packages
 
 ---
 
+<a name="rpi_task_cleanup_boredombat"></a>
 ### `rpi_task_cleanup_boredom.bat`
 
 **Účel:** Vyčistí boredom topics JSON
@@ -383,7 +413,7 @@ rpi_task_cleanup_boredom.bat
 ```bash
 # Odstraní/resetuje boredom_topics.json
 rm boredom_topics.json
-echo '{"topics": []}' \u003e boredom_topics.json
+echo '{"topics": []}' > boredom_topics.json
 ```
 
 **Kdy použít:**
@@ -392,6 +422,7 @@ echo '{"topics": []}' \u003e boredom_topics.json
 
 ---
 
+<a name="rpi_fix_llmbat"></a>
 ### `rpi_fix_llm.bat`
 
 **Účel:** Fix LLM loading issues
@@ -414,6 +445,7 @@ rpi_fix_llm.bat
 
 ---
 
+<a name="rpi_clear_dmbat"></a>
 ### `rpi_clear_dm.bat`
 
 **Účel:** Vymaže bot DM zprávy v admin kanálu
@@ -436,8 +468,12 @@ rpi_clear_dm.bat
 
 ---
 
+<a name="creating-custom-scripts"></a>
+
+<a name="vytvoření-vlastního-scriptu"></a>
 ## 🔧 Vytvoření Vlastního Scriptu
 
+<a name="template"></a>
 ### Template
 
 ```batch
@@ -461,6 +497,7 @@ ssh %RPI_USER%@%RPI_HOST% -p %RPI_PORT% "
 pause
 ```
 
+<a name="best-practices"></a>
 ### Best Practices
 
 1. **Vždy používej `cd ~/rpi_ai/rpi_ai`** na začátku remote příkazů
@@ -477,6 +514,7 @@ pause
 
 ---
 
+<a name="summary-table"></a>
 ## 📊 Summary Table
 
 | Script | Kategorie | Použití | Risk |
@@ -496,14 +534,14 @@ pause
 
 ---
 
+<a name="související"></a>
 ## 🔗 Související
 
-- [Deployment Guide](deployment-guide.md) - Kompletní deployment proces
+- [📖 Deployment Guide](deployment-guide.md) - Kompletní deployment proces
 - [Windows SSH Permissions](../scripts/Windows_SSH_Permissions_Fix.md) - SSH troubleshooting
 - [RPI Sudoers Guide](../scripts/RPI_Sudoers_NOPASSWD_Guide.md) - Detailed sudo setup
 
 ---
-
-**Poslední aktualizace:** 2025-12-03  
-**Platné pro verzi:** 1.1.0  
-**Počet skript ů:** 12+ batch files
+Poslední aktualizace: 2025-12-04  
+Verze: Alpha  
+Tip: Použij Ctrl+F pro vyhledávání

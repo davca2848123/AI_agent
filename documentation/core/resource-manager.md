@@ -1,15 +1,23 @@
 # Resource Manager
 
-> 4-tier adaptivní systém pro správu systémových zdrojů
+> **Navigace:** [📂 Dokumentace](../README.md) | [🧠 Core](../README.md#core-jádro) | [Resource Manager](resource-manager.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
 
+> 4-tier adaptivní systém pro správu systémových zdrojů.
+> **Verze:** Alpha
+
+---
+
+<a name="přehled"></a>
 ## 📋 Přehled
 
 Resource Manager sleduje využití CPU, RAM, Disk a Swap a automaticky reaguje podle  zatížení pomocí 4-tier systému.
 
 ---
 
+<a name="tier-system"></a>
 ## Tier System
 
+<a name="tier-úrovně"></a>
 ### 🎯 Tier Úrovně
 
 | Tier | Threshold | Stav | Reakce |
@@ -19,6 +27,7 @@ Resource Manager sleduje využití CPU, RAM, Disk a Swap a automaticky reaguje p
 | **2** | 90-94% | Mitigace | Redukce LLM, SWAP expansion |
 | **3** | 95%+ | Nouzový | Min. LLM, Kill processes |
 
+<a name="hystereze"></a>
 ### 🔧 Hystereze
 
 Tier se nemění okamžitě - používá hysterezi:
@@ -54,8 +63,12 @@ def get_tier(self, usage=None):
 
 ---
 
+<a name="tier-1"></a>
+
+<a name="tier-1-warning-cleanup"></a>
 ## Tier 1: Warning & Cleanup
 
+<a name="akce"></a>
 ### ⚙️ Akce
 
 ```python
@@ -77,6 +90,7 @@ async def execute_tier1(self):
     )
 ```
 
+<a name="detaily"></a>
 ### 📊 Detaily
 
 ```python
@@ -96,8 +110,12 @@ Actions taken:
 
 ---
 
+<a name="tier-2"></a>
+
+<a name="tier-2-active-mitigation"></a>
 ## Tier 2: Active Mitigation
 
+<a name="akce"></a>
 ### ⚙️ Akce
 
 ```python
@@ -117,6 +135,7 @@ async def execute_tier2(self):
     await agent.send_admin_dm(details, category="tier")
 ```
 
+<a name="llm-reduction"></a>
 ### 🔧 LLM Reduction
 
 ```python
@@ -136,6 +155,7 @@ def _reduce_llm_resources(self, tier: int):
     agent.llm.update_parameters(tier)
 ```
 
+<a name="swap-expansion"></a>
 ### 💾 SWAP Expansion
 
 **Linux:**
@@ -157,8 +177,12 @@ $pagefile.Put()
 
 ---
 
+<a name="tier-3"></a>
+
+<a name="tier-3-emergency-survival"></a>
 ## Tier 3: Emergency Survival
 
+<a name="akce"></a>
 ### ⚙️ Akce
 
 ```python
@@ -181,6 +205,7 @@ async def execute_tier3(self):
     await agent.send_admin_dm(details, category="tier")
 ```
 
+<a name="process-termination"></a>
 ### ⚠️ Process Termination
 
 ```python
@@ -212,8 +237,10 @@ def _terminate_non_essential_processes(self):
 
 ---
 
+<a name="protected-processes"></a>
 ## Protected Processes
 
+<a name="registrace"></a>
 ### 🛡️ Registrace
 
 ```python
@@ -224,6 +251,7 @@ resource_manager.register_protected_process(
 )
 ```
 
+<a name="seznam"></a>
 ### 📋 Seznam
 
 ```python
@@ -236,8 +264,10 @@ self.protected_processes = {
 
 ---
 
+<a name="network-monitor"></a>
 ## Network Monitor
 
+<a name="connectivity-check"></a>
 ### 📡 Connectivity Check
 
 ```python
@@ -259,6 +289,7 @@ async def check_connectivity(self):
         return False
 ```
 
+<a name="disconnect-handling"></a>
 ### 🔌 Disconnect Handling
 
 ```python
@@ -282,6 +313,7 @@ async def handle_disconnect(self):
     )
 ```
 
+<a name="reconnect-handling"></a>
 ### 🔄 Reconnect Handling
 
 ```python
@@ -304,8 +336,10 @@ async def handle_reconnect(self):
 
 ---
 
+<a name="monitoring-loop"></a>
 ## Monitoring Loop
 
+<a name="continuous-check"></a>
 ### 🔁 Continuous Check
 
 ```python
@@ -335,8 +369,10 @@ async def monitor_loop(self):
 
 ---
 
+<a name="usage-statistics"></a>
 ## Usage Statistics
 
+<a name="resourceusage-dataclass"></a>
 ### 📊 ResourceUsage Dataclass
 
 ```python
@@ -350,6 +386,7 @@ class ResourceUsage:
     timestamp: float
 ```
 
+<a name="check-resources"></a>
 ### 🔧 Check Resources
 
 ```python
@@ -367,8 +404,10 @@ def check_resources(self):
 
 ---
 
+<a name="integration"></a>
 ## Integration
 
+<a name="v-corepy"></a>
 ### 🔧 V core.py
 
 ```python
@@ -390,13 +429,14 @@ async def handle_resource_tier(self, tier: int, usage):
 
 ---
 
+<a name="související"></a>
 ## 🔗 Související
 
-- [LLM Integration](llm-integration.md) - Adaptivní LLM parametry
+- [📖 LLM Integration](llm-integration.md) - Adaptivní LLM parametry
 - [`!monitor`](../commands/admin.md#monitor) - Příkaz pro monitorování
-- [Autonomous Behavior](autonomous-behavior.md) - Reakce na tier changes
+- [📖 Autonomous Behavior](autonomous-behavior.md) - Reakce na tier changes
 
 ---
-
-**Poslední aktualizace:** 2025-12-02  
-**Verze:** 1.0.0
+Poslední aktualizace: 2025-12-04  
+Verze: Alpha  
+Tip: Použij Ctrl+F pro vyhledávání

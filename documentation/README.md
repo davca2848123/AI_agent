@@ -1,14 +1,22 @@
 # 📚 RPI AI Agent - Kompletní Dokumentace
 
-> Detailní dokumentace autonomního AI agenta běžícího na Raspberry Pi s Discord integrací
+> **Navigace:** [📂 Dokumentace](README.md) | [📄 Přehled (OVERVIEW)](OVERVIEW.md) | [🔍 Index (INDEX)](INDEX.md) | [📋 API Tasklist (SUMMARY)](SUMMARY.md) | [🏗️ Architektura](architecture.md) | [🆘 Troubleshooting](troubleshooting.md) | [🔍 Hledat](INDEX.md#vyhledavani)
 
+> Detailní dokumentace autonomního AI agenta běžícího na Raspberry Pi s Discord integrací.
+> **Verze:** Alpha
+
+---
+
+<a name="obsah-dokumentace"></a>
 ## 📖 Obsah Dokumentace
 
+<a name="základní-přehled"></a>
 ### 🎯 Základní Přehled
 - [**O Projektu**](#o-projektu) - Úvod a přehled
 - [**Architektura**](architecture.md) - Celková architektura systému
-- [**Instalace a Nastavení**](installation.md) - Průvodce instalací
+- [**Instalace a Nastavení**](scripts/deployment-guide.md) - Průvodce instalací
 
+<a name="discord-příkazy"></a>
 ### 💬 Discord Příkazy
 - [**Základní Příkazy**](commands/basic.md) - `!help`, `!status`, `!stats`, `!intelligence`
 - [**Nástroje a Učení**](commands/tools-learning.md) - `!tools`, `!learn`, `!ask`, `!teach`, `!search`
@@ -16,62 +24,42 @@
 - [**Interakce**](commands/interaction.md) - `!mood`, `!goals`, `!config`
 - [**Administrace**](commands/admin.md) - `!restart`, `!monitor`, `!ssh`, `!cmd`, `!debug`
 
+<a name="nástroje-tools"></a>
 ### 🛠️ Nástroje (Tools)
-- [**FileTool**](tools/file-tool.md) - Práce se soubory a složkami
-- [**SystemTool**](tools/system-tool.md) - Systémové informace
-- [**WebTool**](tools/web-tool.md) - Vyhledávání a čtení webu
-- [**TimeTool**](tools/time-tool.md) - Práce s časem a datumy
-- [**MathTool**](tools/math-tool.md) - Matematické výpočty
-- [**WeatherTool**](tools/weather-tool.md) - Informace o počasí
-- [**CodeTool**](tools/code-tool.md) - Spouštění Python kódu
-- [**WikipediaTool**](tools/wikipedia-tool.md) - Vyhledávání na Wikipedia
-- [**GitTool**](tools/git-tool.md) - Git operace (pokročilé)
+- [**Všechny Nástroje**](tools/all-tools.md) - Kompletní přehled všech 14 nástrojů
 
+<a name="základní-funkcionality"></a>
 ### 🧠 Základní Funkcionality
 - [**Autonomní Chování**](core/autonomous-behavior.md) - Systém "nudy" a autonomní rozhodování
 - [**Paměťový Systém**](core/memory-system.md) - VectorStore a správa vzpomínek
 - [**LLM Integrace**](core/llm-integration.md) - Lokální LLM model (llama-cpp)
 - [**Resource Manager**](core/resource-manager.md) - Správa systémových zdrojů (4-tier system)
 - [**Discord Client**](core/discord-client.md) - Discord bot integrace
-- [**Error Tracking**](core/error-tracking.md) - Sledování a logování chyb
-- [**Network Monitor**](core/network-monitor.md) - Monitorování připojení
 
+<a name="skripty-a-utility"></a>
 ### 📝 Skripty a Utility
-- [**SSH Skripty**](scripts/ssh-scripts.md) - Připojení a správa RPI
-- [**Údržbové Skripty**](scripts/maintenance.md) - Cleanup, swap, atd.
-- [**Deployment**](scripts/deployment.md) - Nasazení na RPI
+- [**Deployment Guide**](scripts/deployment-guide.md) - Nasazení na RPI
+- [**Batch Scripts**](scripts/batch-scripts-reference.md) - Reference skriptů
+- [**Maintenance**](scripts/maintenance.md) - Údržba
 
+<a name="konfigurace"></a>
 ### 🔧 Konfigurace
-- [**config_settings.py**](config/settings.md) - Nastavení agenta
-- [**config_secrets.py**](config/secrets.md) - API klíče a tokeny
-- [**Proměnné Prostředí**](config/environment.md) - Environment variables
+- [**Settings Reference**](configuration/config_settings_reference.md) - Nastavení agenta
+- [**Secrets Template**](configuration/config_secrets_template.md) - API klíče a tokeny
+- [**Environment Variables**](configuration/environment_variables.md) - Proměnné prostředí
+- [**Customization**](configuration/customization-guide.md) - Průvodce úpravami
 
-### 📊 Datové Struktury
-- [**Agent State**](data-structures/agent-state.md) - Stav agenta
-- [**Memory Schema**](data-structures/memory-schema.md) - Databázové schéma
-- [**Tool Stats**](data-structures/tool-stats.md) - Statistiky nástrojů
-
+<a name="pokročilé-témata"></a>
 ### 🔍 Pokročilé Témata
-- [**Command Queue System**](advanced/command-queue.md) - Asynchronní zpracování příkazů
-- [**Fuzzy Command Matching**](advanced/fuzzy-matching.md) - Automatická korekce překlep
-- [**Learning Mode**](advanced/learning-mode.md) - Režim učení
-- [**Boredom Mechanism**](advanced/boredom.md) - Systém "nudy"
-- [**Tier System**](advanced/tier-system.md) - Reakční systém na zátěž
+- [**Fuzzy Matching**](advanced/fuzzy-matching-algorithm.md) - Automatická korekce překlepů
 
+<a name="řešení-problémů"></a>
 ### 🐛 Řešení Problémů
-- [**Časté Problémy**](troubleshooting/common-issues.md)
-- [**LLM Issues**](troubleshooting/llm-issues.md)
-- [**Discord Issues**](troubleshooting/discord-issues.md)
-- [**RPI Issues**](troubleshooting/rpi-issues.md)
-
-### 📚 Reference API
-- [**AutonomousAgent**](api/autonomous-agent.md) - Hlavní třída agenta
-- [**CommandHandler**](api/command-handler.md) - Handler pro příkazy
-- [**VectorStore**](api/vector-store.md) - Paměťový systém
-- [**LLMClient**](api/llm-client.md) - LLM klient
+- [**Troubleshooting Guide**](troubleshooting.md) - Řešení častých problémů
 
 ---
 
+<a name="o-projektu"></a>
 ## O Projektu
 
 **RPI AI Agent** je autonomní AI asistent běžící na Raspberry Pi, který komunikuje přes Discord a má schopnost:
@@ -83,6 +71,7 @@
 - 💬 **Komunikovat** - Přes Discord s uživateli
 - 📊 **Monitorovat** - Systémové zdroje a automaticky reagovat
 
+<a name="hlavní-komponenty"></a>
 ### Hlavní Komponenty
 
 ```
@@ -102,17 +91,21 @@ rpi_ai/
 └── documentation/           # Tato dokumentace
 ```
 
+<a name="klíčové-funkce"></a>
 ### Klíčové Funkce
 
+<a name="autonomní-rozhodování"></a>
 #### 🎯 Autonomní Rozhodování
 Agent používá systém "boredom" (nudy), který postupně roste. Když dosáhne prahu, agent se autonomně rozhodne pro akci pomocí LLM.
 
+<a name="dynamické-nástroje"></a>
 #### 🛠️ Dynamické Nástroje
 Agent může objevovat a učit se používat nástroje. Každý nástroj má:
 - Název a popis
 - `execute()` metodu
 - Automatické logování použití
 
+<a name="paměťový-systém"></a>
 #### 💾 Paměťový Systém
 SQLite databáze s FTS5 vyhledáváním pro:
 - Ukládání akcí a zkušeností
@@ -120,6 +113,7 @@ SQLite databáze s FTS5 vyhledáváním pro:
 - Naučené informace
 - Relevantní filtrování
 
+<a name="resource-management"></a>
 #### 📊 Resource Management
 4-tier systém reagující na zatížení:
 - **Tier 0** (< 85%): Normální provoz
@@ -127,6 +121,7 @@ SQLite databáze s FTS5 vyhledáváním pro:
 - **Tier 2** (90%): Aktivní mitigace, redukce LLM
 - **Tier 3** (95%): Nouzový režim, ukončení procesů
 
+<a name="technologie"></a>
 ### Technologie
 
 - **Python 3.11+** - Hlavní jazyk
@@ -138,8 +133,12 @@ SQLite databáze s FTS5 vyhledáváním pro:
 
 ---
 
+<a name="rychly-start"></a>
+
+<a name="rychlý-start"></a>
 ## Rychlý Start
 
+<a name="prerekvizity"></a>
 ### Prerekvizity
 ```bash
 # Python 3.11+
@@ -149,6 +148,7 @@ python --version
 pip install -r requirements.txt
 ```
 
+<a name="konfigurace"></a>
 ### Konfigurace
 1. Vytvoř `config_secrets.py`:
 ```python
@@ -159,6 +159,7 @@ ADMIN_USER_IDS = [987654321]    # Tvoje Discord ID
 
 2. Nastav `config_settings.py` podle potřeby
 
+<a name="spuštění"></a>
 ### Spuštění
 ```bash
 python main.py
@@ -166,8 +167,12 @@ python main.py
 
 ---
 
+<a name="priklady-pouziti"></a>
+
+<a name="příklady-použití"></a>
 ## Příklady Použití
 
+<a name="základní-příkazy"></a>
 ### Základní Příkazy
 ```
 !help              # Zobraz nápovědu
@@ -176,6 +181,7 @@ python main.py
 !tools             # Seznam nástrojů
 ```
 
+<a name="interakce-s-ai"></a>
 ### Interakce s AI
 ```
 !ask co je to Python?
@@ -184,6 +190,7 @@ python main.py
 !learn web_tool    # Nauč se konkrétní nástroj
 ```
 
+<a name="administrace"></a>
 ### Administrace
 ```
 !logs 50           # Posledních 50 řádků logů
@@ -194,6 +201,7 @@ python main.py
 
 ---
 
+<a name="struktura-dokumentace"></a>
 ## Struktura Dokumentace
 
 Každý dokument v této dokumentaci obsahuje:
@@ -207,6 +215,7 @@ Každý dokument v této dokumentaci obsahuje:
 
 ---
 
+<a name="přispívání"></a>
 ## Přispívání
 
 Pro přidání funkcí nebo opravu chyb:
@@ -215,11 +224,12 @@ Pro přidání funkcí nebo opravu chyb:
 3. Aktualizuj dokumentaci
 4. Vytvoř pull request
 
+<a name="licence"></a>
 ## Licence
 
 Tento projekt je pro osobní použití.
 
 ---
-
-**Poslední aktualizace:** 2025-12-02  
-**Verze Dokumentace:** 1.0.0
+Poslední aktualizace: 2025-12-04  
+Verze: Alpha  
+Tip: Použij Ctrl+F pro vyhledávání

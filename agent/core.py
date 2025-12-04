@@ -492,10 +492,87 @@ class AutonomousAgent:
                         self.led.set_state("IDLE")
 
 
+    async def check_subsystems(self):
+        """Checks health of subsystems and restarts if needed (Self-Healing)."""
+        import config_settings
+        
+        # 1. Web Server Self-Healing
+        if getattr(config_settings, 'WEB_SERVER_AUTO_RESTART', False):
+            # Check if server should be running but isn't
+            if hasattr(self, 'web_server'):
+                is_running = self.web_server.thread and self.web_server.thread.is_alive()
+                manual_stop = getattr(self.web_server, 'manual_stop', False)
+                
+                if not is_running and not manual_stop:
+                    # Server is down and not stopped manually
+                    current_time = time.time()
+                    
+                    # Initialize down timestamp if not set
+                    if not hasattr(self, '_web_server_down_since'):
+                        self._web_server_down_since = current_time
+                        logger.warning("Web server is down! Starting restart timer...")
+                    
+                    # Check if down for > 10 seconds
+                    elif current_time - self._web_server_down_since > 10:
+                        logger.warning("Web server down for >10s. Attempting auto-restart...")
+                        try:
+                            self.web_server.start()
+                            self._web_server_down_since = None # Reset
+                            logger.info("Web server auto-restarted successfully.")
+                            await self.discord.send_admin_dm("🔄 **Web Server Auto-Restarted**\nService was down for >10s.", category="system")
+                        except Exception as e:
+                            logger.error(f"Web server auto-restart failed: {e}")
+                            # Reset timer to try again in 10s (prevent rapid loop)
+                            self._web_server_down_since = current_time 
+                
+                elif is_running:
+                    # Server is running, reset down timer
+                    if hasattr(self, '_web_server_down_since') and self._web_server_down_since:
+                        self._web_server_down_since = None
+
+        # 2. SSH Tunnel Self-Healing
+        # Check if tunnel is supposed to be running (we assume yes if agent is running)
+        if self.command_handler.ngrok_process is None:
+             # Check if it was manually stopped? 
+             # For SSH, we usually want it always on unless explicitly stopped.
+             # But command_handler doesn't have a manual_stop flag yet.
+             # We'll assume if it's None, it might have been stopped manually or crashed.
+             # However, the user specifically mentioned "kill -9" which kills the process but the object might still exist?
+             pass
+        
+        # Better check: Verify the actual process if we have a PID
+        # But pyngrok manages the process.
+        # If the process was killed via kill -9, pyngrok might not know immediately.
+        # We can check if the tunnel is still listed in ngrok.get_tunnels()
+        
+        try:
+            from pyngrok import ngrok
+            tunnels = ngrok.get_tunnels()
+            ssh_tunnel_active = False
+            for t in tunnels:
+                if t.proto == "tcp" and (":22" in t.config['addr'] or t.config['addr'].endswith(":22")):
+                    ssh_tunnel_active = True
+                    break
+            
+            if not ssh_tunnel_active:
+                # No SSH tunnel found!
+                # Only restart if we haven't tried recently to avoid spam
+                if not hasattr(self, '_last_ssh_restart_attempt') or time.time() - self._last_ssh_restart_attempt > 30:
+                    logger.warning("SSH Tunnel not found! Attempting auto-restart...")
+                    self._last_ssh_restart_attempt = time.time()
+                    # Force restart
+                    self.command_handler.ngrok_process = None 
+                    await self.command_handler.start_ssh_tunnel()
+                    await self.discord.send_admin_dm("🔄 **SSH Tunnel Auto-Restarted**\nTunnel was missing.", category="system")
+        except Exception as e:
+            logger.error(f"Error checking SSH tunnel health: {e}")
+
+
     async def observation_loop(self):
         """Polls sensors and queues inputs."""
         logger.debug("Observation loop started.")
         last_resource_check = 0
+        last_subsystem_check = 0
         
         while self.is_running:
             # Check Discord Messages
@@ -543,6 +620,11 @@ class AutonomousAgent:
                     await self.handle_resource_tier(tier, usage)
                 
                 last_resource_check = current_time
+            
+            # Subsystem Health Check (every 30 seconds)
+            if current_time - last_subsystem_check >= 30:
+                await self.check_subsystems()
+                last_subsystem_check = current_time
             
             # Network monitoring (every 60 seconds)
             if current_time - self.network_monitor.last_check >= self.network_monitor.check_interval:
@@ -1340,15 +1422,19 @@ class AutonomousAgent:
                         logger.info(f"Admin DM edited (Category: {category}, ID: {last_id})")
                         
                         # Update timestamp only, keep ID
+                        if category not in self.admin_dms:
+                            self.admin_dms[category] = {}
                         self.admin_dms[category]["timestamp"] = current_time
+                        self.admin_dms[category]["id"] = last_id # Ensure ID is set
                         self._save_agent_state()
                         edited = True
-                    except discord.NotFound:
-                        logger.warning(f"Last admin DM was deleted ({category}). Sending new one.")
-                    except discord.Forbidden:
-                        logger.warning(f"No permission to edit admin DM ({category}). Sending new one.")
+                        
+                    except (discord.NotFound, discord.Forbidden):
+                        logger.warning(f"Could not edit last Admin DM (ID: {last_id}). Sending new one.")
+                        edited = False # Fallback to new message
                     except Exception as e:
-                        logger.warning(f"Failed to edit last admin DM ({category}): {e}. Sending new one.")
+                        logger.error(f"Error editing Admin DM: {e}")
+                        edited = False
                 else:
                     if last_ts:
                         logger.debug(f"Last Admin DM too old to edit (Diff: {current_time - last_ts:.1f}s > 1800s)")

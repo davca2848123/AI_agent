@@ -1,4 +1,4 @@
-﻿import logging
+import logging
 import asyncio
 from typing import Optional
 import time
@@ -15,6 +15,11 @@ try:
     import discord
 except ImportError:
     discord = None
+
+try:
+    from pyngrok import ngrok
+except ImportError:
+    ngrok = None
 
 logger = logging.getLogger(__name__)
 tools_logger = logging.getLogger('agent.tools')  # For tool-related logging
@@ -53,15 +58,296 @@ class SSHView(discord.ui.View):
         # Execute !stats command in the channel (visible to everyone)
         await self.command_handler.cmd_stats(interaction.channel_id)
 
+# === Documentation Views ===
+
+class CommandsView(discord.ui.View):
+    def __init__(self, parent_view):
+        super().__init__(timeout=300)
+        self.parent_view = parent_view
+
+    async def _send_file(self, interaction, path):
+        try:
+            if os.path.exists(path):
+                await interaction.response.send_message(file=discord.File(path), ephemeral=True)
+            else:
+                await interaction.response.send_message(f"❌ Soubor {path} nebyl nalezen.", ephemeral=True)
+        except Exception as e:
+            await interaction.response.send_message(f"❌ Chyba při odesílání: {e}", ephemeral=True)
+
+    @discord.ui.button(label="📋 Basic", style=discord.ButtonStyle.secondary)
+    async def basic(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._send_file(interaction, "documentation/commands/basic.md")
+
+    @discord.ui.button(label="🎓 Tools & Learning", style=discord.ButtonStyle.secondary)
+    async def tools(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._send_file(interaction, "documentation/commands/tools-learning.md")
+
+    @discord.ui.button(label="💾 Data", style=discord.ButtonStyle.secondary)
+    async def data(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._send_file(interaction, "documentation/commands/data-management.md")
+
+    @discord.ui.button(label="💬 Interaction", style=discord.ButtonStyle.secondary)
+    async def interaction_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._send_file(interaction, "documentation/commands/interaction.md")
+
+    @discord.ui.button(label="⚙️ Admin", style=discord.ButtonStyle.danger)
+    async def admin(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._send_file(interaction, "documentation/commands/admin.md")
+
+class CoreView(discord.ui.View):
+    def __init__(self, parent_view):
+        super().__init__(timeout=300)
+        self.parent_view = parent_view
+
+    async def _send_file(self, interaction, path):
+        try:
+            if os.path.exists(path):
+                await interaction.response.send_message(file=discord.File(path), ephemeral=True)
+            else:
+                await interaction.response.send_message(f"❌ Soubor {path} nebyl nalezen.", ephemeral=True)
+        except Exception as e:
+            await interaction.response.send_message(f"❌ Chyba při odesílání: {e}", ephemeral=True)
+
+    @discord.ui.button(label="🤖 Autonomous", style=discord.ButtonStyle.secondary)
+    async def autonomous(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._send_file(interaction, "documentation/core/autonomous-behavior.md")
+
+    @discord.ui.button(label="🧠 Memory", style=discord.ButtonStyle.secondary)
+    async def memory(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._send_file(interaction, "documentation/core/memory-system.md")
+
+    @discord.ui.button(label="🗣️ LLM", style=discord.ButtonStyle.secondary)
+    async def llm(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._send_file(interaction, "documentation/core/llm-integration.md")
+
+    @discord.ui.button(label="💻 Resources", style=discord.ButtonStyle.secondary)
+    async def resources(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._send_file(interaction, "documentation/core/resource-manager.md")
+    
+    @discord.ui.button(label="🔌 Discord", style=discord.ButtonStyle.secondary)
+    async def discord_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._send_file(interaction, "documentation/core/discord-client.md")
+
+class AdvancedView(discord.ui.View):
+    def __init__(self, parent_view):
+        super().__init__(timeout=300)
+        self.parent_view = parent_view
+
+    async def _send_file(self, interaction, path):
+        try:
+            if os.path.exists(path):
+                await interaction.response.send_message(file=discord.File(path), ephemeral=True)
+            else:
+                await interaction.response.send_message(f"❌ Soubor {path} nebyl nalezen.", ephemeral=True)
+        except Exception as e:
+            await interaction.response.send_message(f"❌ Chyba při odesílání: {e}", ephemeral=True)
+
+    @discord.ui.button(label="🔍 Fuzzy Matching", style=discord.ButtonStyle.secondary)
+    async def fuzzy_matching(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._send_file(interaction, "documentation/advanced/fuzzy-matching-algorithm.md")
+
+class ScriptsView(discord.ui.View):
+    def __init__(self, parent_view):
+        super().__init__(timeout=300)
+        self.parent_view = parent_view
+
+    async def _send_file(self, interaction, path):
+        try:
+            if os.path.exists(path):
+                await interaction.response.send_message(file=discord.File(path), ephemeral=True)
+            else:
+                await interaction.response.send_message(f"❌ Soubor {path} nebyl nalezen.", ephemeral=True)
+        except Exception as e:
+            await interaction.response.send_message(f"❌ Chyba při odesílání: {e}", ephemeral=True)
+
+    @discord.ui.button(label="🚀 Deployment", style=discord.ButtonStyle.secondary)
+    async def deployment(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._send_file(interaction, "documentation/scripts/deployment-guide.md")
+
+    @discord.ui.button(label="📜 Batch Scripts", style=discord.ButtonStyle.secondary)
+    async def batch_scripts(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._send_file(interaction, "documentation/scripts/batch-scripts-reference.md")
+
+    @discord.ui.button(label="🧹 Maintenance", style=discord.ButtonStyle.secondary)
+    async def maintenance(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._send_file(interaction, "documentation/scripts/maintenance.md")
+
+class ConfigurationView(discord.ui.View):
+    def __init__(self, parent_view):
+        super().__init__(timeout=300)
+        self.parent_view = parent_view
+
+    async def _send_file(self, interaction, path):
+        try:
+            if os.path.exists(path):
+                await interaction.response.send_message(file=discord.File(path), ephemeral=True)
+            else:
+                await interaction.response.send_message(f"❌ Soubor {path} nebyl nalezen.", ephemeral=True)
+        except Exception as e:
+            await interaction.response.send_message(f"❌ Chyba při odesílání: {e}", ephemeral=True)
+
+    @discord.ui.button(label="🔧 Settings Reference", style=discord.ButtonStyle.secondary)
+    async def settings(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._send_file(interaction, "documentation/configuration/config_settings_reference.md")
+
+    @discord.ui.button(label="🔐 Secrets Template", style=discord.ButtonStyle.secondary)
+    async def secrets(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._send_file(interaction, "documentation/configuration/config_secrets_template.md")
+
+    @discord.ui.button(label="🌍 Env Variables", style=discord.ButtonStyle.secondary)
+    async def env_vars(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._send_file(interaction, "documentation/configuration/environment_variables.md")
+
+    @discord.ui.button(label="⚙️ Customization Guide", style=discord.ButtonStyle.secondary)
+    async def guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._send_file(interaction, "documentation/configuration/customization-guide.md")
+
+    @discord.ui.button(label="📚 Complete Guide", style=discord.ButtonStyle.primary)
+    async def complete_guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._send_file(interaction, "documentation/configuration/complete-configuration-guide.md")
+
+class ApiView(discord.ui.View):
+    def __init__(self, parent_view):
+        super().__init__(timeout=300)
+        self.parent_view = parent_view
+
+    async def _send_file(self, interaction, path):
+        try:
+            if os.path.exists(path):
+                await interaction.response.send_message(file=discord.File(path), ephemeral=True)
+            else:
+                await interaction.response.send_message(f"❌ Soubor {path} nebyl nalezen.", ephemeral=True)
+        except Exception as e:
+            await interaction.response.send_message(f"❌ Chyba při odesílání: {e}", ephemeral=True)
+
+    @discord.ui.button(label="🧠 Agent Core", style=discord.ButtonStyle.secondary)
+    async def agent_core(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._send_file(interaction, "documentation/api/agent-core.md")
+
+    @discord.ui.button(label="💾 Memory System", style=discord.ButtonStyle.secondary)
+    async def memory_system(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._send_file(interaction, "documentation/api/memory-system.md")
+
+    @discord.ui.button(label="🛠️ Tools API", style=discord.ButtonStyle.secondary)
+    async def tools_api(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._send_file(interaction, "documentation/api/tools-api.md")
+
+    @discord.ui.button(label="🔌 Discord Client", style=discord.ButtonStyle.secondary)
+    async def discord_client(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._send_file(interaction, "documentation/api/discord-client.md")
+
+    @discord.ui.button(label="🗣️ LLM Integration", style=discord.ButtonStyle.secondary)
+    async def llm_integration(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._send_file(interaction, "documentation/api/llm-integration.md")
+
+class DocumentationView(discord.ui.View):
+    def __init__(self, command_handler):
+        super().__init__(timeout=300)
+        self.command_handler = command_handler
+
+    async def _send_doc(self, interaction, path, title):
+        try:
+            if os.path.exists(path):
+               await interaction.response.send_message(file=discord.File(path), ephemeral=True)
+            else:
+                await interaction.response.send_message(f"❌ Soubor {path} nebyl nalezen.", ephemeral=True)
+        except Exception as e:
+            await interaction.response.send_message(f"❌ Chyba: {e}", ephemeral=True)
+
+    @discord.ui.button(label="📖 Overview", style=discord.ButtonStyle.primary)
+    async def overview(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._send_doc(interaction, "documentation/OVERVIEW.md", "Overview")
+
+    @discord.ui.button(label="🏗️ Architecture", style=discord.ButtonStyle.secondary)
+    async def architecture(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._send_doc(interaction, "documentation/architecture.md", "Architecture")
+
+    @discord.ui.button(label="🔍 Index", style=discord.ButtonStyle.secondary)
+    async def index(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._send_doc(interaction, "documentation/INDEX.md", "Index")
+
+    @discord.ui.button(label="📋 API Tasklist", style=discord.ButtonStyle.secondary)
+    async def summary(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._send_doc(interaction, "documentation/SUMMARY.md", "API Tasklist")
+
+    @discord.ui.button(label="💬 Commands", style=discord.ButtonStyle.secondary)
+    async def commands(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_message("Vyber kategorii příkazů:", view=CommandsView(self), ephemeral=True)
+
+    @discord.ui.button(label="🛠️ Tools", style=discord.ButtonStyle.secondary)
+    async def tools(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._send_doc(interaction, "documentation/tools/all-tools.md", "Tools")
+
+    @discord.ui.button(label="🧠 Core", style=discord.ButtonStyle.secondary)
+    async def core(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_message("Vyber sekci Core:", view=CoreView(self), ephemeral=True)
+
+    @discord.ui.button(label="📜 Scripts", style=discord.ButtonStyle.secondary)
+    async def scripts(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_message("Vyber Scripts dokumentaci:", view=ScriptsView(self), ephemeral=True)
+
+    @discord.ui.button(label="🎓 Advanced", style=discord.ButtonStyle.secondary)
+    async def advanced(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_message("Vyber Advanced téma:", view=AdvancedView(self), ephemeral=True)
+
+    @discord.ui.button(label="🆘 Troubleshooting", style=discord.ButtonStyle.danger)
+    async def troubleshooting(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._send_doc(interaction, "documentation/troubleshooting.md", "Troubleshooting")
+
+    @discord.ui.button(label="⚙️ Configuration", style=discord.ButtonStyle.secondary)
+    async def configuration(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_message("Vyber Configuration dokumentaci:", view=ConfigurationView(self), ephemeral=True)
+
+    @discord.ui.button(label="📚 API Reference", style=discord.ButtonStyle.secondary)
+    async def api_ref(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_message("Vyber API dokumentaci:", view=ApiView(self), ephemeral=True)
+    
+    @discord.ui.button(label="🌐 Zapnout Web Interface", style=discord.ButtonStyle.success, row=2)
+    async def start_web_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer(ephemeral=True)
+        await self.command_handler.cmd_web(interaction.channel_id, [])
+
 class CommandHandler:
     """Handles Discord bot commands."""
     
     # List of all valid commands for fuzzy matching
     VALID_COMMANDS = [
+        # Basic commands
         "!help", "!status", "!intelligence", "!inteligence", "!restart", "!learn",
         "!memory", "!tools", "!logs", "!stats", "!export", "!ask",
         "!teach", "!search", "!mood", "!goals", "!config", "!monitor", "!ssh", "!cmd", "!live", "!topic",
-        "!documentation", "!docs", "!report"
+        "!documentation", "!docs", "!report", "!web", "!upload", "!debug",
+        "!enable", "!disable",
+        
+        # !web subcommands
+        "!web start", "!web stop", "!web restart",
+        
+        # !ssh subcommands
+        "!ssh start", "!ssh stop", "!ssh status",
+        
+        # !monitor subcommands  
+        "!monitor cpu", "!monitor ram", "!monitor disk", "!monitor network",
+        
+        # !debug subcommands
+        "!debug quick", "!debug deep", "!debug tools", "!debug compile",
+        
+        # !goals subcommands
+        "!goals add", "!goals remove", "!goals clear",
+        
+        # !topic subcommands
+        "!topic add", "!topic remove", "!topic clear", "!topic list",
+        
+        # !learn subcommands
+        "!learn all", "!learn stop", "!learn queue",
+        
+        # !export subcommands
+        "!export history", "!export memory", "!export stats", "!export all",
+        
+        # !live subcommands
+        "!live logs",
+        
+        # !memory subcommands
+        "!memory dump"
     ]
     
     def __init__(self, agent):
@@ -70,7 +356,9 @@ class CommandHandler:
         self.queue = asyncio.Queue()
         self.worker_task = None
         self.is_running = False
+        self.is_running = False
         self.last_user_command = None # Track last command for reporting
+        self.global_interaction_enabled = True # Control global interaction (admin only override)
 
     def start(self):
         """Start the command processing worker."""
@@ -106,6 +394,11 @@ class CommandHandler:
     async def handle_command(self, msg: dict):
         """Enqueue a command for processing."""
         q_size = self.queue.qsize()
+        channel_id = msg.get('channel_id')
+        
+        # Send thinking indicator
+        if channel_id:
+            await self.agent.discord.send_message(channel_id, "🤔 Thinking...")
         
         # Add to queue
         await self.queue.put(msg)
@@ -123,6 +416,13 @@ class CommandHandler:
         author = msg['author']
         author_id = msg.get('author_id', 0)
         
+        # Check global interaction lock
+        if not self.global_interaction_enabled:
+            # Allow admins to bypass
+            if author_id not in config_settings.ADMIN_USER_IDS:
+                logger.info(f"Ignoring command from {author} (Interaction Disabled)")
+                return
+
         logger.info(f"Executing command from {author} ({author_id}): {content}")
         
         # Track command for reporting (unless it's !report itself)
@@ -143,25 +443,52 @@ class CommandHandler:
         args = parts[1:] if len(parts) > 1 else []
         
         # Try fuzzy matching if command not recognized
+        # First try matching the full command with first argument (for subcommands)
+        full_command = f"{original_command} {args[0]}" if args else original_command
         command = original_command
-        if command not in self.VALID_COMMANDS:
-            # Find closest match
+        
+        # Check if full command with subcommand matches
+        if full_command in self.VALID_COMMANDS:
+            # Found exact match for command + subcommand
+            command = original_command
+            # Keep args as is
+        elif command not in self.VALID_COMMANDS:
+            # Try fuzzy matching on full command first, then fallback to base command
             closest_match = None
             min_distance = float('inf')
             
+            # Try matching full command with subcommand
             for valid_cmd in self.VALID_COMMANDS:
-                distance = levenshtein_distance(command, valid_cmd)
-                # Only auto-correct if distance is small (1-2 characters different)
-                if distance < min_distance and distance <= 2:
+                distance = levenshtein_distance(full_command, valid_cmd)
+                # Use configurable threshold for subcommands
+                if distance < min_distance and distance <= config_settings.FUZZY_MATCH_DISTANCE_SUBCOMMANDS:
                     min_distance = distance
                     closest_match = valid_cmd
             
+            # If no good match for full command, try just the base command
+            if not closest_match or min_distance > config_settings.FUZZY_MATCH_DISTANCE_BASE_COMMANDS:
+                for valid_cmd in self.VALID_COMMANDS:
+                    # Only check base commands (without spaces)
+                    if ' ' not in valid_cmd:
+                        distance = levenshtein_distance(command, valid_cmd)
+                        # Use configurable threshold for base commands
+                        if distance < min_distance and distance <= config_settings.FUZZY_MATCH_DISTANCE_BASE_COMMANDS:
+                            min_distance = distance
+                            closest_match = valid_cmd
+            
             if closest_match:
                 # Auto-correct the command
-                logger.info(f"Auto-correcting '{original_command}' → '{closest_match}' (distance: {min_distance})")
+                logger.info(f"Auto-correcting '{full_command if ' ' in closest_match else original_command}' → '{closest_match}' (distance: {min_distance})")
                 await self.agent.discord.send_message(channel_id, 
-                    f"💊 Did you mean `{closest_match}`? (auto-correcting '{original_command}')")
-                command = closest_match
+                    f"💊 Did you mean `{closest_match}`? (auto-correcting '{full_command if ' ' in closest_match else original_command}')")
+                
+                # If closest match has subcommand, split it
+                if ' ' in closest_match:
+                    match_parts = closest_match.split(' ', 1)
+                    command = match_parts[0]
+                    args = [match_parts[1]] + args[1:] if len(args) > 1 else [match_parts[1]]
+                else:
+                    command = closest_match
         
         # Route to appropriate handler
         if command == "!help":
@@ -214,22 +541,416 @@ class CommandHandler:
             await self.cmd_report(channel_id, author_id)
         elif command == "!web":
             await self.cmd_web(channel_id, args)
+        elif command == "!upload":
+            await self.cmd_upload(channel_id, author_id)
+        elif command == "!disable":
+            await self.cmd_disable(channel_id, author_id)
+        elif command == "!enable":
+            await self.cmd_enable(channel_id, author_id)
         else:
             await self.agent.discord.send_message(channel_id, f"❓ Unknown command: {command}. Use `!help` for available commands.")
     
     async def cmd_web(self, channel_id: int, args: list):
-        """Start or retrieve the web interface URL."""
-        await self.agent.discord.send_message(channel_id, "🌐 Starting web tunnel... please wait.")
+        """Start, stop, or restart the web interface. Usage: !web [start|stop|restart]"""
+        import discord
+        
+        # Parse subcommand
+        subcommand = args[0].lower() if args else "start"
+        
+        if subcommand not in ["start", "stop", "restart"]:
+            await self.agent.discord.send_message(
+                channel_id,
+                "❓ **Usage:** `!web [start|stop|restart]`\n\n"
+                "- **start** - Spustit web interface (výchozí)\n"
+                "- **stop** - Zastavit web interface a ngrok tunel\n"
+                "- **restart** - Restartovat web interface"
+            )
+            return
+        
+        # Handle stop
+        if subcommand == "stop":
+            await self.agent.discord.send_message(channel_id, "🛑 Stopping web interface...")
+            self.agent.web_server.stop()
+            await self.agent.discord.send_message(
+                channel_id,
+                "✅ **Web Interface Stopped**\n\nNgrok tunel byl ukončen."
+            )
+            return
+        
+        # Handle restart
+        if subcommand == "restart":
+            await self.agent.discord.send_message(channel_id, "🔄 Restarting web interface...")
+            # Use gentle stop to preserve SSH tunnel if possible
+            self.agent.web_server.disconnect_web_tunnel()
+            
+            # Reload module to pick up code changes
+            try:
+                import importlib
+                import agent.web_interface
+                importlib.reload(agent.web_interface)
+                self.agent.web_server = agent.web_interface.WebServer(self.agent)
+            except Exception as e:
+                logger.error(f"Failed to reload web interface module: {e}")
+                await self.agent.discord.send_message(channel_id, f"⚠️ Failed to reload module: {e}")
+
+            import asyncio
+            await asyncio.sleep(2)  # Short wait as we preserve ngrok process
+            # Fall through to start
+        
+        # Handle start (or continue from restart)
+        # Check if there's already a tunnel running
+        existing_url = None
+        try:
+            from pyngrok import ngrok
+            tunnels = ngrok.get_tunnels()
+            for t in tunnels:
+                if t.config['addr'].endswith(str(self.agent.web_server.port)):
+                    existing_url = t.public_url
+                    break
+        except Exception:
+            pass  # Ignore errors, will try to create new tunnel
+        
+        if existing_url:
+            await self.agent.discord.send_message(channel_id, "🔍 Found existing web tunnel...")
+        else:
+            await self.agent.discord.send_message(channel_id, "🌐 Starting web tunnel... please wait.")
         
         url = self.agent.web_server.start_ngrok()
         
         if url:
-            await self.agent.discord.send_message(channel_id, f"✅ **Web Interface Online!**\n\nDashboard: {url}\nDocumentation: {url}/docs")
+            # Create view with link buttons for dashboard and docs
+            view = discord.ui.View(timeout=None)
+            
+            # Add link buttons using Button constructor (not decorator)
+            dashboard_button = discord.ui.Button(
+                label="🏠 Dashboard",
+                style=discord.ButtonStyle.link,
+                url=url
+            )
+            docs_button = discord.ui.Button(
+                label="📚 Documentation",
+                style=discord.ButtonStyle.link,
+                url=f"{url}/docs"
+            )
+            
+            view.add_item(dashboard_button)
+            view.add_item(docs_button)
+            
+            # Different message based on whether tunnel existed or was created
+            if existing_url:
+                status_msg = "🔗 **Web Interface Connected!**"
+            elif subcommand == "restart":
+                status_msg = "🔄 **Web Interface Restarted!**"
+            else:
+                status_msg = "✅ **Web Interface Online!**"
+                
+            await self.agent.discord.send_message(
+                channel_id, 
+                f"{status_msg}\n\nKlikněte na tlačítko pro otevření:",
+                view=view
+            )
         else:
             await self.agent.discord.send_message(channel_id, "❌ Failed to start web tunnel. Check logs.")
 
+    async def cmd_upload(self, channel_id: int, author_id: int):
+        """Upload new release to GitHub (Admin only)."""
+        # Admin check
+        if author_id not in config_settings.ADMIN_USER_IDS:
+            await self.agent.discord.send_message(channel_id, "⛔ **Access Denied.** Only admins can upload releases to GitHub.")
+            return
+        
+        await self.agent.discord.send_message(channel_id, "🚀 **GitHub Release Upload**\nChecking rate limit...")
+        
+        try:
+            # Import GitHub release module
+            from scripts.github_release import create_release, check_rate_limit
+            import config_secrets
+            
+            github_token = config_secrets.GITHUB_TOKEN
+            repo_name = "davca2848123/AI_agent"
+            
+            # Check rate limit
+            allowed, time_remaining = check_rate_limit(min_hours=2)
+            
+            if not allowed:
+                hours = int(time_remaining // 3600)
+                minutes = int((time_remaining % 3600) // 60)
+                await self.agent.discord.send_message(
+                    channel_id, 
+                    f"⏳ **Rate Limit Active**\n\n"
+                    f"Uploads are limited to once every 2 hours.\n"
+                    f"⏰ Try again in: **{hours}h {minutes}m**\n\n"
+                    f"_This prevents accidental spam and excessive API usage._"
+                )
+                return
+            
+            # Proceed with upload
+            await self.agent.discord.send_message(channel_id, "📦 Creating release... (this may take ~30s)")
+            
+            # Run in executor to avoid blocking
+            loop = asyncio.get_event_loop()
+            success = await loop.run_in_executor(
+                None,
+                create_release,
+                github_token,
+                repo_name,
+                "main",
+                False,  # force=False
+                2       # min_hours=2
+            )
+            
+            if success:
+                await self.agent.discord.send_message(
+                    channel_id,
+                    "✅ **GitHub Release Created Successfully!**\n\n"
+                    "📍 Check: https://github.com/davca2848123/AI_agent/releases\n"
+                    "⏰ Next upload available in: **2 hours**"
+                )
+            else:
+                await self.agent.discord.send_message(
+                    channel_id,
+                    "❌ **Release Creation Failed**\n\n"
+                    "Check `agent.log` for details."
+                )
+                
+        except ImportError as e:
+            await self.agent.discord.send_message(channel_id, f"❌ **Configuration Error:** Missing config_secrets.py or GITHUB_TOKEN\n{e}")
+        except Exception as e:
+            logger.error(f"!upload command error: {e}", exc_info=True)
+            await self.agent.discord.send_message(channel_id, f"❌ **Error:** {e}")
+
+    async def cmd_disable(self, channel_id: int, author_id: int):
+        """Disable interaction for non-admin users."""
+        if author_id not in config_settings.ADMIN_USER_IDS:
+            await self.agent.discord.send_message(channel_id, "⛔ **Access Denied.** Only admins can disable interaction.")
+            return
+            
+        self.global_interaction_enabled = False
+        await self.agent.discord.send_message(channel_id, "🔒 **Interaction Disabled**\nI will now ignore commands from non-admin users.")
+        logger.warning(f"Global interaction disabled by admin {author_id}")
+
+    async def cmd_enable(self, channel_id: int, author_id: int):
+        """Enable interaction for all users."""
+        if author_id not in config_settings.ADMIN_USER_IDS:
+            await self.agent.discord.send_message(channel_id, "⛔ **Access Denied.** Only admins can enable interaction.")
+            return
+            
+        self.global_interaction_enabled = True
+        await self.agent.discord.send_message(channel_id, "🔓 **Interaction Enabled**\nI am now listening to all users.")
+        logger.info(f"Global interaction enabled by admin {author_id}")
+
+    async def cmd_debug(self, channel_id: int, args: list, author_id: int):
+        """Enhanced debug diagnostics with strict checking (Admin only)."""
+        import config_settings
+        import time
+        import asyncio
+        
+        # Admin check
+        if author_id not in config_settings.ADMIN_USER_IDS:
+            await self.agent.discord.send_message(channel_id, "⛔ **Access Denied.** Only admins can use debug commands.")
+            return
+        
+        # Parse mode
+        mode = args[0].lower() if args else "quick"
+        
+        if mode not in ["quick", "deep", "tools", "compile"]:
+            await self.agent.discord.send_message(
+                channel_id,
+                "❓ **Usage:** `!debug [quick|deep|tools|compile]`\n\n"
+                "- **quick**: Fast health check\n"
+                "- **deep**: Comprehensive diagnostics\n"
+                "- **tools**: Tool validation\n"
+                "- **compile**: Python syntax check"
+            )
+            return
+        
+        await self.agent.discord.send_message(channel_id, f"🔍 Running **{mode}** diagnostics...")
+        
+        results = []
+        
+        # === QUICK MODE ===
+        if mode in ["quick", "deep"]:
+            # 1. LLM Check
+            try:
+                if self.agent.llm and self.agent.llm.llm:
+                    start = time.time()
+                    resp = await self.agent.llm.generate_response("ping", system_prompt="Reply: pong")
+                    latency = (time.time() - start) * 1000
+                    if resp and "pong" in resp.lower():
+                        results.append(f"✅ **LLM**: Online ({latency:.0f}ms)")
+                    else:
+                        results.append(f"⚠️ **LLM**: Responding but unexpected output")
+                else:
+                    results.append("🔴 **LLM**: Not initialized")
+            except Exception as e:
+                results.append(f"❌ **LLM**: Error - {e}")
+            
+            # 2. Discord Check
+            if self.agent.discord and self.agent.discord.client:
+                results.append(f"✅ **Discord**: Connected ({self.agent.discord.client.user.name})")
+            else:
+                results.append("🔴 **Discord**: Not connected")
+            
+            # 3. Database Check
+            try:
+                mem_count = len(self.agent.memory.get_recent_memories(limit=1))
+                results.append(f"✅ **Database**: Accessible ({mem_count}+ memories)")
+            except Exception as e:
+                results.append(f"❌ **Database**: Error - {e}")
+            
+            # 4. Tools Check
+            tool_count = len(self.agent.tools.tools)
+            results.append(f"✅ **Tools**: {tool_count} registered")
+        
+        # === DEEP MODE ===
+        if mode == "deep":
+            # 5. File System Check
+            import os
+            checks = [
+                ("agent.log", os.path.exists("agent.log")),
+                ("config_secrets.py", os.path.exists("config_secrets.py")),
+                ("agent/core.py", os.path.exists("agent/core.py")),
+                ("scripts/", os.path.isdir("scripts"))
+            ]
+            fs_ok = all(c[1] for c in checks)
+            if fs_ok:
+                results.append("✅ **Filesystem**: All critical files present")
+            else:
+                missing = [c[0] for c in checks if not c[1]]
+                results.append(f"⚠️ **Filesystem**: Missing: {', '.join(missing)}")
+            
+            # 6. Network Check
+            import subprocess
+            import platform
+            try:
+                cmd = "ping -c 1 8.8.8.8" if platform.system() != "Windows" else "ping -n 1 8.8.8.8"
+                proc = await asyncio.create_subprocess_shell(
+                    cmd,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE
+                )
+                await proc.communicate()
+                if proc.returncode == 0:
+                    results.append("✅ **Network**: Internet accessible")
+                else:
+                    results.append("⚠️ **Network**: No internet connection")
+            except:
+                results.append("❓ **Network**: Check failed")
+            
+            # 7. Resource Check
+            import psutil
+            cpu = psutil.cpu_percent(interval=1)
+            mem = psutil.virtual_memory()
+            disk = psutil.disk_usage('/')
+            results.append(
+                f"📊 **Resources**:\n"
+                f"  - CPU: {cpu}%\n"
+                f"  - RAM: {mem.percent}% ({mem.available / 1024**3:.1f}GB free)\n"
+                f"  - Disk: {disk.percent}% ({disk.free / 1024**3:.1f}GB free)"
+            )
+        
+        # === TOOLS MODE ===
+        if mode == "tools":
+            results.append("🛠️ **Tool Validation:**\n")
+            for tool_name, tool in self.agent.tools.tools.items():
+                try:
+                    # Basic validation
+                    has_desc = bool(tool.description)
+                    has_func = callable(tool.function)
+                    usage = self.agent.tool_usage_count.get(tool_name, 0)
+                    
+                    status = "✅" if (has_desc and has_func) else "⚠️"
+                    results.append(f"{status} `{tool_name}` - Used {usage}x")
+                except Exception as e:
+                    results.append(f"❌ `{tool_name}` - Error: {e}")
+        
+        # === COMPILE MODE ===
+        if mode == "compile":
+            results.append("🔧 **Python Syntax Check:**\n")
+            files_to_check = [
+                "main.py",
+                "agent/core.py",
+                "agent/commands.py",
+                "agent/tools.py",
+                "agent/llm.py"
+            ]
+            
+            for filepath in files_to_check:
+                try:
+                    with open(filepath, 'r', encoding='utf-8') as f:
+                        code = f.read()
+                    compile(code, filepath, 'exec')
+                    results.append(f"✅ `{filepath}`")
+                except SyntaxError as e:
+                    results.append(f"❌ `{filepath}` - Line {e.lineno}: {e.msg}")
+                except FileNotFoundError:
+                    results.append(f"⚠️ `{filepath}` - Not found")
+                except Exception as e:
+                    results.append(f"❌ `{filepath}` - {e}")
+        
+        # Send results
+        output = "\n".join(results)
+        await self.agent.discord.send_message(
+            channel_id,
+            f"🔍 **Debug Report - {mode.upper()}**\n\n{output}"
+        )
+
+    async def cmd_documentation(self, channel_id: int):
+        """Shows project documentation with interactive buttons."""
+        overview_path = "documentation/OVERVIEW.md"
+        try:
+            if not discord:
+                await self.agent.discord.send_message(channel_id, "❌ Discord module not available.")
+                return
+
+            # Send initial message with embed
+            embed = discord.Embed(
+                title="📚 AI Agent Dokumentace",
+                description="Zde naleznete kompletní dokumentaci k systému. Vyberte sekci pomocí tlačítek níže:",
+                color=0x3498db
+            )
+            embed.add_field(name="📖 Overview", value="Základní přehled systému, architektura a rychlý start.", inline=False)
+            embed.add_field(name="💬 Commands", value="Seznam všech 24 příkazů rozdělený do kategorií.", inline=False)
+            embed.add_field(name="🛠️ Tools", value="Detailní popis všech 14 dostupných nástrojů a jejich použití.", inline=False)
+            embed.add_field(name="🧠 Core", value="Dokumentace jádra systému (Autonomní chování, Paměť, LLM, atd.).", inline=False)
+            embed.add_field(name="📜 Scripts", value="Deployment guide, Batch scripts reference, RPI setup a údržba.", inline=False)
+            embed.add_field(name="⚙️ Configuration", value="Nastavení, secrets, environment variables.", inline=False)
+            embed.add_field(name="🎓 Advanced", value="Pokročilá témata: Fuzzy matching algoritmus, Queue system, atd.", inline=False)
+            embed.add_field(name="🆘 Troubleshooting", value="Řešení problémů: Agent, LLM, Database, Discord, Resources, Network.", inline=False)
+            
+            await self.agent.discord.send_message(channel_id, embed=embed, view=DocumentationView(self))
+
+        except Exception as e:
+            logger.error(f"Documentation error: {e}")
+
+            if os.path.exists(overview_path):
+                try:
+                    with open(overview_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                    if len(content) > 1000:
+                        content = content[:1000] + "\n\n... (pokračování v tlačítkách)"
+                except:
+                    content = "(Chyba při náhledu)"
+            
+            view = DocumentationView(self)
+            await self.agent.discord.send_message(channel_id, f"📚 **AI Agent Dokumentace**\n\n{content}", view=view)
+
+
+
     async def cmd_help(self, channel_id: int):
         """Show all available commands with friendly formatting and categories."""
+        
+        # View for documentation button
+        class HelpView(discord.ui.View):
+            def __init__(self, command_handler):
+                super().__init__(timeout=120)
+                self.command_handler = command_handler
+            
+            @discord.ui.button(label="📜 Dokumentace k příkazům", style=discord.ButtonStyle.primary, emoji="📚")
+            async def docs_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+                # Open CommandsView directly (ephemeral)
+                await interaction.response.send_message("Vyber kategorii příkazů:", view=CommandsView(parent_view=None), ephemeral=True)
+
         help_text = """
 🤖 **AI Agent - Nápověda Příkazů**
 
@@ -248,7 +969,6 @@ class CommandHandler:
 `!logs [počet] [ERROR|WARNING|INFO]` - Zobraz logy
 `!live logs [1m|5m|10m|1h]` - Živý stream
 `!export [history|memory|stats|all]` - Export dat
-`!topic [add|remove|clear] [...]` - Témata (⛔ admin)
 `!docs` - Dokumentace
 
 💬 **INTERACTION**
@@ -260,11 +980,15 @@ class CommandHandler:
 `!debug [quick|deep]` - Diagnostika
 `!ssh [start|stop|status]` - SSH tunel
 `!cmd <příkaz>` - Shell (⚠️ omezené)
+`!web [start|stop|restart]` - Web interface + dokumentace
+`!topic [add|remove|clear] [...]` - Témata
+`!upload` - GitHub release 
 
 💡 Syntaxe: <povinné> [nepovinné|možnosti]
         """
         
-        await self.agent.discord.send_message(channel_id, help_text.strip())
+        view = HelpView(self)
+        await self.agent.discord.send_message(channel_id, help_text.strip(), view=view)
     
     class StatusView(discord.ui.View):
         def __init__(self, command_handler):
@@ -2206,27 +2930,32 @@ _{description}_
                 await self.agent.discord.send_message(channel_id, "ℹ️ SSH tunnel is already running.")
             return
 
+        if not ngrok:
+            if channel_id:
+                await self.agent.discord.send_message(channel_id, "⚠️ Pyngrok not installed.")
+            return
+
         if channel_id:
-            await self.agent.discord.send_message(channel_id, "🔧 Starting ngrok SSH tunnel...")
+            await self.agent.discord.send_message(channel_id, "🔧 Starting ngrok SSH tunnel (via pyngrok)...")
         
         try:
-            # Start ngrok in background
-            self.ngrok_process = await asyncio.create_subprocess_shell(
-                "ngrok tcp 22",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
-            )
+            # Start ngrok tunnel via pyngrok
+            # This uses the same process as the web interface!
+            self.ngrok_process = ngrok.connect(22, "tcp")
             
-            # Register as protected process
-            if self.ngrok_process and hasattr(self.agent, 'resource_manager'):
+            logger.info(f"SSH tunnel started: {self.ngrok_process.public_url}")
+            
+            # Register as protected process (ngrok process itself)
+            # We need to find the actual ngrok process ID
+            # pyngrok manages the process, we can try to get it
+            ngrok_proc = ngrok.get_ngrok_process()
+            if ngrok_proc and hasattr(self.agent, 'resource_manager'):
                 self.agent.resource_manager.register_protected_process(
-                    self.ngrok_process.pid,
+                    ngrok_proc.proc.pid,
                     "ngrok"
                 )
-                logger.info(f"Ngrok process registered as protected (PID: {self.ngrok_process.pid})")
+                logger.info(f"Ngrok process registered as protected (PID: {ngrok_proc.proc.pid})")
             
-            # Wait a bit for ngrok to start and establish connection
-            await asyncio.sleep(3)
         except Exception as e:
             logger.exception("SSH tunnel setup failed")
             if channel_id:
@@ -2234,7 +2963,7 @@ _{description}_
             self.ngrok_process = None
             return
 
-        # Query ngrok API for tunnel info
+        # Notify
         await self._notify_ssh_info(channel_id)
 
 
@@ -2262,57 +2991,53 @@ _{description}_
             await self.command_handler.cmd_ssh(interaction.channel_id, interaction.user.id, ["stop"])
 
     async def _notify_ssh_info(self, channel_id: Optional[int] = None):
-        """Queries ngrok API and sends SSH info."""
-        async with aiohttp.ClientSession() as session:
+        """Queries ngrok and sends SSH info."""
+        public_url = None
+        
+        # 1. Try to get from stored tunnel object
+        if self.ngrok_process and hasattr(self.ngrok_process, 'public_url'):
+            public_url = self.ngrok_process.public_url
+        
+        # 2. Fallback: Query pyngrok for any TCP tunnel
+        if not public_url and ngrok:
             try:
-                async with session.get('http://127.0.0.1:4040/api/tunnels', timeout=3) as resp:
-                    if resp.status == 200:
-                        data = await resp.json()
-                        tunnels = data.get('tunnels', [])
-                        if tunnels:
-                            # Get the first tunnel (should be our TCP tunnel)
-                            public_url = tunnels[0].get('public_url', '')
-                            
-                            # Extract SSH command using regex
-                            ssh_command = self._extract_ssh_command(public_url, username="davca")
-                            
-                            if ssh_command and ssh_command.startswith("ssh"):
-                                # Parse host and port for net use command
-                                # ssh davca@0.tcp.eu.ngrok.io -p 12345
-                                parts = ssh_command.split()
-                                host_part = parts[1] # davca@0.tcp.eu.ngrok.io
-                                port_part = parts[3] # 12345
-                                
-                                host = host_part.split('@')[1]
-                                
-                                # Dynamic drive letter selection (Z -> A, excluding C)
-                                # Uses cmd /c to allow "exit" to break the loop upon success
-                                net_use_command = (
-                                    f'cmd /c "for %i in (Z Y X W V U T S R Q P O N M L K J I H G F E D B A) '
-                                    f'do @if not exist %i:\\ (net use %i: \\\\sshfs\\davca@{host}!{port_part} /user:davca && exit)"'
-                                )
-                                
-                                view = self.SSHView(self, ssh_command, net_use_command)
-                                msg = f"✅ **SSH Tunnel Established!**\n\nClick the buttons below to get connection commands (Admins only)."
-                                
-                                if channel_id:
-                                    await self.agent.discord.send_message(channel_id, msg, view=view)
-                                else:
-                                    # Send to admin DM if no channel specified
-                                    await self.agent.send_admin_dm(f"✅ **SSH Tunnel Established!**\n\n**SSH:**\n```bash\n{ssh_command}\n```\n\n**Net Use:**\n```batch\n{net_use_command}\n```", category="ssh")
-                            else:
-                                if channel_id:
-                                    await self.agent.discord.send_message(channel_id, "⚠️ Tunnel started but failed to parse connection info.")
-                        else:
-                            if channel_id:
-                                await self.agent.discord.send_message(channel_id, "⚠️ Tunnel started but API returned no tunnels. Wait a moment and try again.")
-                    else:
-                        if channel_id:
-                            await self.agent.discord.send_message(channel_id, f"⚠️ Failed to query ngrok API: Status {resp.status}")
+                tunnels = ngrok.get_tunnels()
+                for t in tunnels:
+                    if t.proto == "tcp":
+                        public_url = t.public_url
+                        # Update reference
+                        self.ngrok_process = t
+                        break
             except Exception as e:
-                logger.error(f"Error querying ngrok API: {e}")
-                if channel_id:
-                    await self.agent.discord.send_message(channel_id, f"✖️ Error querying ngrok API: {e}")
+                logger.error(f"Failed to get tunnels from pyngrok: {e}")
+
+        if not public_url:
+            if channel_id:
+                await self.agent.discord.send_message(channel_id, "❌ Could not find active SSH tunnel.")
+            return
+
+        # Parse URL (tcp://0.tcp.ngrok.io:12345 -> host, port)
+        # Remove tcp:// prefix
+        clean_url = public_url.replace("tcp://", "")
+        try:
+            host, port = clean_url.split(":")
+        except ValueError:
+            logger.error(f"Failed to parse public URL: {public_url}")
+            if channel_id:
+                await self.agent.discord.send_message(channel_id, f"❌ Failed to parse URL: {public_url}")
+            return
+        
+        ssh_command = f"ssh davca@{host} -p {port}"
+        net_use_command = f"net use Z: \\\\sshfs.r\\davca@{host}!{port}\\home\\davca\\rpi_ai /user:davca"
+        
+        message = "✅ **SSH Tunnel Established!**\nKlikněte na tlačítka pro zobrazení příkazů."
+        
+        if channel_id:
+            view = self.SSHView(self, ssh_command, net_use_command)
+            await self.agent.discord.send_message(channel_id, message, view=view)
+        else:
+            # Send to admin DM if no channel specified
+            await self.agent.send_admin_dm(message, category="ssh")
 
     async def cmd_ssh(self, channel_id: int, author_id: int, args: list = None):
         
@@ -2331,10 +3056,13 @@ _{description}_
                 return
             
             try:
-                self.ngrok_process.terminate()
-                await asyncio.sleep(1)
-                if self.ngrok_process.returncode is None:
-                    self.ngrok_process.kill()
+                # Disconnect using pyngrok
+                if hasattr(self.ngrok_process, 'public_url'):
+                    ngrok.disconnect(self.ngrok_process.public_url)
+                else:
+                    # Fallback if it's not a proper object (shouldn't happen with new logic)
+                    pass
+                
                 self.ngrok_process = None
                 await self.agent.discord.send_message(channel_id, "✅ SSH tunnel stopped.")
                 logger.info("SSH tunnel stopped")
@@ -2416,6 +3144,14 @@ _{description}_
         if not command:
             await self.agent.discord.send_message(channel_id, "💻 Usage: `!cmd <command>`")
             return
+
+        # Specific check for 'kill' command - Admin only
+        # Note: The whole !cmd is already admin-only, but user requested specific restriction.
+        # If we ever relax !cmd, this ensures kill remains restricted.
+        if 'kill' in command.split():
+             if author_id not in config_settings.ADMIN_USER_IDS:
+                await self.agent.discord.send_message(channel_id, "⛔ **Access Denied.** 'kill' command is restricted to admins.")
+                return
             
         logger.info("Sending executing message...")
         await self.agent.discord.send_message(channel_id, f"💻 Executing: `{command}`...")
@@ -2717,6 +3453,316 @@ _{description}_
             )
     
 
+
+        import time
+        import asyncio
+        
+        # Admin check
+        if author_id not in config_settings.ADMIN_USER_IDS:
+            await self.agent.discord.send_message(channel_id, "⛔ **Access Denied.** Only admins can use debug commands.")
+            return
+        
+        # Parse mode
+        mode = args[0].lower() if args else "quick"
+        
+        if mode not in ["quick", "deep", "tools", "compile"]:
+            await self.agent.discord.send_message(
+                channel_id,
+                "❓ **Usage:** `!debug [quick|deep|tools|compile]`\n\n"
+                "- **quick**: Fast health check\n"
+                "- **deep**: Comprehensive diagnostics\n"
+                "- **tools**: Tool validation\n"
+                "- **compile**: Python syntax check"
+            )
+            return
+        
+        await self.agent.discord.send_message(channel_id, f"🔍 Running **{mode}** diagnostics...")
+        
+        results = []
+        
+        # === QUICK MODE ===
+        if mode in ["quick", "deep"]:
+            # 1. LLM Check
+            try:
+                if self.agent.llm and self.agent.llm.llm:
+                    start = time.time()
+                    resp = await self.agent.llm.generate_response("ping", system_prompt="Reply: pong")
+                    latency = (time.time() - start) * 1000
+                    if resp and "pong" in resp.lower():
+                        results.append(f"✅ **LLM**: Online ({latency:.0f}ms)")
+                    else:
+                        results.append(f"⚠️ **LLM**: Responding but unexpected output")
+                else:
+                    results.append("🔴 **LLM**: Not initialized")
+            except Exception as e:
+                results.append(f"❌ **LLM**: Error - {e}")
+            
+            # 2. Discord Check
+            if self.agent.discord and self.agent.discord.client:
+                results.append(f"✅ **Discord**: Connected ({self.agent.discord.client.user.name})")
+            else:
+                results.append("🔴 **Discord**: Not connected")
+            
+            # 3. Database Check
+            try:
+                mem_count = len(self.agent.memory.get_recent_memories(limit=1))
+                results.append(f"✅ **Database**: Accessible ({mem_count}+ memories)")
+            except Exception as e:
+                results.append(f"❌ **Database**: Error - {e}")
+            
+            # 4. Tools Check
+            tool_count = len(self.agent.tools.tools)
+            results.append(f"✅ **Tools**: {tool_count} registered")
+        
+        # === DEEP MODE ===
+        if mode == "deep":
+            # 5. File System Check
+            import os
+            checks = [
+                ("agent.log", os.path.exists("agent.log")),
+                ("config_secrets.py", os.path.exists("config_secrets.py")),
+                ("agent/core.py", os.path.exists("agent/core.py")),
+                ("scripts/", os.path.isdir("scripts"))
+            ]
+            fs_ok = all(c[1] for c in checks)
+            if fs_ok:
+                results.append("✅ **Filesystem**: All critical files present")
+            else:
+                missing = [c[0] for c in checks if not c[1]]
+                results.append(f"⚠️ **Filesystem**: Missing: {', '.join(missing)}")
+            
+            # 6. Network Check
+            import subprocess
+            import platform
+            try:
+                cmd = "ping -c 1 8.8.8.8" if platform.system() != "Windows" else "ping -n 1 8.8.8.8"
+                proc = await asyncio.create_subprocess_shell(
+                    cmd,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE
+                )
+                await proc.communicate()
+                if proc.returncode == 0:
+                    results.append("✅ **Network**: Internet accessible")
+                else:
+                    results.append("⚠️ **Network**: No internet connection")
+            except:
+                results.append("❓ **Network**: Check failed")
+            
+            # 7. Resource Check
+            import psutil
+            cpu = psutil.cpu_percent(interval=1)
+            mem = psutil.virtual_memory()
+            disk = psutil.disk_usage('/')
+            results.append(
+                f"📊 **Resources**:\n"
+                f"  - CPU: {cpu}%\n"
+                f"  - RAM: {mem.percent}% ({mem.available / 1024**3:.1f}GB free)\n"
+                f"  - Disk: {disk.percent}% ({disk.free / 1024**3:.1f}GB free)"
+            )
+        
+        # === TOOLS MODE ===
+        if mode == "tools":
+            results.append("🛠️ **Tool Validation:**\n")
+            for tool_name, tool in self.agent.tools.tools.items():
+                try:
+                    # Basic validation
+                    has_desc = bool(tool.description)
+                    has_func = callable(tool.function)
+                    usage = self.agent.tool_usage_count.get(tool_name, 0)
+                    
+                    status = "✅" if (has_desc and has_func) else "⚠️"
+                    results.append(f"{status} `{tool_name}` - Used {usage}x")
+                except Exception as e:
+                    results.append(f"❌ `{tool_name}` - Error: {e}")
+        
+        # === COMPILE MODE ===
+        if mode == "compile":
+            results.append("🔧 **Python Syntax Check:**\n")
+            files_to_check = [
+                "main.py",
+                "agent/core.py",
+                "agent/commands.py",
+                "agent/tools.py",
+                "agent/llm.py"
+            ]
+            
+            for filepath in files_to_check:
+                try:
+                    with open(filepath, 'r', encoding='utf-8') as f:
+                        code = f.read()
+                    compile(code, filepath, 'exec')
+                    results.append(f"✅ `{filepath}`")
+                except SyntaxError as e:
+                    results.append(f"❌ `{filepath}` - Line {e.lineno}: {e.msg}")
+                except FileNotFoundError:
+                    results.append(f"⚠️ `{filepath}` - Not found")
+                except Exception as e:
+                    results.append(f"❌ `{filepath}` - {e}")
+        
+        # Send results
+        output = "\n".join(results)
+        await self.agent.discord.send_message(
+            channel_id,
+            f"🔍 **Debug Report - {mode.upper()}**\n\n{output}"
+        )
+
+    async def cmd_debug(self, channel_id: int, args: list, author_id: int):
+        """Enhanced debug diagnostics with strict checking (Admin only)."""
+        import config_settings
+        import time
+        import asyncio
+        
+        # Admin check
+        if author_id not in config_settings.ADMIN_USER_IDS:
+            await self.agent.discord.send_message(channel_id, "⛔ **Access Denied.** Only admins can use debug commands.")
+            return
+        
+        # Parse mode
+        mode = args[0].lower() if args else "quick"
+        
+        if mode not in ["quick", "deep", "tools", "compile"]:
+            await self.agent.discord.send_message(
+                channel_id,
+                "❓ **Usage:** `!debug [quick|deep|tools|compile]`\n\n"
+                "- **quick**: Fast health check\n"
+                "- **deep**: Comprehensive diagnostics\n"
+                "- **tools**: Tool validation\n"
+                "- **compile**: Python syntax check"
+            )
+            return
+        
+        await self.agent.discord.send_message(channel_id, f"🔍 Running **{mode}** diagnostics...")
+        
+        results = []
+        
+        # === QUICK MODE ===
+        if mode in ["quick", "deep"]:
+            # 1. LLM Check
+            try:
+                if self.agent.llm and self.agent.llm.llm:
+                    start = time.time()
+                    resp = await self.agent.llm.generate_response("ping", system_prompt="Reply: pong")
+                    latency = (time.time() - start) * 1000
+                    if resp and "pong" in resp.lower():
+                        results.append(f"✅ **LLM**: Online ({latency:.0f}ms)")
+                    else:
+                        results.append(f"⚠️ **LLM**: Responding but unexpected output")
+                else:
+                    results.append("🔴 **LLM**: Not initialized")
+            except Exception as e:
+                results.append(f"❌ **LLM**: Error - {e}")
+            
+            # 2. Discord Check
+            if self.agent.discord and self.agent.discord.client:
+                results.append(f"✅ **Discord**: Connected ({self.agent.discord.client.user.name})")
+            else:
+                results.append("🔴 **Discord**: Not connected")
+            
+            # 3. Database Check
+            try:
+                mem_count = len(self.agent.memory.get_recent_memories(limit=1))
+                results.append(f"✅ **Database**: Accessible ({mem_count}+ memories)")
+            except Exception as e:
+                results.append(f"❌ **Database**: Error - {e}")
+            
+            # 4. Tools Check
+            tool_count = len(self.agent.tools.tools)
+            results.append(f"✅ **Tools**: {tool_count} registered")
+        
+        # === DEEP MODE ===
+        if mode == "deep":
+            # 5. File System Check
+            import os
+            checks = [
+                ("agent.log", os.path.exists("agent.log")),
+                ("config_secrets.py", os.path.exists("config_secrets.py")),
+                ("agent/core.py", os.path.exists("agent/core.py")),
+                ("scripts/", os.path.isdir("scripts"))
+            ]
+            fs_ok = all(c[1] for c in checks)
+            if fs_ok:
+                results.append("✅ **Filesystem**: All critical files present")
+            else:
+                missing = [c[0] for c in checks if not c[1]]
+                results.append(f"⚠️ **Filesystem**: Missing: {', '.join(missing)}")
+            
+            # 6. Network Check
+            import subprocess
+            import platform
+            try:
+                cmd = "ping -c 1 8.8.8.8" if platform.system() != "Windows" else "ping -n 1 8.8.8.8"
+                proc = await asyncio.create_subprocess_shell(
+                    cmd,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE
+                )
+                await proc.communicate()
+                if proc.returncode == 0:
+                    results.append("✅ **Network**: Internet accessible")
+                else:
+                    results.append("⚠️ **Network**: No internet connection")
+            except:
+                results.append("❓ **Network**: Check failed")
+            
+            # 7. Resource Check
+            import psutil
+            cpu = psutil.cpu_percent(interval=1)
+            mem = psutil.virtual_memory()
+            disk = psutil.disk_usage('/')
+            results.append(
+                f"📊 **Resources**:\n"
+                f"  - CPU: {cpu}%\n"
+                f"  - RAM: {mem.percent}% ({mem.available / 1024**3:.1f}GB free)\n"
+                f"  - Disk: {disk.percent}% ({disk.free / 1024**3:.1f}GB free)"
+            )
+        
+        # === TOOLS MODE ===
+        if mode == "tools":
+            results.append("🛠️ **Tool Validation:**\n")
+            for tool_name, tool in self.agent.tools.tools.items():
+                try:
+                    # Basic validation
+                    has_desc = bool(tool.description)
+                    has_func = callable(tool.function)
+                    usage = self.agent.tool_usage_count.get(tool_name, 0)
+                    
+                    status = "✅" if (has_desc and has_func) else "⚠️"
+                    results.append(f"{status} `{tool_name}` - Used {usage}x")
+                except Exception as e:
+                    results.append(f"❌ `{tool_name}` - Error: {e}")
+        
+        # === COMPILE MODE ===
+        if mode == "compile":
+            results.append("🔧 **Python Syntax Check:**\n")
+            files_to_check = [
+                "main.py",
+                "agent/core.py",
+                "agent/commands.py",
+                "agent/tools.py",
+                "agent/llm.py"
+            ]
+            
+            for filepath in files_to_check:
+                try:
+                    with open(filepath, 'r', encoding='utf-8') as f:
+                        code = f.read()
+                    compile(code, filepath, 'exec')
+                    results.append(f"✅ `{filepath}`")
+                except SyntaxError as e:
+                    results.append(f"❌ `{filepath}` - Line {e.lineno}: {e.msg}")
+                except FileNotFoundError:
+                    results.append(f"⚠️ `{filepath}` - Not found")
+                except Exception as e:
+                    results.append(f"❌ `{filepath}` - {e}")
+        
+        # Send results
+        output = "\n".join(results)
+        await self.agent.discord.send_message(
+            channel_id,
+            f"🔍 **Debug Report - {mode.upper()}**\n\n{output}"
+        )
+
     async def cmd_documentation(self, channel_id: int):
         """Shows project documentation with interactive buttons."""
         overview_path = "documentation/OVERVIEW.md"
@@ -2724,192 +3770,6 @@ _{description}_
             if not discord:
                 await self.agent.discord.send_message(channel_id, "❌ Discord module not available.")
                 return
-
-            # Define View classes locally
-            
-            class CommandsView(discord.ui.View):
-                def __init__(self, parent_view):
-                    super().__init__(timeout=300)
-                    self.parent_view = parent_view
-
-                async def _send_file(self, interaction, path):
-                    try:
-                        if os.path.exists(path):
-                            await interaction.response.send_message(file=discord.File(path), ephemeral=True)
-                        else:
-                            await interaction.response.send_message(f"❌ Soubor {path} nebyl nalezen.", ephemeral=True)
-                    except Exception as e:
-                        await interaction.response.send_message(f"❌ Chyba při odesílání: {e}", ephemeral=True)
-
-                @discord.ui.button(label="📋 Basic", style=discord.ButtonStyle.secondary)
-                async def basic(self, interaction: discord.Interaction, button: discord.ui.Button):
-                    await self._send_file(interaction, "documentation/commands/basic.md")
-
-                @discord.ui.button(label="🎓 Tools & Learning", style=discord.ButtonStyle.secondary)
-                async def tools(self, interaction: discord.Interaction, button: discord.ui.Button):
-                    await self._send_file(interaction, "documentation/commands/tools-learning.md")
-
-                @discord.ui.button(label="💾 Data", style=discord.ButtonStyle.secondary)
-                async def data(self, interaction: discord.Interaction, button: discord.ui.Button):
-                    await self._send_file(interaction, "documentation/commands/data-management.md")
-
-                @discord.ui.button(label="💬 Interaction", style=discord.ButtonStyle.secondary)
-                async def interaction_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
-                    await self._send_file(interaction, "documentation/commands/interaction.md")
-
-                @discord.ui.button(label="⚙️ Admin", style=discord.ButtonStyle.danger)
-                async def admin(self, interaction: discord.Interaction, button: discord.ui.Button):
-                    await self._send_file(interaction, "documentation/commands/admin.md")
-
-            class CoreView(discord.ui.View):
-                def __init__(self, parent_view):
-                    super().__init__(timeout=300)
-                    self.parent_view = parent_view
-
-                async def _send_file(self, interaction, path):
-                    try:
-                        if os.path.exists(path):
-                            await interaction.response.send_message(file=discord.File(path), ephemeral=True)
-                        else:
-                            await interaction.response.send_message(f"❌ Soubor {path} nebyl nalezen.", ephemeral=True)
-                    except Exception as e:
-                        await interaction.response.send_message(f"❌ Chyba při odesílání: {e}", ephemeral=True)
-
-                @discord.ui.button(label="🤖 Autonomous", style=discord.ButtonStyle.secondary)
-                async def autonomous(self, interaction: discord.Interaction, button: discord.ui.Button):
-                    await self._send_file(interaction, "documentation/core/autonomous-behavior.md")
-
-                @discord.ui.button(label="🧠 Memory", style=discord.ButtonStyle.secondary)
-                async def memory(self, interaction: discord.Interaction, button: discord.ui.Button):
-                    await self._send_file(interaction, "documentation/core/memory-system.md")
-
-                @discord.ui.button(label="🗣️ LLM", style=discord.ButtonStyle.secondary)
-                async def llm(self, interaction: discord.Interaction, button: discord.ui.Button):
-                    await self._send_file(interaction, "documentation/core/llm-integration.md")
-
-                @discord.ui.button(label="💻 Resources", style=discord.ButtonStyle.secondary)
-                async def resources(self, interaction: discord.Interaction, button: discord.ui.Button):
-                    await self._send_file(interaction, "documentation/core/resource-manager.md")
-                
-                @discord.ui.button(label="🔌 Discord", style=discord.ButtonStyle.secondary)
-                async def discord_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
-                    await self._send_file(interaction, "documentation/core/discord-client.md")
-
-            class AdvancedView(discord.ui.View):
-                def __init__(self, parent_view):
-                    super().__init__(timeout=300)
-                    self.parent_view = parent_view
-
-                async def _send_file(self, interaction, path):
-                    try:
-                        if os.path.exists(path):
-                            await interaction.response.send_message(file=discord.File(path), ephemeral=True)
-                        else:
-                            await interaction.response.send_message(f"❌ Soubor {path} nebyl nalezen.", ephemeral=True)
-                    except Exception as e:
-                        await interaction.response.send_message(f"❌ Chyba při odesílání: {e}", ephemeral=True)
-
-                @discord.ui.button(label="🔍 Fuzzy Matching", style=discord.ButtonStyle.secondary)
-                async def fuzzy_matching(self, interaction: discord.Interaction, button: discord.ui.Button):
-                    await self._send_file(interaction, "documentation/advanced/fuzzy-matching-algorithm.md")
-
-            class ScriptsView(discord.ui.View):
-                def __init__(self, parent_view):
-                    super().__init__(timeout=300)
-                    self.parent_view = parent_view
-
-                async def _send_file(self, interaction, path):
-                    try:
-                        if os.path.exists(path):
-                            await interaction.response.send_message(file=discord.File(path), ephemeral=True)
-                        else:
-                            await interaction.response.send_message(f"❌ Soubor {path} nebyl nalezen.", ephemeral=True)
-                    except Exception as e:
-                        await interaction.response.send_message(f"❌ Chyba při odesílání: {e}", ephemeral=True)
-
-                @discord.ui.button(label="🚀 Deployment", style=discord.ButtonStyle.secondary)
-                async def deployment(self, interaction: discord.Interaction, button: discord.ui.Button):
-                    await self._send_file(interaction, "documentation/scripts/deployment-guide.md")
-
-                @discord.ui.button(label="📜 Batch Scripts", style=discord.ButtonStyle.secondary)
-                async def batch_scripts(self, interaction: discord.Interaction, button: discord.ui.Button):
-                    await self._send_file(interaction, "documentation/scripts/batch-scripts-reference.md")
-
-            class ConfigurationView(discord.ui.View):
-                def __init__(self, parent_view):
-                    super().__init__(timeout=300)
-                    self.parent_view = parent_view
-
-                async def _send_file(self, interaction, path):
-                    try:
-                        if os.path.exists(path):
-                            await interaction.response.send_message(file=discord.File(path), ephemeral=True)
-                        else:
-                            await interaction.response.send_message(f"❌ Soubor {path} nebyl nalezen.", ephemeral=True)
-                    except Exception as e:
-                        await interaction.response.send_message(f"❌ Chyba při odesílání: {e}", ephemeral=True)
-
-                @discord.ui.button(label="🔧 Settings Reference", style=discord.ButtonStyle.secondary)
-                async def settings(self, interaction: discord.Interaction, button: discord.ui.Button):
-                    await self._send_file(interaction, "documentation/configuration/config_settings_reference.md")
-
-                @discord.ui.button(label="🔐 Secrets Template", style=discord.ButtonStyle.secondary)
-                async def secrets(self, interaction: discord.Interaction, button: discord.ui.Button):
-                    await self._send_file(interaction, "documentation/configuration/config_secrets_template.md")
-
-                @discord.ui.button(label="🌍 Env Variables", style=discord.ButtonStyle.secondary)
-                async def env_vars(self, interaction: discord.Interaction, button: discord.ui.Button):
-                    await self._send_file(interaction, "documentation/configuration/environment_variables.md")
-
-                @discord.ui.button(label="⚙️ Customization Guide", style=discord.ButtonStyle.secondary)
-                async def guide(self, interaction: discord.Interaction, button: discord.ui.Button):
-                    await self._send_file(interaction, "documentation/configuration/customization-guide.md")
-
-            class DocumentationView(discord.ui.View):
-                def __init__(self, command_handler):
-                    super().__init__(timeout=300)
-                    self.command_handler = command_handler
-
-                async def _send_doc(self, interaction, path, title):
-                    try:
-                        if os.path.exists(path):
-                           await interaction.response.send_message(file=discord.File(path), ephemeral=True)
-                        else:
-                            await interaction.response.send_message(f"❌ Soubor {path} nebyl nalezen.", ephemeral=True)
-                    except Exception as e:
-                        await interaction.response.send_message(f"❌ Chyba: {e}", ephemeral=True)
-
-                @discord.ui.button(label="📖 Overview", style=discord.ButtonStyle.primary)
-                async def overview(self, interaction: discord.Interaction, button: discord.ui.Button):
-                    await self._send_doc(interaction, "documentation/OVERVIEW.md", "Overview")
-
-                @discord.ui.button(label="💬 Commands", style=discord.ButtonStyle.secondary)
-                async def commands(self, interaction: discord.Interaction, button: discord.ui.Button):
-                    await interaction.response.send_message("Vyber kategorii příkazů:", view=CommandsView(self), ephemeral=True)
-
-                @discord.ui.button(label="🛠️ Tools", style=discord.ButtonStyle.secondary)
-                async def tools(self, interaction: discord.Interaction, button: discord.ui.Button):
-                    await self._send_doc(interaction, "documentation/tools/all-tools.md", "Tools")
-
-                @discord.ui.button(label="🧠 Core", style=discord.ButtonStyle.secondary)
-                async def core(self, interaction: discord.Interaction, button: discord.ui.Button):
-                    await interaction.response.send_message("Vyber sekci Core:", view=CoreView(self), ephemeral=True)
-
-                @discord.ui.button(label="📜 Scripts", style=discord.ButtonStyle.secondary)
-                async def scripts(self, interaction: discord.Interaction, button: discord.ui.Button):
-                    await interaction.response.send_message("Vyber Scripts dokumentaci:", view=ScriptsView(self), ephemeral=True)
-
-                @discord.ui.button(label="🎓 Advanced", style=discord.ButtonStyle.secondary)
-                async def advanced(self, interaction: discord.Interaction, button: discord.ui.Button):
-                    await interaction.response.send_message("Vyber Advanced téma:", view=AdvancedView(self), ephemeral=True)
-
-                @discord.ui.button(label="🆘 Troubleshooting", style=discord.ButtonStyle.danger)
-                async def troubleshooting(self, interaction: discord.Interaction, button: discord.ui.Button):
-                    await self._send_doc(interaction, "documentation/troubleshooting.md", "Troubleshooting")
-
-                @discord.ui.button(label="⚙️ Configuration", style=discord.ButtonStyle.secondary)
-                async def configuration(self, interaction: discord.Interaction, button: discord.ui.Button):
-                    await interaction.response.send_message("Vyber Configuration dokumentaci:", view=ConfigurationView(self), ephemeral=True)
 
             # Send initial message with embed
             embed = discord.Embed(

@@ -1,20 +1,31 @@
 # 🔧 config_settings.py Reference
 
-> Detailní popis všech konfiguračních možností v souboru `config_settings.py`.
+> **Navigace:** [📂 Dokumentace](../README.md) | [⚙️ Konfigurace](../README.md#konfigurace) | [config_settings.py Reference](config_settings_reference.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
 
+> Detailní popis všech konfiguračních možností v souboru `config_settings.py`.
+> **Verze:** Alpha
+
+---
+
+<a name="umístění"></a>
 ## 📂 Umístění
 Soubor se nachází v kořenovém adresáři projektu: `config_settings.py`
 
 ---
 
+<a name="core-settings"></a>
+
+<a name="core-settings-základní-nastavení"></a>
 ## 🔧 Core Settings (Základní Nastavení)
 
+<a name="admin_user_ids"></a>
 ### `ADMIN_USER_IDS`
 Seznam Discord ID uživatelů, kteří mají administrátorská práva (přístup k `!cmd`, `!restart`, `!debug` atd.).
 ```python
 ADMIN_USER_IDS = [512658574875557889]
 ```
 
+<a name="model_cache_dir"></a>
 ### `MODEL_CACHE_DIR`
 Adresář pro ukládání stažených AI modelů (HuggingFace cache).
 ```python
@@ -23,8 +34,12 @@ MODEL_CACHE_DIR = "./models/"
 
 ---
 
+<a name="location-settings"></a>
+
+<a name="location-settings-lokace"></a>
 ## 🌍 Location Settings (Lokace)
 
+<a name="default_location"></a>
 ### `DEFAULT_LOCATION`
 Výchozí lokace pro nástroje jako počasí (`WeatherTool`) nebo čas (`TimeTool`), pokud uživatel nespecifikuje jinak.
 ```python
@@ -33,6 +48,9 @@ DEFAULT_LOCATION = "Frýdek-Místek"
 
 ---
 
+<a name="resource-management"></a>
+
+<a name="resource-management-správa-zdroju"></a>
 ## ⚡ Resource Management (Správa Zdroju)
 
 Nastavení prahových hodnot pro 4-úrovňový systém správy paměti (RAM).
@@ -49,6 +67,7 @@ RESOURCE_TIER_2_THRESHOLD = 90
 RESOURCE_TIER_3_THRESHOLD = 95
 ```
 
+<a name="dynamic-swap"></a>
 ### Dynamic SWAP
 Nastavení pro automatické zvětšování SWAP paměti na Raspberry Pi.
 ```python
@@ -57,6 +76,7 @@ SWAP_MIN_SIZE_GB = 2        # Minimální velikost
 SWAP_MAX_SIZE_GB = 8        # Maximální velikost při zátěži
 ```
 
+<a name="llm-resource-adaptation"></a>
 ### LLM Resource Adaptation
 Dynamická změna velikosti kontextového okna (tokenů) podle zatížení systému.
 ```python
@@ -68,16 +88,21 @@ LLM_CONTEXT_TIER3 = 1024    # Při Tier 3 (95% RAM)
 
 ---
 
+<a name="boredom-system"></a>
+
+<a name="boredom-system-nuda"></a>
 ## 🥱 Boredom System (Nuda)
 
 Nastavení autonomního chování agenta, když s ním nikdo neinteraguje.
 
+<a name="boredom_interval"></a>
 ### `BOREDOM_INTERVAL`
 Čas v sekundách mezi kontrolami "nudy". Pokud nikdo nepíše, agent se po této době může sám ozvat nebo něco udělat.
 ```python
 BOREDOM_INTERVAL = 300  # 5 minut
 ```
 
+<a name="topics_file"></a>
 ### `TOPICS_FILE`
 Soubor s tématy, o kterých agent přemýšlí nebo mluví, když se nudí.
 ```python
@@ -86,6 +111,9 @@ TOPICS_FILE = "boredom_topics.json"
 
 ---
 
+<a name="memory-scoring-system"></a>
+
+<a name="memory-scoring-system-paměť"></a>
 ## 🧠 Memory Scoring System (Paměť)
 
 Konfigurace pro ukládání vzpomínek do dlouhodobé paměti. Určuje, co je "důležité".
@@ -106,11 +134,20 @@ Konfigurace pro ukládání vzpomínek do dlouhodobé paměti. Určuje, co je "d
 
 ---
 
+<a name="security"></a>
+
+<a name="security-bezpečnost"></a>
 ## 🔒 Security (Bezpečnost)
 
+<a name="ip_sanitization_enabled"></a>
 ### `IP_SANITIZATION_ENABLED`
 Globální přepínač pro maskování IP adres v logách a Discord zprávách.
 ```python
 IP_SANITIZATION_ENABLED = True
 ```
 Pokud je `True`, všechny IPv4 adresy (např. `192.168.1.20`) budou nahrazeny za `[IP_REDACTED]`.
+
+---
+Poslední aktualizace: 2025-12-04  
+Verze: Alpha  
+Tip: Použij Ctrl+F pro vyhledávání

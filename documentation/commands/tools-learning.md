@@ -1,23 +1,33 @@
 # Nástroje a Učení
 
-> Příkazy pro práci s nástroji, učení a interakci s AI
+> **Navigace:** [📂 Dokumentace](../README.md) | [💬 Příkazy](../README.md#commands-příkazy) | [Nástroje a učení](tools-learning.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
 
+> Příkazy pro práci s nástroji, učení a interakci s AI.
+> **Verze:** Alpha
+
+---
+
+<a name="přehled"></a>
 ## 📋 Přehled
 
 Tyto příkazy umožňují agentovi učit se používat nástroje, klást otázky AI a učit AI nové věci.
 
 ---
 
+<a name="tools"></a>
 ## `!tools`
 
+<a name="popis"></a>
 ### 📋 Popis
 Zobrazí seznam všech dostupných nástrojů s informacemi o jejich použití.
 
+<a name="použití"></a>
 ### ⚙️ Použití
 ```
 !tools
 ```
 
+<a name="co-zobrazuje"></a>
 ### 💡 Co zobrazuje
 
 Pro každý nástroj:
@@ -26,6 +36,7 @@ Pro každý nástroj:
 - **Poslední použití** - Datum a čas (pokud byl použit)
 - **Popis** - Co nástroj dělá
 
+<a name="příklad"></a>
 ### 📝 Příklad
 ```
 User: !tools
@@ -51,23 +62,28 @@ Bot: 🛠️ **Available Tools:**
   _Execute Python code safely_
 ```
 
+<a name="poznámky"></a>
 ### ⚠️ Poznámky
 - "Learned" znamená že nástroj byl alespoň jednou použit
 - Timestamp je ve formátu `YYYY-MM-DD HH:MM`
 - Statistiky se ukládají do `tool_stats.json`
 
+<a name="související"></a>
 ### 🔗 Související
 - [`!learn`](#learn) - Naučit se nástroj
 - [`!stats`](basic.md#stats) - Zobraz top 5 nástrojů
-- [Tool Implementations](../tools/) - Detaily o jednotlivých nástrojích
+- [Tool Implementations](../tools/all-tools.md) - Detaily o jednotlivých nástrojích
 
 ---
 
+<a name="learn"></a>
 ## `!learn`
 
+<a name="popis"></a>
 ### 📋 Popis
 Přinutí agenta naučit se používat nástroj(e). Agent vyzkouší nástroj a uloží si zkušenost.
 
+<a name="použití"></a>
 ### ⚙️ Použití
 
 **Jednorázové učení:**
@@ -90,6 +106,7 @@ Přinutí agenta naučit se používat nástroj(e). Agent vyzkouší nástroj a 
 !learn stop
 ```
 
+<a name="parametry"></a>
 ### 🔧 Parametry
 
 | Parametr | Popis | Příklad |
@@ -99,6 +116,7 @@ Přinutí agenta naučit se používat nástroj(e). Agent vyzkouší nástroj a 
 | `all` | Naučit se všechny nástroje postupně | `!learn all` |
 | `stop` | Zastavit probíhající učení | `!learn stop` |
 
+<a name="jak-to-funguje"></a>
 ### 💡 Jak to funguje
 
 **Jednorázové učení:**
@@ -114,6 +132,7 @@ agent.is_learning_mode = True
 agent.boredom_score = 1.0
 ```
 
+<a name="příklady"></a>
 ### 📝 Příklady
 
 **Jednorázové učení:**
@@ -156,28 +175,33 @@ Bot: 🛑 **Learning Session Stopped.**
      Resuming normal autonomous behavior.
 ```
 
+<a name="poznámky"></a>
 ### ⚠️ Poznámky
 - Learning mode nastaví `agent.is_learning_mode = True`
 - Během učení agent postupně zpracovává `learning_queue`
 - Partial match funguje (např. `!learn web` najde `web_tool`)
 - Po dokončení učení se režim automaticky vrátí na normální
 
+<a name="související"></a>
 ### 🔗 Související
-- [Learning Mode](../advanced/learning-mode.md) - Jak learning mode funguje
-- [Autonomous Behavior](../core/autonomous-behavior.md) - Jak agent rozhoduje
+- [📖 Autonomous Behavior](../core/autonomous-behavior.md) - Jak agent rozhoduje
 
 ---
 
+<a name="ask"></a>
 ## `!ask`
 
+<a name="popis"></a>
 ### 📋 Popis
 Zeptej se AI na otázku. Agent použije vhodné nástroje k nalezení odpovědi.
 
+<a name="použití"></a>
 ### ⚙️ Použití
 ```
 !ask <otázka>
 ```
 
+<a name="podporované-typy-otázek"></a>
 ### 🔧 Podporované typy otázek
 
 **Počasí:**
@@ -209,6 +233,7 @@ Zeptej se AI na otázku. Agent použije vhodné nástroje k nalezení odpovědi.
 !ask explain quantum physics
 ```
 
+<a name="jak-to-funguje"></a>
 ### 💡 Jak to funguje
 
 1. **Detekce typu otázky** - Rozpozná weather, math, time queries
@@ -216,6 +241,7 @@ Zeptej se AI na otázku. Agent použije vhodné nástroje k nalezení odpovědi.
 3. **Spuštění nástroje** - Zavolá `tool.execute()` s parametry
 4. **Formulace odpovědi** - LLM vytvoří odpověď z výsledku
 
+<a name="příklady"></a>
 ### 📝 Příklady
 
 **Počasí:**
@@ -242,6 +268,7 @@ Bot: [uses web_tool to search]
      Python was created by Guido van Rossum and first released in 1991...
 ```
 
+<a name="implementační-detaily"></a>
 ### 🔧 Implementační detaily
 
 **Tool Selection Prompt:**
@@ -264,35 +291,42 @@ if any(kw in question.lower() for kw in weather_keywords):
     # Extract location and use weather_tool
 ```
 
+<a name="poznámky"></a>
 ### ⚠️ Poznámky
 - LLM musí být dostupný (!status zkontroluje)
 - Pokud je otázka příliš složitá, může selhat
 - Agent si zapamatuje odpověď do memory
 - Tool selection závisí na kvalitě LLM
 
+<a name="související"></a>
 ### 🔗 Související
-- [Tools](../tools/) - Dostupné nástroje
-- [LLM Integration](../core/llm-integration.md) - Jak LLM funguje
+- [📖 Tools](../tools/all-tools.md) - Dostupné nástroje
+- [📖 LLM Integration](../core/llm-integration.md) - Jak LLM funguje
 - [`!search`](#search) - Specificky vyhledávání
 
 ---
 
+<a name="teach"></a>
 ## `!teach`
 
+<a name="popis"></a>
 ### 📋 Popis
 Nauč agenta novou informaci, kterou si zapamatuje.
 
+<a name="použití"></a>
 ### ⚙️ Použití
 ```
 !teach <informace>
 ```
 
+<a name="jak-to-funguje"></a>
 ### 💡 Jak to funguje
 
 1. **Přijme informaci** - Text od uživatele
 2. **Uloží do paměti** - Jako `user_teaching` type
 3. **Potvrdí** - Vrátí potvrzení
 
+<a name="příklady"></a>
 ### 📝 Příklady
 
 ```
@@ -307,6 +341,7 @@ User: !teach My favorite color is blue
 Bot: ✅ Got it! I've learned: "My favorite color is blue"
 ```
 
+<a name="implementace"></a>
 ### 🔧 Implementace
 
 ```python
@@ -333,6 +368,7 @@ if metadata_type == "user_teaching":
     # Save directly to database
 ```
 
+<a name="scoring-bypass"></a>
 ### 🔓 Scoring Bypass
 
 Zatímco normální vzpomínky musí projít [scoring systémem](../core/memory-system.md#advanced-scoring-system), `!teach` příkaz má **garantované uložení**:
@@ -346,34 +382,41 @@ Zatímco normální vzpomínky musí projít [scoring systémem](../core/memory-
 
 **Důvod:** Uživatelské učení je vždy cenné a nesmí být odmítnuto kvůli nízkému skóre.
 
+<a name="poznámky"></a>
 ### ⚠️ Poznámky
 - **Informace se VŽDY uloží** - Není filtrováno scoring systémem
 - Agent může použít tuto informaci později v konverzaci
 - Paměť je prohledávatelná pomocí FTS5
 - Každé `!teach` zvýší `successful_learnings` counter
 
+<a name="související"></a>
 ### 🔗 Související
-- [Memory System](../core/memory-system.md) - Jak paměť funguje
+- [📖 Memory System](../core/memory-system.md) - Jak paměť funguje
 - [`!memory`](data-management.md#memory) - Zobraz statistiky paměti
 
 ---
 
+<a name="search"></a>
 ## `!search`
 
+<a name="popis"></a>
 ### 📋 Popis
 Přikaž agentovi vyhledat informace na internetu.
 
+<a name="použití"></a>
 ### ⚙️ Použití
 ```
 !search <dotaz>
 ```
 
+<a name="jak-to-funguje"></a>
 ### 💡 Jak to funguje
 
 1. **Vytvoří autonomní akci** - „Research: {query}"
 2. **Agent sám vyhledá** - Použije web_tool
 3. **Reportuje výsledky** - Pošle do Discord kanálu
 
+<a name="příklady"></a>
 ### 📝 Příklady
 
 ```
@@ -391,6 +434,7 @@ Bot: 🔍 Hledám: škola třinec
      [Results from DuckDuckGo]
 ```
 
+<a name="implementace"></a>
 ### 🔧 Implementace
 
 ```python
@@ -399,18 +443,21 @@ action = f"Research: {query}"
 agent.execute_action(action)
 ```
 
+<a name="poznámky"></a>
 ### ⚠️ Poznámky
 - Vyžaduje funkční internet
 - používá DuckDuckGo search
 - Výsledky závisí na kvalitě vyhledávače
 - Agent si zapamatuje nalezené informace
 
+<a name="související"></a>
 ### 🔗 Související
-- [WebTool](../tools/web-tool.md) - Detaily web_tool
+- [📖 WebTool](../tools/all-tools.md#webtool) - Detaily web_tool
 - [`!ask`](#ask) - Pro interaktivní otázky
 
 ---
 
+<a name="souhrn"></a>
 ## 📊 Souhrn
 
 | Příkaz | Účel | Příklad |
@@ -424,7 +471,6 @@ agent.execute_action(action)
 | `!search` | Vyhledej | `!search AI news` |
 
 ---
-
-**Poslední aktualizace:** 2025-12-03  
-**Platné pro verzi:** 1.1.0  
-**Změny:** Přidána dokumentace scoring bypass pro !teach
+Poslední aktualizace: 2025-12-04  
+Verze: Alpha  
+Tip: Použij Ctrl+F pro vyhledávání

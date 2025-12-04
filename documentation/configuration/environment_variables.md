@@ -1,9 +1,19 @@
 # 🌍 Environment Variables
 
+> **Navigace:** [📂 Dokumentace](../README.md) | [⚙️ Konfigurace](../README.md#konfigurace) | [Environment Variables](environment_variables.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
+
 > Možnosti konfigurace pomocí proměnných prostředí (Environment Variables).
+> **Verze:** Alpha
+
+---
 
 Tyto proměnné mají přednost před nastavením v `config_settings.py`. Jsou užitečné pro Docker, Systemd služby nebo dočasné změny chování.
 
+---
+
+<a name="variable-list"></a>
+
+<a name="seznam-proměnných"></a>
 ## 📋 Seznam Proměnných
 
 | Proměnná | Popis | Příklad |
@@ -14,6 +24,11 @@ Tyto proměnné mají přednost před nastavením v `config_settings.py`. Jsou u
 | `LOG_FILE` | Název souboru s logy | `custom_agent.log` |
 | `RAM_TIER1_THRESHOLD` | Práh pro Tier 1 správu paměti (%) | `80` |
 
+---
+
+<a name="terminal-usage"></a>
+
+<a name="použití-v-terminálu"></a>
 ## 💻 Použití v Terminálu
 
 Můžete nastavit proměnné před spuštěním skriptu:
@@ -28,6 +43,11 @@ $env:LOG_LEVEL="DEBUG"
 python main.py
 ```
 
+---
+
+<a name="systemd-usage"></a>
+
+<a name="použití-v-systemd-service"></a>
 ## ⚙️ Použití v Systemd Service
 
 Pro trvalé nastavení na Raspberry Pi upravte soubor služby:
@@ -46,3 +66,8 @@ Po změně nezapomeňte reloadnout daemona:
 sudo systemctl daemon-reload
 sudo systemctl restart rpi-agent
 ```
+
+---
+Poslední aktualizace: 2025-12-04  
+Verze: Alpha  
+Tip: Použij Ctrl+F pro vyhledávání

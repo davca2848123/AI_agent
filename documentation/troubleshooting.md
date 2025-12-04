@@ -1,7 +1,13 @@
 # 🆘 Troubleshooting Guide
 
-> Kompletní průvodce řešením problémů RPI AI Agenta
+> **Navigace:** [📂 Dokumentace](README.md) | [📄 Přehled (OVERVIEW)](OVERVIEW.md) | [🔍 Index (INDEX)](INDEX.md) | [📋 API Tasklist (SUMMARY)](SUMMARY.md) | [🏗️ Architektura](architecture.md) | [🆘 Troubleshooting](troubleshooting.md) | [🔍 Hledat](INDEX.md#vyhledavani)
 
+> Kompletní průvodce řešením problémů RPI AI Agenta.
+> **Verze:** Alpha
+
+---
+
+<a name="obsah"></a>
 ## 📋 Obsah
 
 1. [Agent se nespustí](#agent-se-nespustí)
@@ -15,6 +21,7 @@
 
 ---
 
+<a name="quick-diagnostic-checklist"></a>
 ## 🚨 Quick Diagnostic Checklist
 
 Před detailním troubleshootingem:
@@ -47,8 +54,10 @@ scripts\rpi_health_check.bat
 
 ---
 
+<a name="agent-se-nespustí"></a>
 ## 🔴 Agent se nespustí
 
+<a name="symptom-service-failed-to-start"></a>
 ### Symptom: Service Failed to Start
 
 **Check:**
@@ -63,6 +72,7 @@ sudo systemctl status rpi-agent.service
    Active: failed (Result: exit-code)
 ```
 
+<a name="solution-1-check-logs"></a>
 ### Solution 1: Check Logs
 
 ```bash
@@ -75,6 +85,7 @@ sudo journalctl -u rpi-agent.service -n 100 --no-pager
 # - "PermissionError" → Wrong file permissions
 ```
 
+<a name="solution-2-missing-dependencies"></a>
 ### Solution 2: Missing Dependencies
 
 ```bash
@@ -93,6 +104,7 @@ python3 -c "from llama_cpp import Llama; print('OK')"
 scripts\rpi_rebuild_python.bat
 ```
 
+<a name="solution-3-config-issues"></a>
 ### Solution 3: Config Issues
 
 **Check config files exist:**
@@ -115,6 +127,7 @@ DISCORD_BOT_TOKEN = "YOUR_TOKEN_HERE"  # Must start with "MT..."
 ADMIN_USER_IDS = [123456789012345678]  # Your Discord user ID
 ```
 
+<a name="solution-4-restart-service"></a>
 ### Solution 4: Restart Service
 
 ```bash
@@ -128,6 +141,7 @@ sudo systemctl restart rpi-agent.service
 sudo systemctl status rpi-agent.service
 ```
 
+<a name="solution-5-manual-test"></a>
 ### Solution 5: Manual Test
 
 ```bash
@@ -143,8 +157,10 @@ python3 main.py
 
 ---
 
+<a name="llm-problémy"></a>
 ## 🧠 LLM Problémy
 
+<a name="symptom-llm-not-available"></a>
 ### Symptom: "LLM not available"
 
 **Discord shows:**
@@ -154,6 +170,7 @@ python3 main.py
 • LLM: ❌ Offline (LLM not available)
 ```
 
+<a name="solution-1-check-model-file"></a>
 ### Solution 1: Check Model File
 
 ```bash
@@ -176,6 +193,7 @@ python3 scripts/fix_llm_full.py
 scripts\rpi_fix_llm.bat
 ```
 
+<a name="solution-2-memory-issues"></a>
 ### Solution 2: Memory Issues
 
 **LLM needs ~800 MB RAM:**
@@ -204,6 +222,7 @@ sudo swapon /swapfile
 scripts\rpi_setup_swap.bat
 ```
 
+<a name="solution-3-llm-loading-timeout"></a>
 ### Solution 3: LLM Loading Timeout
 
 **Error in logs:**
@@ -223,6 +242,7 @@ model = Llama(model_path=..., n_ctx=1024, n_threads=2)
 LLM_CONTEXT_NORMAL = 512  # Instead of 1024
 ```
 
+<a name="solution-4-corrupted-model-file"></a>
 ### Solution 4: Corrupted Model File
 
 ```bash
@@ -239,6 +259,7 @@ rm qwen2.5-0.5b-instruct-q4_k_m.gguf
 python3 scripts/fix_llm_full.py
 ```
 
+<a name="solution-5-llama-cpp-python-issue"></a>
 ### Solution 5: llama-cpp-python Issue
 
 ```bash
@@ -249,8 +270,12 @@ pip3 install llama-cpp-python --break-system-packages
 
 ---
 
+<a name="memory--database"></a>
+
+<a name="memory-database"></a>
 ## 💾 Memory & Database
 
+<a name="symptom-database-corruption"></a>
 ### Symptom: Database Corruption
 
 **Errors:**
@@ -259,6 +284,7 @@ sqlite3.DatabaseError: database disk image is malformed
 [ERROR] Database corrupted!
 ```
 
+<a name="solution-1-auto-recovery"></a>
 ### Solution 1: Auto-Recovery
 
 Agent should auto-recover:
@@ -282,6 +308,7 @@ cp backup/agent_memory_2025-12-03.db agent_memory.db
 sudo systemctl restart rpi-agent.service
 ```
 
+<a name="solution-2-database-too-large"></a>
 ### Solution 2: Database Too Large
 
 **Check size:**
@@ -303,6 +330,7 @@ cd ~/rpi_ai/rpi_ai
 python3 scripts/internal/cleanup_memory.py
 ```
 
+<a name="solution-3-fts-index-issues"></a>
 ### Solution 3: FTS Index Issues
 
 **Error:**
@@ -322,6 +350,7 @@ INSERT INTO memories_fts(memories_fts) VALUES('rebuild');
 EOF
 ```
 
+<a name="solution-4-memory-scoring-not-working"></a>
 ### Solution 4: Memory Scoring Not Working
 
 **Symptoms:**
@@ -345,12 +374,15 @@ MEMORY_CONFIG = {
 
 ---
 
+<a name="discord-connection"></a>
 ## 💬 Discord Connection
 
+<a name="symptom-bot-offline"></a>
 ### Symptom: Bot Offline
 
 **Discord shows bot as offline**
 
+<a name="solution-1-check-token"></a>
 ### Solution 1: Check Token
 
 ```python
@@ -363,6 +395,7 @@ client = discord.Client(intents=discord.Intents.default())
 client.run("YOUR_TOKEN")  # Should connect or show error
 ```
 
+<a name="solution-2-check-intents"></a>
 ### Solution 2: Check Intents
 
 **Error:**
@@ -384,6 +417,7 @@ discord.errors.PrivilegedIntentsRequired
 sudo systemctl restart rpi-agent.service
 ```
 
+<a name="solution-3-network-issues"></a>
 ### Solution 3: Network Issues
 
 ```bash
@@ -396,10 +430,12 @@ ping discord.com
 # - Check DNS: ping 8.8.8.8
 ```
 
+<a name="symptom-commands-not-responding"></a>
 ### Symptom: Commands Not Responding
 
 **Bot online but doesn't react to commands**
 
+<a name="solution-1-check-permissions"></a>
 ### Solution 1: Check Permissions
 
 **In Discord:**
@@ -412,6 +448,7 @@ ping discord.com
    - ✅ Embed Links
    - ✅ Attach Files
 
+<a name="solution-2-command-queue-stuck"></a>
 ### Solution 2: Command Queue Stuck
 
 ```bash
@@ -424,12 +461,15 @@ sudo systemctl restart rpi-agent.service
 
 ---
 
+<a name="resource-issues"></a>
 ## 📊 Resource Issues
 
+<a name="symptom-high-cpu-usage"></a>
 ### Symptom: High CPU Usage
 
 **CPU at 100% constantly**
 
+<a name="solution-1-check-process"></a>
 ### Solution 1: Check Process
 
 ```bash
@@ -442,6 +482,7 @@ top -u davca
 # - Check logs for repeating errors
 ```
 
+<a name="solution-2-resource-tier"></a>
 ### Solution 2: Resource Tier
 
 **Agent should auto-adjust:**
@@ -455,10 +496,12 @@ top -u davca
 LLM_CONTEXT_NORMAL = 512  # Lower context = less CPU
 ```
 
+<a name="symptom-high-ram-usage"></a>
 ### Symptom: High RAM Usage
 
 **RAM > 90%**
 
+<a name="solution-1-check-swap"></a>
 ### Solution 1: Check SWAP
 
 ```bash
@@ -474,6 +517,7 @@ free -h
 scripts\rpi_setup_swap.bat
 ```
 
+<a name="solution-2-memory-leaks"></a>
 ### Solution 2: Memory Leaks
 
 ```bash
@@ -485,6 +529,7 @@ watch -n 5 'free -h'
 # - Restart service daily (temporary fix)
 ```
 
+<a name="symptom-disk-full"></a>
 ### Symptom: Disk Full
 
 **Error:**
@@ -492,6 +537,7 @@ watch -n 5 'free -h'
 OSError: [Errno 28] No space left on device
 ```
 
+<a name="solution-1-check-disk"></a>
 ### Solution 1: Check Disk
 
 ```bash
@@ -501,6 +547,7 @@ df -h
 # /dev/root        28G   27G  1.0G  96% /    ← CRITICAL!
 ```
 
+<a name="solution-2-cleanup"></a>
 ### Solution 2: Cleanup
 
 ```bash
@@ -525,8 +572,12 @@ scripts\rpi_cleanup_logs.bat
 
 ---
 
+<a name="network--ssh"></a>
+
+<a name="network-ssh"></a>
 ## 🌐 Network & SSH
 
+<a name="symptom-cant-ssh-to-rpi"></a>
 ### Symptom: Can't SSH to RPI
 
 **Error:**
@@ -534,6 +585,7 @@ scripts\rpi_cleanup_logs.bat
 ssh: connect to host 192.168.1.100 port 22: Connection refused
 ```
 
+<a name="solution-1-check-rpi-is-on"></a>
 ### Solution 1: Check RPI is On
 
 ```bash
@@ -546,6 +598,7 @@ ping 192.168.1.100
 # - Network issue
 ```
 
+<a name="solution-2-find-rpi-ip"></a>
 ### Solution 2: Find RPI IP
 
 ```bash
@@ -555,6 +608,7 @@ nmap -sn 192.168.1.0/24 | grep -B 2 "Raspberry"
 # Or check router admin panel
 ```
 
+<a name="solution-3-ssh-service"></a>
 ### Solution 3: SSH Service
 
 **If RPI accessible but SSH fails:**
@@ -565,10 +619,12 @@ sudo systemctl status ssh
 sudo systemctl start ssh
 ```
 
+<a name="symptom-ngrok-tunnel-issues"></a>
 ### Symptom: ngrok Tunnel Issues
 
 **!ssh start fails**
 
+<a name="solution-1-check-ngrok"></a>
 ### Solution 1: Check ngrok
 
 ```bash
@@ -581,6 +637,7 @@ tar xvfz ngrok-v3-stable-linux-arm64.tgz
 sudo mv ngrok /usr/local/bin/
 ```
 
+<a name="solution-2-auth-token"></a>
 ### Solution 2: Auth Token
 
 ```bash
@@ -588,6 +645,7 @@ sudo mv ngrok /usr/local/bin/
 ngrok config add-authtoken YOUR_TOKEN_HERE
 ```
 
+<a name="solution-3-port-already-in-use"></a>
 ### Solution 3: Port Already in Use
 
 **Error:**
@@ -605,8 +663,10 @@ pkill ngrok
 
 ---
 
+<a name="command-errors"></a>
 ## ⚠️ Command Errors
 
+<a name="symptom-unknown-command"></a>
 ### Symptom: "Unknown command"
 
 **Input:**
@@ -619,6 +679,7 @@ pkill ngrok
 ❓ Unknown command: !myscommand. Use !help for available commands.
 ```
 
+<a name="solution-1-check-fuzzy-matching"></a>
 ### Solution 1: Check Fuzzy Matching
 
 **Distance > 2 won't auto-correct:**
@@ -629,6 +690,7 @@ pkill ngrok
 
 **Use !help to see valid commands**
 
+<a name="symptom-access-denied"></a>
 ### Symptom: "Access Denied"
 
 **Input:**
@@ -641,6 +703,7 @@ pkill ngrok
 ⛔ Access Denied. Only admins can use this command.
 ```
 
+<a name="solution-check-admin-status"></a>
 ### Solution: Check Admin Status
 
 ```python
@@ -654,6 +717,7 @@ ADMIN_USER_IDS = [
 1. Discord Settings → Advanced → Developer Mode: ON
 2. Right-click yourself → Copy ID
 
+<a name="symptom-command-queued-but-never-executes"></a>
 ### Symptom: "Command queued" but never executes
 
 **Output:**
@@ -663,6 +727,7 @@ Command queued (Position: 3)
 [Never executes]
 ```
 
+<a name="solution-queue-stuck"></a>
 ### Solution: Queue Stuck
 
 ```bash
@@ -675,8 +740,10 @@ sudo systemctl restart rpi-agent.service
 
 ---
 
+<a name="diagnostic-tools"></a>
 ## 🔍 Diagnostic Tools
 
+<a name="built-in-commands"></a>
 ### Built-in Commands
 
 ```
@@ -689,6 +756,7 @@ sudo systemctl restart rpi-agent.service
 !monitor 30      # Live resource monitoring
 ```
 
+<a name="system-commands"></a>
 ### System Commands
 
 ```bash
@@ -708,6 +776,7 @@ top              # CPU
 vcgencmd measure_temp  # Temperature (RPI only)
 ```
 
+<a name="windows-scripts"></a>
 ### Windows Scripts
 
 ```batch
@@ -721,6 +790,7 @@ scripts\rpi_restart_service.bat
 scripts\rpi_connect_debug.bat  (if exists)
 ```
 
+<a name="database-diagnostics"></a>
 ### Database Diagnostics
 
 ```bash
@@ -741,8 +811,10 @@ FROM memories;"
 
 ---
 
+<a name="emergency-procedures"></a>
 ## 🚑 Emergency Procedures
 
+<a name="complete-reset"></a>
 ### Complete Reset
 
 **⚠️ WARNING: Deletes all data!**
@@ -769,6 +841,7 @@ python3 -c "from agent.memory import VectorStore; VectorStore()"
 sudo systemctl start rpi-agent.service
 ```
 
+<a name="factory-reset-nuclear-option"></a>
 ### Factory Reset (Nuclear Option)
 
 ```bash
@@ -791,6 +864,7 @@ cd rpi_ai/rpi_ai
 
 ---
 
+<a name="common-error-messages"></a>
 ## 📝 Common Error Messages
 
 | Error | Meaning | Solution |
@@ -805,6 +879,7 @@ cd rpi_ai/rpi_ai
 
 ---
 
+<a name="related-documentation"></a>
 ## 🔗 Related Documentation
 
 - [Deployment Guide](deployment-guide.md) - Setup and configuration
@@ -815,8 +890,10 @@ cd rpi_ai/rpi_ai
 
 ---
 
+<a name="tips-best-practices"></a>
 ## 💡 Tips & Best Practices
 
+<a name="prevent-issues"></a>
 ### Prevent Issues
 
 1. **Regular Monitoring**
@@ -842,6 +919,7 @@ cd rpi_ai/rpi_ai
    !monitor 30    # Check every 30 seconds
    ```
 
+<a name="quick-recovery-steps"></a>
 ### Quick Recovery Steps
 
 1. **Check !status in Discord** - Fastest diagnostic
@@ -850,6 +928,7 @@ cd rpi_ai/rpi_ai
 4. **Try restart** - Fixes 80% of issues
 5. **Restore backup** - If data corruption
 
+<a name="log-analysis"></a>
 ### Log Analysis
 
 ```bash
@@ -865,3 +944,8 @@ sudo journalctl -u rpi-agent.service | grep -i "warning"
 **Last Updated:** 2025-12-03  
 **Version:** 1.1.0  
 **Covers:** All major subsystems and common issues
+
+---
+Poslední aktualizace: 2025-12-04  
+Verze: Alpha  
+Tip: Použij Ctrl+F pro vyhledávání

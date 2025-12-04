@@ -1,23 +1,33 @@
 # Základní Příkazy
 
-> Základní příkazy pro interakci s agentem a zobrazení stavu
+> **Navigace:** [📂 Dokumentace](../README.md) | [💬 Příkazy](../README.md#commands-příkazy) | [Základní příkazy](basic.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
 
+> Základní příkazy pro interakci s agentem a zobrazení stavu.
+> **Verze:** Alpha
+
+---
+
+<a name="přehled"></a>
 ## 📋 Přehled
 
 Základní příkazy poskytují přístup k nápovědě, stavu agenta a statistikám. Tyto příkazy jsou dostupné všem uživatelům.
 
 ---
 
+<a name="help"></a>
 ## `!help`
 
+<a name="popis"></a>
 ### 📋 Popis
 Zobrazí kompletní seznam všech dostupných příkazů s krátkým popisem jejich funkcí.
 
+<a name="použití"></a>
 ### ⚙️ Použití
 ```
 !help
 ```
 
+<a name="výstup"></a>
 ### 💡 Výstup
 Příkaz vrátí strukturovanou zprávu obsahující:
 - **Základní funkce** - `!help`, `!status`, `!stats`, `!intelligence`
@@ -26,6 +36,7 @@ Příkaz vrátí strukturovanou zprávu obsahující:
 - **Interakce** - `!mood`, `!goals`, `!config`
 - **Administrace** - `!restart`, `!monitor`, `!ssh`, `!cmd`, `!debug`
 
+<a name="příklad"></a>
 ### 📝 Příklad
 ```
 User: !help
@@ -41,22 +52,27 @@ Bot: 📋 **Available Commands:**
 ...
 ```
 
+<a name="související"></a>
 ### 🔗 Související
-- [Administrace](admin.md) - Pro admin příkazy
-- [Nástroje a učení](tools-learning.md) - Pro work s nástroji
+- [📖 Administrace](admin.md) - Pro admin příkazy
+- [📖 Nástroje a učení](tools-learning.md) - Pro work s nástroji
 
 ---
 
+<a name="status"></a>
 ## `!status`
 
+<a name="popis"></a>
 ### 📋 Popis
 Zobrazí aktuální stav agenta včetně diagnostických kontrol LLM, internetu a disku. Obsahuje tlačítko pro zobrazení detailních statistik.
 
+<a name="použití"></a>
 ### ⚙️ Použití
 ```
 !status
 ```
 
+<a name="co-zobrazuje"></a>
 ### 💡 Co zobrazuje
 
 **Základní informace:**
@@ -71,6 +87,7 @@ Zobrazí aktuální stav agenta včetně diagnostických kontrol LLM, internetu 
 **Interaktivní prvky:**
 - Tlačítko **"Zobrazit detailní statistiky"** - Spustí `!stats` příkaz
 
+<a name="příklad"></a>
 ### 📝 Příklad
 ```
 User: !status
@@ -88,6 +105,7 @@ Bot: 📊 **Agent Status**
 [Tlačítko: Zobrazit detailní statistiky]
 ```
 
+<a name="implementační-detaily"></a>
 ### 🔧 Implementační detaily
 
 **Kontrola LLM:**
@@ -104,11 +122,13 @@ cmd = "ping -c 1 8.8.8.8"  # Linux
 cmd = "ping -n 1 8.8.8.8"  # Windows
 ```
 
+<a name="poznámky"></a>
 ### ⚠️ Poznámky
 - LLM test může trvat 200-500ms
 - Internet test může selhat pokud je firewall příliš restriktivní
 - Disk Space se měří na root partition (`/`)
 
+<a name="související"></a>
 ### 🔗 Související
 - [`!stats`](#stats) - Detailní statistiky
 - [`!monitor`](admin.md#monitor) - Monitorování zdrojů
@@ -116,16 +136,20 @@ cmd = "ping -n 1 8.8.8.8"  # Windows
 
 ---
 
+<a name="stats"></a>
 ## `!stats`
 
+<a name="popis"></a>
 ### 📋 Popis
 Zobrazí kompletní statistiky agenta včetně uptime, intelligence score, aktivity, paměti a použití nástrojů.
 
+<a name="použití"></a>
 ### ⚙️ Použití
 ```
 !stats
 ```
 
+<a name="co-zobrazuje"></a>
 ### 💡 Co zobrazuje
 
 **1. Systém:**
@@ -151,6 +175,7 @@ Zobrazí kompletní statistiky agenta včetně uptime, intelligence score, aktiv
 **5. Top 5 Nástrojů:**
 - Nejpoužívanější nástroje s počty
 
+<a name="příklad"></a>
 ### 📝 Příklad
 ```
 User: !stats
@@ -185,6 +210,7 @@ Bot: 📊 **Comprehensive Statistics**
 5. weather_tool: 12 uses
 ```
 
+<a name="výpočet-intelligence"></a>
 ### 🔧 Výpočet Intelligence
 
 **Logaritmické škálování pro realistické skóre:**
@@ -203,12 +229,14 @@ learning_score = min(200, math.log(learnings + 1) * 45)
 intelligence = tool_diversity_score + usage_efficiency + learning_score
 ```
 
+<a name="poznámky"></a>
 ### ⚠️ Poznámky
 - Intelligence škála je logaritmická - exponenciální růst se zpomaluje
 - Uptime se načítá z `agent.start_time`
 - Top 5 nástrojů seřazeno podle použití
 - Activity rate = `total_actions / (uptime_seconds / 60)`
 
+<a name="související"></a>
 ### 🔗 Související
 - [`!intelligence`](#intelligence) - Pouze intelligence metriky
 - [`!tools`](tools-learning.md#tools) - Detaily o nástrojích
@@ -216,11 +244,14 @@ intelligence = tool_diversity_score + usage_efficiency + learning_score
 
 ---
 
+<a name="intelligence"></a>
 ## `!intelligence`
 
+<a name="popis"></a>
 ### 📋 Popis
 Zobrazí metriky inteligence agenta s analýzou úrovně.
 
+<a name="použití"></a>
 ### ⚙️ Použití
 ```
 !intelligence
@@ -231,6 +262,7 @@ nebo
 ```
 (oba překlepy fungují)
 
+<a name="co-zobrazuje"></a>
 ### 💡 Co zobrazuje
 
 **Metriky:**
@@ -245,6 +277,7 @@ nebo
 - **50-74:** Moderate - Getting smarter!
 - **75+:** High - Very capable!
 
+<a name="příklad"></a>
 ### 📝 Příklad
 ```
 User: !intelligence
@@ -259,6 +292,7 @@ Bot: 🧠 **Intelligence Metrics:**
 **Analysis:** Moderate - Getting smarter!
 ```
 
+<a name="výpočet-starší-verze"></a>
 ### 🔧 Výpočet (starší verze)
 
 ```python
@@ -270,22 +304,52 @@ intelligence = min(100,
 )
 ```
 
+<a name="poznámky"></a>
 ### ⚠️ Poznámky
 - Tento příkaz používá starší, jednodušší výpočet než `!stats`
 - Pro přesnější metriky použij `!stats`
 - `!inteligence` je alias (automaticky opraveno)
 
+<a name="související"></a>
 ### 🔗 Související
 - [`!stats`](#stats) - Komplexnější statistiky
 - [`!learn`](tools-learning.md#learn) - Učení nových dovedností
 
 ---
 
+<a name="documentation"></a>
+## `!documentation`
+
+<a name="popis"></a>
+### 📋 Popis
+Zobrazí interaktivní dokumentaci přímo v Discordu pomocí tlačítek.
+
+<a name="použití"></a>
+### ⚙️ Použití
+```
+!documentation
+```
+nebo
+```
+!docs
+```
+
+<a name="funkce"></a>
+### 💡 Funkce
+- Zobrazí rozcestník kategorií
+- Tlačítka pro navigaci (Overview, Commands, Tools, Core)
+- Odesílá soubory dokumentace jako přílohy (ephemeral messages)
+
+---
+
+<a name="fuzzy-command-matching"></a>
 ## Fuzzy Command Matching
 
+<a name="popis"></a>
 ### 📋 Popis
 Agent automaticky opravuje překlepy v příkazech pomocí Levenshtein distance algoritmu.
 
+<a name="jak-funguje"></a>
 ### ⚙️ Jak funguje
 
 **1. Porovnání příkazu:**
@@ -298,6 +362,7 @@ distance = levenshtein_distance(user_command, valid_command)
 - Uživatel dostane notifikaci o korekci
 - Příkaz se normálně vykoná
 
+<a name="příklady-auto-korekce"></a>
 ### 💡 Příklady auto-korekce
 
 ```
@@ -308,6 +373,7 @@ distance = levenshtein_distance(user_command, valid_command)
 !inteligence → !intelligence  (alias)
 ```
 
+<a name="příklad-použití"></a>
 ### 📝 Příklad použití
 ```
 User: !statu
@@ -318,6 +384,7 @@ Bot: 💡 Did you mean `!status`? (auto-correcting '!statu')
      ...
 ```
 
+<a name="implementace"></a>
 ### 🔧 Implementace
 
 ```python
@@ -327,6 +394,7 @@ def levenshtein_distance(s1: str, s2: str) -> int:
     ...
 ```
 
+<a name="poznámky"></a>
 ### ⚠️ Poznámky
 - Funguje pro všechny příkazy
 - Threshold je 2 znaky (příliš vzdálené příkazy se neopraví)
@@ -334,11 +402,14 @@ def levenshtein_distance(s1: str, s2: str) -> int:
 
 ---
 
+<a name="command-queue-system"></a>
 ## Command Queue System
 
+<a name="popis"></a>
 ### 📋 Popis
 Všechny příkazy jsou zpracovávány asynchronně přes interní frontu.
 
+<a name="jak-funguje"></a>
 ### ⚙️ Jak funguje
 
 **1. Příkaz přijde:**
@@ -357,11 +428,13 @@ while self.is_running:
 **3. Feedback:**
 - Pokud je fronta neprázdná, uživatel dostane pozici ve frontě
 
+<a name="výhody"></a>
 ### 💡 Výhody
 - Příkazy se nezablokují
 - Můžeš poslat více příkazů najednou
 - Error v jednom příkazu nezastaví ostatní
 
+<a name="příklad"></a>
 ### 📝 Příklad
 ```
 User: !stats
@@ -373,6 +446,7 @@ Bot: [Zpracovává !stats]
      Command queued (Position: 3)
 ```
 
+<a name="poznámky"></a>
 ### ⚠️ Poznámky
 - Všechny příkazy se vykonají v pořadí
 - Pokud příkaz vyhodí error, ostatní pokračují
@@ -380,6 +454,7 @@ Bot: [Zpracovává !stats]
 
 ---
 
+<a name="souhrn"></a>
 ## 📊 Souhrn
 
 | Příkaz | Účel | Výstup |
@@ -388,8 +463,9 @@ Bot: [Zpracovává !stats]
 | `!status` | Stav agenta | Diagnostika + tlačítko stats |
 | `!stats` | Detailní statistiky | Intelligence, aktivita, top nástroje |
 | `!intelligence` | Intelligence metriky | Skóre 0-100 + analýza |
+| `!documentation` | Dokumentace | Interaktivní tlačítka |
 
 ---
-
-**Poslední aktualizace:** 2025-12-02  
-**Platné pro verzi:** 1.0.0
+Poslední aktualizace: 2025-12-04  
+Verze: Alpha  
+Tip: Použij Ctrl+F pro vyhledávání

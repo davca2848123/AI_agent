@@ -12,6 +12,7 @@ numpy
 PyGithub
 flask
 pyngrok
+markdown
 
 # Optional dependencies
 # dulwich  # For git_tool (currently disabled)

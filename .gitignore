@@ -46,6 +46,9 @@ tool_timestamps.json
 agent_state.json
 .restart_flag
 .shutdown_incomplete
+boredom_topics.json
+startup_tracker.json
+.startup_state
 
 # Backups and temporary
 backup/
@@ -66,3 +69,5 @@ test_*.py
 __pycache__
 venv
 .env
+.last_github_upload
+.startup_failures

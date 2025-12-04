@@ -5,7 +5,7 @@ REM This script connects to the Raspberry Pi and restarts the agent service
 REM Load SSH configuration
 call "%~dp0ssh_config.bat"
 
-set SERVICE_NAME=rpi_agent
+set SERVICE_NAME=rpi_ai.service
 
 echo ================================================
 echo   SSH + Restart RPI Agent Service

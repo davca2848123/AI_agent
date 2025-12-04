@@ -9,7 +9,7 @@ import subprocess
 import datetime
 import zipfile
 import logging
-from github import Github
+from github import Github, Auth
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +35,8 @@ BLACKLIST = [
     ".agent_state.json",
     ".restart_flag",
     ".shutdown_incomplete",
+    ".last_github_upload",
+    ".startup_failures",
     "backup/",
     "tests/",
     "workspace/",
@@ -83,10 +85,14 @@ def git_push_changes(branch="main"):
         return False
 
 def get_new_version(repo):
-    """Calculates version based on today's date and existing tags"""
+    """Calculates version based on today's date and existing tags.
+    
+    Format: YY.M.D for first release, YY.M.D_N for subsequent releases
+    Example: 25.12.4, 25.12.4_1, 25.12.4_2
+    """
     now = datetime.datetime.now()
-    # Format without leading zeros (2025.12.3) as requested
-    base_ver = f"{now.year}.{now.month}.{now.day}"
+    # Format: YY.M.D (year without century)
+    base_ver = f"{now.year % 100}.{now.month}.{now.day}"
     
     try:
         tags = list(repo.get_tags())
@@ -107,17 +113,19 @@ def get_new_version(repo):
             has_base = True
             continue
         
-        # Process version like 2025.12.3.1
-        parts = v.replace(base_ver + ".", "")
-        if parts.isdigit():
-            suffix = int(parts)
-            if suffix > max_suffix:
-                max_suffix = suffix
+        # Process version like 25.12.4_1
+        if '_' in v:
+            parts = v.split('_')
+            if len(parts) == 2 and parts[0] == base_ver and parts[1].isdigit():
+                suffix = int(parts[1])
+                if suffix > max_suffix:
+                    max_suffix = suffix
     
     if not has_base and max_suffix == 0:
         return base_ver
     
-    return f"{base_ver}.{max_suffix + 1}"
+    # Return base_ver_N where N = max_suffix + 1
+    return f"{base_ver}_{max_suffix + 1}"
 
 def should_exclude(path):
     """Check if path should be excluded based on blacklist"""
@@ -155,11 +163,80 @@ def zip_folder(output_filename="release.zip"):
     logger.info(f"Created {output_filename}")
     return output_filename
 
-def create_release(github_token, repo_name, branch="main"):
-    """Main function to create GitHub release"""
+def get_last_upload_time():
+    """Get timestamp of last GitHub upload."""
+    upload_file = ".last_github_upload"
+    if os.path.exists(upload_file):
+        try:
+            with open(upload_file, 'r') as f:
+                timestamp = float(f.read().strip())
+                return timestamp
+        except (ValueError, IOError) as e:
+            logger.warning(f"Could not read last upload time: {e}")
+            return None
+    return None
+
+def save_upload_time():
+    """Save current time as last upload timestamp."""
+    upload_file = ".last_github_upload"
     try:
-        # 1. GitHub API login
-        g = Github(github_token)
+        import time
+        with open(upload_file, 'w') as f:
+            f.write(str(time.time()))
+        logger.debug(f"Saved upload timestamp to {upload_file}")
+    except IOError as e:
+        logger.error(f"Could not save upload time: {e}")
+
+def check_rate_limit(min_hours=2):
+    """Check if enough time has passed since last upload.
+    
+    Args:
+        min_hours: Minimum hours between uploads (default 2)
+    
+    Returns:
+        tuple: (allowed: bool, time_until_allowed: float in seconds)
+    """
+    import time
+    last_upload = get_last_upload_time()
+    
+    if last_upload is None:
+        return (True, 0)  # No previous upload, allow
+    
+    elapsed = time.time() - last_upload
+    min_seconds = min_hours * 3600
+    
+    if elapsed >= min_seconds:
+        return (True, 0)
+    else:
+        time_remaining = min_seconds - elapsed
+        return (False, time_remaining)
+
+def create_release(github_token, repo_name, branch="main", force=False, min_hours=2):
+    """Main function to create GitHub release.
+    
+    Args:
+        github_token: GitHub personal access token
+        repo_name: Repository name (owner/repo)
+        branch: Git branch to use (default main)
+        force: Skip rate limit check if True
+        min_hours: Minimum hours between uploads (default 2)
+    
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    try:
+        # Check rate limit unless forced
+        if not force:
+            allowed, time_remaining = check_rate_limit(min_hours)
+            if not allowed:
+                hours = int(time_remaining // 3600)
+                minutes = int((time_remaining % 3600) // 60)
+                logger.warning(f"Rate limit: Upload blocked. Try again in {hours}h {minutes}m")
+                return False
+        
+        # 1. GitHub API login with new auth method
+        auth = Auth.Token(github_token)
+        g = Github(auth=auth)
         try:
             repo = g.get_repo(repo_name)
         except Exception as e:
@@ -203,6 +280,9 @@ def create_release(github_token, repo_name, branch="main"):
         # release.upload_asset(zip_name, label="Source Code (Project)")
         # if os.path.exists(zip_name):
         #     os.remove(zip_name)
+        
+        # Save upload timestamp
+        save_upload_time()
         
         logger.info("GitHub release completed successfully!")
         return True

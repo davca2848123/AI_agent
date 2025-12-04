@@ -1,7 +1,13 @@
 # 🚀 Deployment Guide
 
-> Komplexní průvodce nasazením AI Agenta na Raspberry Pi
+> **Navigace:** [📂 Dokumentace](../README.md) | [📜 Scripts](../README.md#scripts-skripty) | [Deployment Guide](deployment-guide.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
 
+> Komplexní průvodce nasazením AI Agenta na Raspberry Pi.
+> **Verze:** Alpha
+
+---
+
+<a name="obsah"></a>
 ## 📋 Obsah
 
 1. [Požadavky](#požadavky)
@@ -13,18 +19,24 @@
 
 ---
 
+<a name="requirements"></a>
+
+<a name="požadavky"></a>
 ## Požadavky
 
+<a name="hardware"></a>
 ### Hardware
 - **Raspberry Pi 4B** (4GB+ RAM doporučeno)
 - **SD karta** 32GB+ (Class 10)
 - **Internetovépřipojení** (Ethernet nebo WiFi)
 
+<a name="software"></a>
 ### Software
 - **OS:** Debian/Raspberry Pi OS (64-bit)
 - **Python:** 3.10+
 - **Git** pro klonování projektu
 
+<a name="účty-tokeny"></a>
 ### Účty & Tokeny
 - Discord Bot Token
 - Discord Admin User ID
@@ -32,8 +44,12 @@
 
 ---
 
+<a name="initial-setup"></a>
+
+<a name="počáteční-nastavení"></a>
 ## Počáteční Nastavení
 
+<a name="1-příprava-raspberry-pi"></a>
 ### 1. Příprava Raspberry Pi
 
 ```bash
@@ -50,6 +66,7 @@ sudo apt install -y build-essential cmake
 # viz scripts/rpi_setup_led.bat
 ```
 
+<a name="2-klonování-projektu"></a>
 ### 2. Klonování Projektu
 
 ```bash
@@ -58,6 +75,7 @@ git clone https://github.com/your-username/rpi_ai.git
 cd rpi_ai/rpi_ai
 ```
 
+<a name="3-konfigurace-secrets"></a>
 ### 3. Konfigurace Secrets
 
 Vytvoř `config_secrets.py`:
@@ -71,6 +89,7 @@ NGROK_AUTH_TOKEN = "tvůj_ngrok_token"  # Volitelné
 
 ⚠️ **Nikdy necommituj tento soubor do Gitu!**
 
+<a name="4-instalace-python-závislostí"></a>
 ### 4. Instalace Python Závislostí
 
 ```bash
@@ -86,8 +105,12 @@ pip3 install -r requirements.txt --break-system-packages
 
 ---
 
+<a name="installation-steps"></a>
+
+<a name="instalační-kroky"></a>
 ## Instalační Kroky
 
+<a name="krok-1-test-funkčnosti"></a>
 ### Krok 1: Test Funkčnosti
 
 Před konfigurací autostartu otestuj, že agent funguje:
@@ -107,6 +130,7 @@ Očekávaný output:
 
 Zastavit: `Ctrl+C`
 
+<a name="krok-2-nastavení-swap-kritické"></a>
 ### Krok 2: Nastavení SWAP (Kritické!)
 
 Agent vyžaduje dostatek paměti. Nastav SWAP:
@@ -128,6 +152,7 @@ sudo swapon /swapfile
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 ```
 
+<a name="krok-3-sudo-bez-hesla-pro-resource-management"></a>
 ### Krok 3: Sudo bez Hesla (Pro Resource Management)
 
 Agent potřebuje rozšiřovat SWAP automaticky:
@@ -149,6 +174,7 @@ davca ALL=(ALL) NOPASSWD: /bin/dd, /sbin/mkswap, /sbin/swapon, /sbin/swapoff
 
 Detaily viz: `scripts/RPI_Sudoers_NOPASSWD_Guide.md`
 
+<a name="krok-4-systemd-service-autostart"></a>
 ### Krok 4: Systemd Service (Autostart)
 
 Vytvoř systemd service pro automatický start:
@@ -193,14 +219,19 @@ sudo systemctl status rpi-agent.service
 
 ---
 
+<a name="autostart-configuration"></a>
+
+<a name="konfigurace-autostart"></a>
 ## Konfigurace Autostart
 
+<a name="restart-po-c-rashi"></a>
 ### Restart po C rashi
 
 Service je nakonfigurovaný s `Restart=always` a `RestartSec=10`, takže:
 - Při jakémkoliv pádu se agent automaticky restartuje za 10s
 - Při restartu systému se service automaticky spustí
 
+<a name="viewing-logs"></a>
 ### Viewing Logs
 
 **Real-time logy:**
@@ -220,8 +251,12 @@ sudo journalctl -u rpi-agent.service --since yesterday
 
 ---
 
+<a name="maintenance-monitoring"></a>
+
+<a name="údržba-a-monitoring"></a>
 ## Údržba a Monitoring
 
+<a name="windows-batch-skripty"></a>
 ### Windows Batch Skripty
 
 Z Windows můžeš spravovat RPi pomocí batch skriptů v `scripts/`:
@@ -239,6 +274,7 @@ set RPI_HOST=192.168.1.100
 set RPI_USER=davca
 ```
 
+<a name="discord-příkazy"></a>
 ### Discord Příkazy
 
 Z Discordu:
@@ -247,6 +283,7 @@ Z Discordu:
 - `!monitor 30` - Live monitoring zdrojů
 - `!restart` - Restart agenta (admin)
 
+<a name="pravidelná-údržba"></a>
 ### Pravidelná Údržba
 
 **Týdenně:**
@@ -259,8 +296,10 @@ Z Discordu:
 
 ---
 
+<a name="troubleshooting"></a>
 ## Troubleshooting
 
+<a name="agent-se-nespustí"></a>
 ### Agent se nespustí
 
 **1. Zkontroluj logy:**
@@ -280,6 +319,7 @@ cd ~/rpi_ai/rpi_ai
 python3 main.py
 ```
 
+<a name="llm-se-nenačte"></a>
 ### LLM se nenačte
 
 **Problém:** Nedostatek RAM
@@ -292,6 +332,7 @@ free -h
 # Pokud SWAP = 0, nastav podle Krok 2 výše
 ```
 
+<a name="discord-connection-failed"></a>
 ### Discord Connection Failed
 
 **1. Ověř token:**
@@ -308,6 +349,7 @@ ping discord.com
 **3. Zkontroluj bot permissions:**
 - Bot potřebuje "MESSAGE_CONTENT" Intent v Discord Developer Portal
 
+<a name="service-se-nerestartuje"></a>
 ### Service se nerestartuje
 
 ```bash
@@ -322,7 +364,8 @@ sudo systemctl daemon-reload
 sudo systemctl restart rpi-agent.service
 ```
 
-###Memory Database Corruption
+<a name="memory-database-corruption"></a>
+### Memory Database Corruption
 
 **Symptom:** Agent hlásí database errors
 
@@ -345,8 +388,12 @@ sudo systemctl restart rpi-agent.service
 
 ---
 
+<a name="security"></a>
+
+<a name="bezpečnost"></a>
 ## 🔒 Bezpečnost
 
+<a name="ssh-hardening"></a>
 ### SSH Hardening
 
 ```bash
@@ -361,6 +408,7 @@ PubkeyAuthentication yes
 PermitRootLogin no
 ```
 
+<a name="firewall"></a>
 ### Firewall
 
 ```bash
@@ -369,6 +417,7 @@ sudo ufw allow 22/tcp  # SSH
 sudo ufw enable
 ```
 
+<a name="pravidelné-updatesá"></a>
 ### Pravidelné Updatesá
 
 ```bash
@@ -379,14 +428,14 @@ sudo dpkg-reconfigure --priority=low unattended-upgrades
 
 ---
 
+<a name="související-dokumentace"></a>
 ## 📚 Související Dokumentace
 
 - [Batch Scripts Reference](batch-scripts-reference.md) - Detaily všech `.bat` skriptů
 - [RPI Sudoers Guide](../scripts/RPI_Sudoers_NOPASSWD_Guide.md) - Sudo bez hesla
-- [Configuration Guide])(../configuration/customization-guide.md) - Konfigurace nastavení
+- [Configuration Guide](../configuration/customization-guide.md) - Konfigurace nastavení
 
 ---
-
-**Poslední aktualizace:** 2025-12-03  
-**Platné pro verzi:** 1.1.0  
-**Testováno na:** Raspberry Pi 4B, Debian 12
+Poslední aktualizace: 2025-12-04  
+Verze: Alpha  
+Tip: Použij Ctrl+F pro vyhledávání

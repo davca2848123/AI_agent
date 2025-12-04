@@ -1,19 +1,28 @@
 # Autonomní Chování
 
-> Jak agent samostatně rozhoduje a jedná
+> **Navigace:** [📂 Dokumentace](../README.md) | [🧠 Core](../README.md#core-jádro) | [Autonomní chování](autonomous-behavior.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
 
+> Jak agent samostatně rozhoduje a jedná.
+> **Verze:** Alpha
+
+---
+
+<a name="přehled"></a>
 ## 📋 Přehled
 
 Agent má schopnost autonomního rozhodování díky systému "nudy" (boredom) a kontextově informovanému decision-makingu pomocí LLM.
 
 ---
 
+<a name="boredom-mechanism"></a>
 ## Boredom Mechanism
 
+<a name="princip"></a>
 ### 🎯 Princip
 
 Agent má **boredom score** (0.0 - 1.0), které postupně roste v čase. Když překročí threshold, agent se autonomně rozhodne pro akci.
 
+<a name="parametry"></a>
 ### 🔧 Parametry
 
 ```python
@@ -23,6 +32,7 @@ self.boredom_threshold = 0.8  # 80%
 self.boredom_decay_rate = 0.02  # Per minute
 ```
 
+<a name="boredom-loop"></a>
 ### 💡 Boredom Loop
 
 ```python
@@ -42,6 +52,7 @@ async def boredom_loop(self):
         await self.discord.update_activity(f"Boredom: {int(self.boredom_score * 100)}%")
 ```
 
+<a name="boredom-reduction"></a>
 ### 📊 Boredom Reduction
 
 Akce redukují boredom na základě "obtížnosti":
@@ -61,8 +72,10 @@ def reduce_boredom(self, amount: float):
 
 ---
 
+<a name="decision-making"></a>
 ## Decision Making
 
+<a name="llm-based-decisions"></a>
 ### 🧠 LLM-Based Decisions
 
 Agent používá LLM k rozhodování jakou akci provést:
@@ -92,6 +105,7 @@ async def trigger_autonomous_action(self):
     await self.execute_action(decision)
 ```
 
+<a name="decision-context"></a>
 ### 📝 Decision Context
 
 ```python
@@ -108,6 +122,7 @@ Current Status:
 """
 ```
 
+<a name="decision-types"></a>
 ### 🎯 Decision Types
 
 **1. Learning Mode** - Procházet learning_queue  
@@ -118,12 +133,15 @@ Current Status:
 
 ---
 
+<a name="learning-mode"></a>
 ## Learning Mode
 
+<a name="popis"></a>
 ### 📋 Popis
 
 Speciální režim kdy agent systematicky prochází frontu nástrojů k naučení.
 
+<a name="aktivace"></a>
 ### 🔧 Aktivace
 
 ```python
@@ -133,6 +151,7 @@ self.is_learning_mode = True
 self.boredom_score = 1.0  # Force immediate action
 ```
 
+<a name="learning-flow"></a>
 ### 💡 Learning Flow
 
 ```python
@@ -156,8 +175,10 @@ if self.is_learning_mode and self.learning_queue:
 
 ---
 
+<a name="action-execution"></a>
 ## Action Execution
 
+<a name="execute-action"></a>
 ### 🔧 Execute Action
 
 ```python
@@ -194,8 +215,10 @@ async def execute_action(self, action: str):
 
 ---
 
+<a name="activity-monitoring"></a>
 ## Activity Monitoring
 
+<a name="discord-activity-detection"></a>
 ### 📋 Discord Activity Detection
 
 Agent sleduje co uživatelé dělají na Discord (hry, apky):
@@ -213,6 +236,7 @@ async def observation_loop(self):
             await self._process_activity(activity)
 ```
 
+<a name="activity-processing"></a>
 ### 🔍 Activity Processing
 
 ```python
@@ -242,8 +266,10 @@ async def _process_activity(self, activity_data: dict):
 
 ---
 
+<a name="action-history"></a>
 ## Action History
 
+<a name="historie-akcí"></a>
 ### 📝 Historie akcí
 
 Agent udržuje historii posledních akcí:
@@ -260,6 +286,7 @@ def _add_to_history(self, action: str):
         self.action_history = self.action_history[-100:]
 ```
 
+<a name="použití"></a>
 ### 💡 Použití
 
 - Context pro LLM rozhodování
@@ -269,8 +296,10 @@ def _add_to_history(self, action: str):
 
 ---
 
+<a name="goals-system"></a>
 ## Goals System
 
+<a name="cíle-agenta"></a>
 ### 🎯 Cíle agenta
 
 ```python
@@ -281,6 +310,7 @@ self.goals = [
 ]
 ```
 
+<a name="ovlivnění-rozhodování"></a>
 ### 💡 Ovlivnění rozhodování
 
 Cíle jsou součástí decision context:
@@ -298,8 +328,10 @@ LLM bere cíle v úvahu při výběru akce.
 
 ---
 
+<a name="simplified-action-status"></a>
 ## Simplified Action Status
 
+<a name="discord-status-update"></a>
 ### 📋 Discord Status Update
 
 Agent zobrazuje co dělá jako Discord status:
@@ -322,13 +354,14 @@ async def _simplify_action(self, action: str) -> str:
 
 ---
 
+<a name="související"></a>
 ## 🔗 Související
 
-- [LLM Integration](llm-integration.md) - Jak LLM rozhoduje
-- [Memory System](memory-system.md) - Ukládání zkušeností
-- [Boredom Mechanism](../advanced/boredom.md) - Detailní vysvětlení
+- [📖 LLM Integration](llm-integration.md) - Jak LLM rozhoduje
+- [📖 Memory System](memory-system.md) - Ukládání zkušeností
+- [📖 Boredom Mechanism](../advanced/boredom.md) - Detailní vysvětlení
 
 ---
-
-**Poslední aktualizace:** 2025-12-02  
-**Verze:** 1.0.0
+Poslední aktualizace: 2025-12-04  
+Verze: Alpha  
+Tip: Použij Ctrl+F pro vyhledávání

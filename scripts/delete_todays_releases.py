@@ -7,13 +7,14 @@ Use this to clean up releases created by the restart loop bug.
 import os
 import sys
 import datetime
-from github import Github
+from github import Github, Auth
 
 def delete_todays_releases(github_token, repo_name):
     """Delete all releases from today."""
     try:
-        # Initialize GitHub API
-        g = Github(github_token)
+        # Initialize GitHub API with new auth method
+        auth = Auth.Token(github_token)
+        g = Github(auth=auth)
         repo = g.get_repo(repo_name)
         
         # Get today's date pattern

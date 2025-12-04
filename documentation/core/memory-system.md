@@ -1,15 +1,23 @@
 # Paměťový Systém (Memory System)
 
-> VectorStore a správa vzpomínek agenta
+> **Navigace:** [📂 Dokumentace](../README.md) | [🧠 Core](../README.md#core-jádro) | [Paměťový systém](memory-system.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
 
+> VectorStore a správa vzpomínek agenta.
+> **Verze:** Alpha
+
+---
+
+<a name="přehled"></a>
 ## 📋 Přehled
 
 Agent používá SQLite databázi s FTS5 (Full-Text Search) pro ukládání a vyhledávání vzpomínek. **Nově** obsahuje pokročilý scoring systém pro inteligentní filtrování vzpomínek.
 
 ---
 
+<a name="vectorstore-class"></a>
 ## VectorStore Class
 
+<a name="inicializace"></a>
 ### 🔧 Inicializace
 
 ```python
@@ -18,6 +26,7 @@ from agent.memory import VectorStore
 memory = VectorStore(db_path="agent_memory.db")
 ```
 
+<a name="databázové-schema"></a>
 ### 📊 Databázové Schema
 
 ```sql
@@ -35,8 +44,12 @@ USING fts5(content, content=memories, content_rowid=id);
 
 ---
 
+<a name="adding-memories"></a>
+
+<a name="přidávání-vzpomínek"></a>
 ## Přidávání Vzpomínek
 
+<a name="add_memory"></a>
 ### 🔧 add_memory()
 
 ```python
@@ -50,10 +63,12 @@ memory.add_memory(
 )
 ```
 
+<a name="advanced-scoring-system-new"></a>
 ### ⭐ Advanced Scoring System (NEW!)
 
 Agent používá **pokročilý scoring systém** pro rozhodování, které vzpomínky ukládat.
 
+<a name="konfigurace"></a>
 #### Konfigurace
 
 Parametry v `config_settings.py`:
@@ -76,6 +91,7 @@ MEMORY_CONFIG = {
 }
 ```
 
+<a name="scoring-process-5-kroků"></a>
 #### Scoring Process (5 kroků)
 
 **1. Blacklist Check** → Okamžité zamítnutí
@@ -146,6 +162,7 @@ else:
     return None
 ```
 
+<a name="příklady-scoring"></a>
 #### Příklady Scoring
 
 **Příklad 1: Zamítnutá vzpomínka**
@@ -193,6 +210,7 @@ Content: "Successfully created Python function to fix Discord command parsing er
 Decision: ❌ REJECTED (60 < 70)
 ```
 
+<a name="scoring-bypass"></a>
 ### 🔓 Scoring Bypass
 
 **Některé typy vzpomínek VŽDY projdou bez ohledu na skóre:**
@@ -222,6 +240,7 @@ async def cmd_teach(self, channel_id: int, info: str):
 
 ⚠️ **Poznámka:** `user_teaching` typ dostává bypass, protože uživatelské učení je vždy cenné.
 
+<a name="basic-relevance-filter-pre-scoring"></a>
 ### 💡 Basic Relevance Filter (Pre-Scoring)
 
 Před scoring systémem běží **basic filter**:
@@ -257,8 +276,12 @@ def is_relevant_memory(self, content: str, metadata: dict = None) -> bool:
 
 ---
 
+<a name="searching-memories"></a>
+
+<a name="vyhledávání-vzpomínek"></a>
 ## Vyhledávání Vzpomínek
 
+<a name="search_relevant_memories"></a>
 ### 🔍 search_relevant_memories()
 
 Používá FTS5 pro keyword-based search:
@@ -270,6 +293,7 @@ memories = memory.search_relevant_memories(
 )
 ```
 
+<a name="implementace"></a>
 ### 🔧 Implementace
 
 ```python
@@ -311,14 +335,19 @@ def search_relevant_memories(self, query: str, limit: int = 5):
     return results[:limit]
 ```
 
+<a name="search-scoring"></a>
 ### 📊 Search Scoring
 
 Skóre = počet matching keywords v content.
 
 ---
 
+<a name="getting-recent-memories"></a>
+
+<a name="získání-nedávných-vzpomínek"></a>
 ## Získání Nedávných Vzpomínek
 
+<a name="get_recent_memories"></a>
 ### 🔧 get_recent_memories()
 
 ```python
@@ -329,8 +358,12 @@ Vrací posledních N vzpomínek seřazených podle timestamp.
 
 ---
 
+<a name="memory-management"></a>
+
+<a name="správa-paměti"></a>
 ## Správa Paměti
 
+<a name="delete_boredom_memories"></a>
 ### 🗑️ delete_boredom_memories()
 
 Vymaže vzpomínky související s nudou:
@@ -345,6 +378,7 @@ WHERE content LIKE '%boredom%'
    OR content LIKE '%waiting%'
 ```
 
+<a name="delete_error_memories"></a>
 ### 🗑️ delete_error_memories()
 
 Vymaže chybové vzpomínky:
@@ -361,8 +395,10 @@ WHERE content LIKE '%Error:%'
 
 ---
 
+<a name="backup-restore"></a>
 ## Backup & Restore
 
+<a name="create_backup"></a>
 ### 💾 create_backup()
 
 ```python
@@ -374,6 +410,7 @@ Vytvoří kopii databáze:
 backup/agent_memory_20251203_230000.db
 ```
 
+<a name="restore_from_backup"></a>
 ### 🔄 restore_from_backup()
 
 ```python
@@ -384,8 +421,10 @@ Obnoví z nejnovější zálohy.
 
 ---
 
+<a name="metadata-types"></a>
 ## Metadata Types
 
+<a name="standardní-typy"></a>
 ### 📝 Standardní Typy
 
 | Type | Popis | Scoring Bypass | Příklad |
@@ -397,6 +436,7 @@ Obnoví z nejnovější zálohy.
 | `discovery` | Objevená aktivita | ❌ Ne | "Discovered Minecraft" |
 | `internal` | Interní (pre-filtered) | N/A | "Boredom check" |
 
+<a name="příklad-metadata"></a>
 ### 🔧 Příklad Metadata
 
 ```json
@@ -411,8 +451,12 @@ Obnoví z nejnovější zálohy.
 
 ---
 
+<a name="statistics"></a>
+
+<a name="statistiky"></a>
 ## Statistiky
 
+<a name="count_memories_by_type"></a>
 ### 📊 count_memories_by_type()
 
 ```python
@@ -427,8 +471,12 @@ WHERE json_extract(metadata, '$.type') = ?
 
 ---
 
+<a name="database-optimization"></a>
+
+<a name="database-optimalizace"></a>
 ## Database Optimalizace
 
+<a name="pragma-settings"></a>
 ### 🔧 PRAGMA Settings
 
 ```python
@@ -438,6 +486,7 @@ conn.execute("PRAGMA cache_size=10000")
 conn.execute("PRAGMA temp_store=MEMORY")
 ```
 
+<a name="výhody"></a>
 ### 📊 Výhody
 
 - **WAL Mode** - Lepší concurrency, rychlejší zápisy
@@ -446,8 +495,10 @@ conn.execute("PRAGMA temp_store=MEMORY")
 
 ---
 
+<a name="corrupted-database-handling"></a>
 ## Corrupted Database Handling
 
+<a name="auto-recovery"></a>
 ### ⚠️ Auto-Recovery
 
 ```python
@@ -462,6 +513,7 @@ def _initialize_db(self):
         self._backup_corrupted_and_start_fresh()
 ```
 
+<a name="recovery-process"></a>
 ### 🔄 Recovery Process
 
 1. Přejmenuj corrupted DB na `.corrupted`
@@ -471,8 +523,12 @@ def _initialize_db(self):
 
 ---
 
+<a name="integration-with-agent"></a>
+
+<a name="integration-s-agentem"></a>
 ## Integration s Agentem
 
+<a name="v-corepy"></a>
 ### 🔧 V core.py
 
 ```python
@@ -498,15 +554,17 @@ context = "\n".join([m['content'] for m in memories])
 
 ---
 
+<a name="související"></a>
 ## 🔗 Související
 
-- [Autonomous Behavior](autonomous-behavior.md) - Jak agent používá paměť pro rozhodování
+- [📖 Autonomous Behavior](autonomous-behavior.md) - Jak agent používá paměť pro rozhodování
 - [`!memory`](../commands/data-management.md#memory) - Příkaz pro statistiky
 - [`!export memory`](../commands/data-management.md#export) - Export paměti
 - [`!teach`](../commands/tools-learning.md#teach) - Učení agenta (bypass scoring)
+- [📚 API Reference](../api/memory-system.md) - Technická dokumentace tříd a metod
+
 
 ---
-
-**Poslední aktualizace:** 2025-12-03  
-**Verze:** 1.1.0  
-**Změny:** Přidán pokročilý scoring systém, scoring bypass pro user_teaching
+Poslední aktualizace: 2025-12-04  
+Verze: Alpha  
+Tip: Použij Ctrl+F pro vyhledávání
