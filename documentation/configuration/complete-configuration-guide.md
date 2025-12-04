@@ -73,7 +73,7 @@ RAM_TIER3_THRESHOLD = 95
 # === BOREDOM SYSTEM ===
 BOREDOM_INCREASE_RATE = 0.5    # % per minute when idle
 BOREDOM_THRESHOLD_ACTION = 70  # Start autonomous actions at 70%
-MESSAGE_BOREDOM_REDUCTION = 0.3  # Reduce 30% on message
+MESSAGE_BOREDOM_REDUCTION = 0.1  # Reduce 10% on message
 
 # === LOGGING ===
 LOG_LEVEL = "INFO"             # DEBUG, INFO, WARNING, ERROR
@@ -398,7 +398,7 @@ await client.change_presence(
 
 BOREDOM_INCREASE_RATE = 0.5     # +0.5% per minute idle
 BOREDOM_THRESHOLD_ACTION = 70   # Start actions at 70%
-MESSAGE_BOREDOM_REDUCTION = 0.3 # -30% on message
+MESSAGE_BOREDOM_REDUCTION = 0.1 # -10% on message
 
 # Examples:
 
