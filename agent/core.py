@@ -85,6 +85,7 @@ class AutonomousAgent:
                             NoteTool, DatabaseTool, RSSTool, 
                             TranslateTool, WikipediaTool, DiscordActivityTool)
         from .error_tracker import get_error_tracker
+        from .web_interface import WebServer
         
         
         self.memory = VectorStore()
@@ -95,6 +96,7 @@ class AutonomousAgent:
         self.resource_manager = ResourceManager(self)  # Add resource manager
         self.network_monitor = NetworkMonitor(self)  # Add network monitor
         self.error_tracker = get_error_tracker()  # Add error tracker
+        self.web_server = WebServer(self) # Add web interface
         
         # Tools
         self.tools = ToolRegistry()
@@ -128,6 +130,14 @@ class AutonomousAgent:
                 f.write(str(time.time()))
         except Exception as e:
             logger.error(f"Failed to create shutdown flag: {e}")
+        
+        # 0. Stop web server
+        try:
+            if hasattr(self, 'web_server'):
+                logger.info("Stopping web server...")
+                self.web_server.stop()
+        except Exception as e:
+            logger.error(f"Failed to stop web server: {e}")
         
         shutdown_start = time.time()
         
@@ -257,6 +267,12 @@ class AutonomousAgent:
         
         # Start discord
         await self.discord.start()
+        
+        # Start web server
+        try:
+            self.web_server.start()
+        except Exception as e:
+            logger.error(f"Failed to start web server: {e}")
         
         # Start command handler worker
         self.command_handler.start()

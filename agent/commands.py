@@ -212,9 +212,22 @@ class CommandHandler:
             await self.cmd_documentation(channel_id)
         elif command == "!report":
             await self.cmd_report(channel_id, author_id)
+        elif command == "!web":
+            await self.cmd_web(channel_id, args)
         else:
             await self.agent.discord.send_message(channel_id, f"❓ Unknown command: {command}. Use `!help` for available commands.")
     
+    async def cmd_web(self, channel_id: int, args: list):
+        """Start or retrieve the web interface URL."""
+        await self.agent.discord.send_message(channel_id, "🌐 Starting web tunnel... please wait.")
+        
+        url = self.agent.web_server.start_ngrok()
+        
+        if url:
+            await self.agent.discord.send_message(channel_id, f"✅ **Web Interface Online!**\n\nDashboard: {url}\nDocumentation: {url}/docs")
+        else:
+            await self.agent.discord.send_message(channel_id, "❌ Failed to start web tunnel. Check logs.")
+
     async def cmd_help(self, channel_id: int):
         """Show all available commands with friendly formatting and categories."""
         help_text = """
@@ -2822,6 +2835,36 @@ _{description}_
                 async def batch_scripts(self, interaction: discord.Interaction, button: discord.ui.Button):
                     await self._send_file(interaction, "documentation/scripts/batch-scripts-reference.md")
 
+            class ConfigurationView(discord.ui.View):
+                def __init__(self, parent_view):
+                    super().__init__(timeout=300)
+                    self.parent_view = parent_view
+
+                async def _send_file(self, interaction, path):
+                    try:
+                        if os.path.exists(path):
+                            await interaction.response.send_message(file=discord.File(path), ephemeral=True)
+                        else:
+                            await interaction.response.send_message(f"❌ Soubor {path} nebyl nalezen.", ephemeral=True)
+                    except Exception as e:
+                        await interaction.response.send_message(f"❌ Chyba při odesílání: {e}", ephemeral=True)
+
+                @discord.ui.button(label="🔧 Settings Reference", style=discord.ButtonStyle.secondary)
+                async def settings(self, interaction: discord.Interaction, button: discord.ui.Button):
+                    await self._send_file(interaction, "documentation/configuration/config_settings_reference.md")
+
+                @discord.ui.button(label="🔐 Secrets Template", style=discord.ButtonStyle.secondary)
+                async def secrets(self, interaction: discord.Interaction, button: discord.ui.Button):
+                    await self._send_file(interaction, "documentation/configuration/config_secrets_template.md")
+
+                @discord.ui.button(label="🌍 Env Variables", style=discord.ButtonStyle.secondary)
+                async def env_vars(self, interaction: discord.Interaction, button: discord.ui.Button):
+                    await self._send_file(interaction, "documentation/configuration/environment_variables.md")
+
+                @discord.ui.button(label="⚙️ Customization Guide", style=discord.ButtonStyle.secondary)
+                async def guide(self, interaction: discord.Interaction, button: discord.ui.Button):
+                    await self._send_file(interaction, "documentation/configuration/customization-guide.md")
+
             class DocumentationView(discord.ui.View):
                 def __init__(self, command_handler):
                     super().__init__(timeout=300)
@@ -2864,6 +2907,10 @@ _{description}_
                 async def troubleshooting(self, interaction: discord.Interaction, button: discord.ui.Button):
                     await self._send_doc(interaction, "documentation/troubleshooting.md", "Troubleshooting")
 
+                @discord.ui.button(label="⚙️ Configuration", style=discord.ButtonStyle.secondary)
+                async def configuration(self, interaction: discord.Interaction, button: discord.ui.Button):
+                    await interaction.response.send_message("Vyber Configuration dokumentaci:", view=ConfigurationView(self), ephemeral=True)
+
             # Send initial message with embed
             embed = discord.Embed(
                 title="📚 AI Agent Dokumentace",
@@ -2875,6 +2922,7 @@ _{description}_
             embed.add_field(name="🛠️ Tools", value="Detailní popis všech 14 dostupných nástrojů a jejich použití.", inline=False)
             embed.add_field(name="🧠 Core", value="Dokumentace jádra systému (Autonomní chování, Paměť, LLM, atd.).", inline=False)
             embed.add_field(name="📜 Scripts", value="Deployment guide, Batch scripts reference, RPI setup a údržba.", inline=False)
+            embed.add_field(name="⚙️ Configuration", value="Nastavení, secrets, environment variables.", inline=False)
             embed.add_field(name="🎓 Advanced", value="Pokročilá témata: Fuzzy matching algoritmus, Queue system, atd.", inline=False)
             embed.add_field(name="🆘 Troubleshooting", value="Řešení problémů: Agent, LLM, Database, Discord, Resources, Network.", inline=False)
             

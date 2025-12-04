@@ -126,11 +126,23 @@ class DiscordClient:
             return
 
         try:
-            # Apply IP sanitization if enabled
-            if getattr(config_settings, 'IP_SANITIZATION_ENABLED', True):
-                content = sanitize_output(content)
-            
             channel = self.client.get_channel(channel_id)
+            
+            # Apply IP sanitization if enabled
+            should_sanitize = getattr(config_settings, 'IP_SANITIZATION_ENABLED', True)
+            
+            if should_sanitize and content:
+                # Default to True
+                is_safe_admin_dm = False
+                
+                if channel and isinstance(channel, discord.DMChannel):
+                    # Check if recipient is admin
+                    if hasattr(channel, 'recipient') and channel.recipient.id in config_settings.ADMIN_USER_IDS:
+                        is_safe_admin_dm = True
+                
+                if not is_safe_admin_dm:
+                    content = sanitize_output(content)
+            
             if channel:
                 if file_path and os.path.exists(file_path):
                     file = discord.File(file_path)

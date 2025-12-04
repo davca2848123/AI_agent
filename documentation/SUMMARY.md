@@ -268,9 +268,9 @@ Oblasti které můžou být přidány v budoucnu:
 - [x] Backup strategies
 
 ### Configuration
-- [ ] config_settings.py reference
-- [ ] config_secrets.py template
-- [ ] Environment variables
+- [x] [config_settings.py reference](configuration/config_settings_reference.md)
+- [x] [config_secrets.py template](configuration/config_secrets_template.md)
+- [x] [Environment variables](configuration/environment_variables.md)
 - [x] [Customization guide](configuration/customization-guide.md)
 
 ---
