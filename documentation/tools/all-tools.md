@@ -1,6 +1,6 @@
 # Všechny Nástroje (Tools) - Kompletní Přehled
 
-> **Navigace:** [📂 Dokumentace](../README.md) | [🛠️ Nástroje](../README.md#tools-nástroje) | [Všechny nástroje](all-tools.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
+> **Navigace:** [📂 Dokumentace](../README.md) | [🛠️ Nástroje](../README.md#tools-nástroje) | [Všechny nástroje](all-tools.md)
 
 > Detailní dokumentace všech dostupných nástrojů agenta.
 > **Verze:** Alpha

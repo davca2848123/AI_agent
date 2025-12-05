@@ -1,6 +1,6 @@
 # 🧠 Agent Core API
 
-> **Navigace:** [📂 Dokumentace](../README.md) | [📚 API](../INDEX.md#api) | [Agent Core](agent-core.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
+> **Navigace:** [📂 Dokumentace](../README.md) | [📚 API](../INDEX.md#api) | [Agent Core](agent-core.md)
 
 Dokumentace pro třídu `AutonomousAgent` v `agent/core.py`.
 

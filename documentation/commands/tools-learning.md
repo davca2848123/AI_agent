@@ -1,6 +1,6 @@
 # Nástroje a Učení
 
-> **Navigace:** [📂 Dokumentace](../README.md) | [💬 Příkazy](../README.md#commands-příkazy) | [Nástroje a učení](tools-learning.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
+> **Navigace:** [📂 Dokumentace](../README.md) | [💬 Příkazy](../README.md#commands-příkazy) | [Nástroje a učení](tools-learning.md)
 
 > Příkazy pro práci s nástroji, učení a interakci s AI.
 > **Verze:** Alpha

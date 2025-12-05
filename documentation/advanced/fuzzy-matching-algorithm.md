@@ -1,6 +1,6 @@
 # Fuzzy Command Matching Algorithm
 
-> **Navigace:** [📂 Dokumentace](../README.md) | [🔍 Advanced](../README.md#advanced-pokročilé) | [Fuzzy Matching Algorithm](fuzzy-matching-algorithm.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
+> **Navigace:** [📂 Dokumentace](../README.md) | [🔍 Advanced](../README.md#advanced-pokročilé) | [Fuzzy Matching Algorithm](fuzzy-matching-algorithm.md)
 
 > Inteligentní auto-korekce příkazů pomocí Levenshtein Distance.
 > **Verze:** Alpha

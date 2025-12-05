@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+import time
 from typing import Optional
 
 try:
@@ -13,6 +14,21 @@ from .sanitizer import sanitize_output
 import config_settings
 
 logger = logging.getLogger(__name__)
+
+# Setup specific logger for Discord messages
+msg_logger = logging.getLogger('discord_messages')
+msg_logger.setLevel(logging.INFO)
+# Prevent propagation to root logger to avoid duplication in agent.log if not desired
+# But user wants "Match agent.log format", so maybe we want it separate?
+# "Create new logger... Log all sent messages... Include channel_id"
+# We'll add a FileHandler.
+if not msg_logger.handlers:
+    try:
+        msg_handler = logging.FileHandler('discord_messages.log', encoding='utf-8')
+        msg_handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
+        msg_logger.addHandler(msg_handler)
+    except Exception as e:
+        logger.error(f"Failed to setup discord_messages.log: {e}")
 
 class DiscordClient:
     def __init__(self, token: Optional[str] = None):
@@ -28,10 +44,6 @@ class DiscordClient:
             # Disable cache for memory efficiency as per spec
             self.client = discord.Client(intents=intents, max_messages=10)
             
-            self.client = discord.Client(intents=intents, max_messages=10)
-            
-        self.message_queue = asyncio.Queue()
-        self.last_message_history = []
         self.message_queue = asyncio.Queue()
         self.last_message_history = []
         self.last_message_id = None
@@ -76,7 +88,6 @@ class DiscordClient:
             if before.author == self.client.user:
                 if self.last_message_id and before.id == self.last_message_id:
                     # Append new version to history
-                    import time
                     self.last_message_history.append({
                         "timestamp": time.time(),
                         "content": after.content
@@ -154,11 +165,15 @@ class DiscordClient:
                 log_content = content if content else (f"[Embed: {embed.title}]" if embed else "[No content]")
                 logger.info(f"Sent message to channel {channel_id}: {log_content[:100]}{'...' if len(log_content) > 100 else ''}")
                 
-                # Store last sent message for reporting
+                # Log to dedicated discord_messages.log
+                try:
+                    msg_logger.info(f"Channel: {channel_id} | Type: {'Embed' if embed else 'Text'} | Content: {log_content}")
+                except Exception as e:
+                    logger.error(f"Failed to log to discord_messages.log: {e}")
+                
                 # Store last sent message for reporting
                 self.last_sent_message = content # Keep for backward compatibility
                 self.last_message_id = msg.id
-                import time
                 self.last_message_history = [{
                     "timestamp": time.time(),
                     "content": content

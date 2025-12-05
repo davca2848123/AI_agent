@@ -1,6 +1,6 @@
 # 🛠️ Tools API
 
-> **Navigace:** [📂 Dokumentace](../README.md) | [📚 API](../INDEX.md#api) | [Tools API](tools-api.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
+> **Navigace:** [📂 Dokumentace](../README.md) | [📚 API](../INDEX.md#api) | [Tools API](tools-api.md)
 
 Dokumentace pro systém nástrojů v `agent/tools.py`.
 

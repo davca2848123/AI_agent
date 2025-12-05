@@ -520,9 +520,25 @@ class WebServer:
                     
                     try:
                         with open(file_path, 'r', encoding='utf-8') as file:
-                            lines = file.readlines()
-                            content = ''.join(lines)
-                            content_lower = content.lower()
+                            original_lines = file.readlines()
+                            content = ''.join(original_lines)
+                            
+                            # Remove navigation blocks (all lines starting with >)
+                            # Filter out blockquote lines (navigation, metadata, etc.)
+                            content_lines = content.split('\n')
+                            
+                            # Debug: count removed lines
+                            removed_lines = [line for line in content_lines if line.strip().startswith('>')]
+                            if removed_lines:
+                                logger.info(f"Filtering {len(removed_lines)} navigation lines from {rel_path}")
+                            
+                            filtered_content_lines = [line for line in content_lines if not line.strip().startswith('>')]
+                            content_cleaned = '\n'.join(filtered_content_lines)
+                            
+                            # Create filtered lines for anchor detection (with newlines)
+                            filtered_lines = [line + '\n' for line in filtered_content_lines]
+                            
+                            content_lower = content_cleaned.lower()
                             
                             # Find all occurrences (exact + fuzzy)
                             import re
@@ -534,10 +550,30 @@ class WebServer:
                             # 1. Exact phrase matching
                             for match in re.finditer(re.escape(query_lower), content_lower):
                                 pos = match.start()
-                                anchor = self._find_nearest_anchor(lines, pos)
-                                start = max(0, pos - 100)
-                                end = min(len(content), pos + len(query) + 100)
-                                snippet = content[start:end].replace('<', '&lt;').replace('>', '&gt;')
+                                
+                                # Check if this match is inside a markdown link or anchor
+                                # Find the line containing this match
+                                line_start = content_cleaned.rfind('\n', 0, pos) + 1
+                                line_end = content_cleaned.find('\n', pos)
+                                if line_end == -1:
+                                    line_end = len(content_cleaned)
+                                match_line = content_cleaned[line_start:line_end]
+                                
+                                # Skip if line contains markdown link with query: [text](url)
+                                link_pattern = r'\[([^\]]*' + re.escape(query_lower) + r'[^\]]*)\]\([^\)]+\)'
+                                if re.search(link_pattern, match_line, re.IGNORECASE):
+                                    continue
+                                
+                                # Skip if line contains HTML anchor with query: <a name="...query..."></a>
+                                anchor_pattern = r'<a\s+name="[^"]*' + re.escape(query_lower) + r'[^"]*"[^>]*></a>'
+                                if re.search(anchor_pattern, match_line, re.IGNORECASE):
+                                    continue
+                                
+                                anchor = self._find_nearest_anchor(filtered_lines, pos)
+                                # Show small context before, match, and text after
+                                start = max(0, pos - 30)
+                                end = min(len(content_cleaned), pos + len(query) + 120)
+                                snippet = content_cleaned[start:end].replace('<', '&lt;').replace('>', '&gt;')
                                 
                                 # Highlight exact match
                                 import re as regex
@@ -553,8 +589,12 @@ class WebServer:
                             
                             # 2. Fuzzy word matching (if query is single word or short)
                             if len(query_words) <= 3:  # Only for short queries
-                                content_words = re.findall(r'\b\w+\b', content_lower)
-                                for i, word in enumerate(content_words):
+                                # Track word positions for accurate snippet extraction
+                                word_positions = []
+                                for match in re.finditer(r'\b\w+\b', content_lower):
+                                    word_positions.append((match.group(), match.start()))
+                                
+                                for word, word_pos in word_positions:
                                     for query_word in query_words:
                                         if len(query_word) >= 4:  # Only fuzzy match longer words
                                             distance = levenshtein_distance(query_word, word)
@@ -562,18 +602,33 @@ class WebServer:
                                             threshold = 2
                                             
                                             if distance <= threshold and distance > 0:
-                                                # Find position of this word in original content
-                                                # Reconstruct approximate position
-                                                words_before = content_lower[:content_lower.find(word)].split()
-                                                approx_pos = sum(len(w) + 1 for w in words_before)
+                                                # Check if this match is inside a markdown link or anchor
+                                                # Find the line containing this match
+                                                line_start = content_cleaned.rfind('\n', 0, word_pos) + 1
+                                                line_end = content_cleaned.find('\n', word_pos)
+                                                if line_end == -1:
+                                                    line_end = len(content_cleaned)
+                                                match_line = content_cleaned[line_start:line_end]
                                                 
-                                                anchor = self._find_nearest_anchor(lines, approx_pos)
-                                                start = max(0, approx_pos - 100)
-                                                end = min(len(content), approx_pos + len(word) + 100)
-                                                snippet = content[start:end].replace('<', '&lt;').replace('>', '&gt;')
+                                                # Skip if line contains markdown link with query word
+                                                link_pattern = r'\[([^\]]*' + re.escape(query_word) + r'[^\]]*)\]\([^\)]+\)'
+                                                if re.search(link_pattern, match_line, re.IGNORECASE):
+                                                    continue
                                                 
-                                                # Highlight fuzzy match
-                                                snippet = snippet.replace(word, f'<strong style="background: #faa61a; color: white; padding: 2px 4px;">{word}</strong>')
+                                                # Skip if line contains HTML anchor with query word
+                                                anchor_pattern = r'<a\s+name="[^"]*' + re.escape(query_word) + r'[^"]*"[^>]*></a>'
+                                                if re.search(anchor_pattern, match_line, re.IGNORECASE):
+                                                    continue
+                                                
+                                                # Use the actual word position from regex match
+                                                anchor = self._find_nearest_anchor(filtered_lines, word_pos)
+                                                # Show small context before, match, and text after
+                                                start = max(0, word_pos - 30)
+                                                end = min(len(content_cleaned), word_pos + len(word) + 120)
+                                                snippet = content_cleaned[start:end].replace('<', '&lt;').replace('>', '&gt;')
+                                                
+                                                # Highlight fuzzy match (case-insensitive replacement)
+                                                snippet = re.sub(re.escape(word), f'<strong style="background: #faa61a; color: white; padding: 2px 4px;">{word}</strong>', snippet, flags=re.IGNORECASE)
                                                 
                                                 # Score based on distance (closer = better)
                                                 score = 80 - (distance * 10)

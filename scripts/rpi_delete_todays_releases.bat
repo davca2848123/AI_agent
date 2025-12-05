@@ -22,7 +22,7 @@ echo Project path: %RPI_PROJECT_PATH%
 echo.
 
 REM Connect via SSH and run the deletion script
-ssh %RPI_USER%@%RPI_HOST% -p %RPI_PORT% "cd %RPI_PROJECT_PATH% && python3 scripts/delete_todays_releases.py"
+ssh %RPI_USER%@%RPI_HOST% -p %RPI_PORT% "cd %RPI_PROJECT_PATH% && python3 scripts/internal/delete_todays_releases.py"
 
 echo.
 echo ========================================

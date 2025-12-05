@@ -519,11 +519,26 @@ class NetworkMonitor:
             if hasattr(self.agent, 'command_handler'):
                 handler = self.agent.command_handler
                 if hasattr(handler, 'ngrok_process') and handler.ngrok_process:
-                    if handler.ngrok_process.returncode is not None:
-                        logger.warning("ngrok stopped - manual restart needed")
-                        failed_recoveries.append("ngrok (manual restart needed)")
-                    else:
-                        logger.info("✅ ngrok still running")
+                    # Check if ngrok tunnel is still active by querying tunnels
+                    try:
+                        from pyngrok import ngrok
+                        tunnels = ngrok.get_tunnels()
+                        # Check if our tunnel still exists
+                        tunnel_active = False
+                        if hasattr(handler.ngrok_process, 'public_url'):
+                            for t in tunnels:
+                                if t.public_url == handler.ngrok_process.public_url:
+                                    tunnel_active = True
+                                    break
+                        
+                        if not tunnel_active:
+                            logger.warning("ngrok tunnel stopped - manual restart needed")
+                            failed_recoveries.append("ngrok (manual restart needed)")
+                        else:
+                            logger.info("✅ ngrok still running")
+                    except Exception as ngrok_err:
+                        logger.error(f"ngrok tunnel check failed: {ngrok_err}")
+                        failed_recoveries.append(f"ngrok ({str(ngrok_err)})")
         except Exception as e:
             logger.error(f"ngrok check failed: {e}")
             failed_recoveries.append(f"ngrok ({str(e)})")

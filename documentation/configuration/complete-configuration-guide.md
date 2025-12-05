@@ -1,6 +1,6 @@
 # ⚙️ Configuration Guide
 
-> **Navigace:** [📂 Dokumentace](../README.md) | [⚙️ Konfigurace](../README.md#konfigurace) | [Configuration Guide](complete-configuration-guide.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
+> **Navigace:** [📂 Dokumentace](../README.md) | [⚙️ Konfigurace](../README.md#konfigurace) | [Configuration Guide](complete-configuration-guide.md)
 
 > Kompletní průvodce konfigurací RPI AI Agenta.
 > **Verze:** Alpha

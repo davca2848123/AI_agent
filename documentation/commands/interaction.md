@@ -1,6 +1,6 @@
 # Interakční Příkazy
 
-> **Navigace:** [📂 Dokumentace](../README.md) | [💬 Příkazy](../README.md#commands-příkazy) | [Interakční příkazy](interaction.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
+> **Navigace:** [📂 Dokumentace](../README.md) | [💬 Příkazy](../README.md#commands-příkazy) | [Interakční příkazy](interaction.md)
 
 > Příkazy pro interakci s osobností a cíli agenta.
 > **Verze:** Alpha

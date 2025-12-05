@@ -1,6 +1,6 @@
 # Údržbové Skripty
 
-> **Navigace:** [📂 Dokumentace](../README.md) | [📜 Scripts](../README.md#scripts-skripty) | [Maintenance Scripts](maintenance.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
+> **Navigace:** [📂 Dokumentace](../README.md) | [📜 Scripts](../README.md#scripts-skripty) | [Maintenance Scripts](maintenance.md)
 
 > Skripty pro údržbu a správu agenta.
 > **Verze:** Alpha

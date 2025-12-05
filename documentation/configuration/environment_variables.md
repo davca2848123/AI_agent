@@ -1,6 +1,6 @@
 # 🌍 Environment Variables
 
-> **Navigace:** [📂 Dokumentace](../README.md) | [⚙️ Konfigurace](../README.md#konfigurace) | [Environment Variables](environment_variables.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
+> **Navigace:** [📂 Dokumentace](../README.md) | [⚙️ Konfigurace](../README.md#konfigurace) | [Environment Variables](environment_variables.md)
 
 > Možnosti konfigurace pomocí proměnných prostředí (Environment Variables).
 > **Verze:** Alpha

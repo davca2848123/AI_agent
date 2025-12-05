@@ -1,6 +1,6 @@
 # LLM Integrace
 
-> **Navigace:** [📂 Dokumentace](../README.md) | [🧠 Core](../README.md#core-jádro) | [LLM Integrace](llm-integration.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
+> **Navigace:** [📂 Dokumentace](../README.md) | [🧠 Core](../README.md#core-jádro) | [LLM Integrace](llm-integration.md)
 
 > Lokální LLM pomocí llama-cpp-python.
 > **Verze:** Alpha

@@ -1,6 +1,6 @@
 # Administrační Příkazy
 
-> **Navigace:** [📂 Dokumentace](../README.md) | [💬 Příkazy](../README.md#commands-příkazy) | [Administrační příkazy](admin.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
+> **Navigace:** [📂 Dokumentace](../README.md) | [💬 Příkazy](../README.md#commands-příkazy) | [Administrační příkazy](admin.md)
 
 > Admin-only příkazy pro správu a diagnostiku systému.
 > **Verze:** Alpha
@@ -450,18 +450,382 @@ Bot: 💾 **Database Diagnostic:**
 
 ---
 
+<a name="web"></a>
+## `!web`
+
+<a name="popis"></a>
+### 📋 Popis
+Správa web interface (Flask server + ngrok tunnel).
+
+<a name="použití"></a>
+### ⚙️ Použití
+
+**Start:**
+```
+!web start
+!web
+```
+
+**Stop:**
+```
+!web stop
+```
+
+**Restart:**
+```
+!web restart
+```
+
+<a name="příklady"></a>
+### 📝 Příklady
+
+**Start web interface:**
+```
+User: !web start
+
+Bot: 🌐 Starting web tunnel... please wait.
+
+[5 seconds later]
+
+Bot: ✅ **Web Interface Online!**
+
+Klikněte na tlačítko pro otevření:
+[🏠 Dashboard] [📚 Documentation]
+```
+
+**Stop:**
+```
+User: !web stop
+
+Bot: 🛑 Stopping web interface...
+     ✅ **Web Interface Stopped**
+     
+     Ngrok tunel byl ukončen.
+```
+
+<a name="implementace"></a>
+### 🔧 Implementace
+
+**Komponenty:**
+- Flask server (auto port 5001-5020)
+- Ngrok tunnel (публічний URL)
+- Markdown renderer
+- Search functionality (fuzzy + exact)
+- Dashboard s real-time stats
+
+<a name="poznámky"></a>
+### ⚠️ Poznámky
+- Automatický výběr volného portu
+- Ngrok tunnel zůstává aktivní i po Flask restart
+- Web interface obsahuje dokumentaci + search
+- Dashboard auto-refresh (konfigurovatelný interval)
+
+---
+
+<a name="topic"></a>
+## `!topic`
+
+<a name="popis"></a>
+### 📋 Popis
+Správa topics pro autonomous boredom system (admin only).
+
+<a name="použití"></a>
+### ⚙️ Použití
+
+**List topics:**
+```
+!topic
+!topic list
+```
+
+**Add topic:**
+```
+!topic add <text>
+```
+
+**Remove topic:**
+```
+!topic remove <index>
+```
+
+**Clear all:**
+```
+!topic clear
+```
+
+<a name="příklady"></a>
+### 📝 Příklady
+
+**List:**
+```
+User: !topic
+
+Bot: 📚 **Boredom Topics** (5):
+1. Learn about Python decorators
+2. Explore new web scraping techniques  
+3. Study async programming patterns
+4. Research AI model optimization
+5. Learn about Docker containers
+```
+
+**Add:**
+```
+User: !topic add Study quantum computing basics
+
+Bot: ✅ Topic added! (6 total topics)
+```
+
+**Remove:**
+```
+User: !topic remove 3
+
+Bot: ✅ Removed topic: "Study async programming patterns"
+     (5 remaining topics)
+```
+
+<a name="poznámky"></a>
+### ⚠️ Poznámky
+- **Admin only** - všechny operace
+- Topics jsou uloženy v `boredom_topics.json`
+- Agent vybere random topic při vysoké boredom
+- Topics persistují přes restart
+
+---
+
+<a name="report"></a>
+## `!report`
+
+<a name="popis"></a>
+### 📋 Popis
+Generate report o posledním user command.
+
+<a name="použití"></a>
+### ⚙️ Použití
+```
+!report
+```
+
+<a name="příklady"></a>
+### 📝 Příklady
+
+```
+User: !ask what is Python?
+
+[Agent responds...]
+
+User: !report
+
+Bot: 📊 **Last Command Report:**
+
+**User:** JohnDoe#1234
+**Command:** !ask what is Python?
+**Timestamp:** 2025-12-04 22:30:15
+**Time ago:** 2 minutes ago
+
+**Context:**
+- Channel: #general
+- Server: My Discord Server
+```
+
+<a name="poznámky"></a>
+### ⚠️ Poznámky
+- Admin only
+- Sleduje poslední non-report command
+- Užitečné pro debugging interakcí
+- Data v paměti (nepersistuje přes restart)
+
+---
+
+<a name="upload"></a>
+## `!upload`
+
+<a name="popis"></a>
+### 📋 Popis
+Upload nové release na GitHub (admin only).
+
+<a name="použití"></a>
+### ⚙️ Použití
+```
+!upload
+```
+
+<a name="příklady"></a>
+### 📝 Příklady
+
+**Successful upload:**
+```
+User: !upload
+
+Bot: 🚀 **GitHub Release Upload**
+     Checking rate limit...
+     
+     📦 Creating release... (this may take ~30s)
+     
+     ✅ **GitHub Release Created Successfully!**
+     
+     📍 Check: https://github.com/davca2848123/AI_agent/releases
+     ⏰ Next upload available in: **2 hours**
+```
+
+**Rate limited:**
+```
+User: !upload
+
+Bot: ⏳ **Rate Limit Active**
+     
+     Uploads are limited to once every 2 hours.
+     ⏰ Try again in: **1h 45m**
+     
+     _This prevents accidental spam and excessive API usage._
+```
+
+<a name="implementace"></a>
+### 🔧 Implementace
+
+**Rate limiting:**
+- Minimální 2 hodiny mezi uploady
+- Timestamp uložen v `.last_github_upload`
+- Kontrola před uploadem
+
+**GitHub API:**
+```python
+from scripts.github_release import create_release
+create_release(github_token, repo_name, branch, force=False, min_hours=2)
+```
+
+<a name="poznámky"></a>
+### ⚠️ Poznámky
+- **Admin only**
+- Vyžaduje `GITHUB_TOKEN` v `config_secrets.py`  
+- 2-hour rate limit
+- Creates timestamped release
+- Asyncio executor pro non-blocking
+
+---
+
+<a name="disable"></a>
+## `!disable`
+
+<a name="popis"></a>
+### 📋 Popis
+Disable interaction pro non-admin uživatele (admin only).
+
+<a name="použití"></a>
+### ⚙️ Použití
+```
+!disable
+```
+
+<a name="příklady"></a>
+### 📝 Příklady
+
+```
+User (Admin): !disable
+
+Bot: 🔒 **Interaction Disabled**
+     I will now ignore commands from non-admin users.
+
+[Later]
+
+User (Non-admin): !help
+
+[No response]
+
+User (Admin): !help
+
+Bot: 🤖 **AI Agent - Nápověda Příkazů**...
+```
+
+<a name="poznámky"></a>
+### ⚠️ Poznámky
+- **Admin only**
+- Admins můžou vždy použít příkazy
+- Global flag: `CommandHandler.global_interaction_enabled`
+- 
+
+Non-persistent (reset při restartu)
+- Užitečné pro maintenance nebo testing
+
+---
+
+<a name="enable"></a>
+## `!enable`
+
+<a name="popis"></a>
+### 📋 Popis
+Enable interaction pro všechny uživatele (admin only).
+
+<a name="použití"></a>
+### ⚙️ Použití
+```
+!enable
+```
+
+<a name="příklady"></a>
+### 📝 Příklady
+
+```
+User (Admin): !enable
+
+Bot: 🔓 **Interaction Enabled**
+     I am now listening to all users.
+
+[Later]
+
+User (Non-admin): !help
+
+Bot: 🤖 **AI Agent - Nápověda Příkazů**...
+```
+
+<a name="poznámky"></a>
+### ⚠️ Poznámky
+- **Admin only**
+- Obnova normálního stavu
+- Default state je enabled
+- Párový příkaz s `!disable`
+
+---
+
 <a name="souhrn"></a>
 ## 📊 Souhrn
 
 | Příkaz | Účel | Příklad |
 |--------|------|---------|
 | `!restart` | Restart agenta | `!restart` |
-| `!cmd` | Shell command | `!cmd ls -la` |
 | `!monitor` | Resource monitoring | `!monitor 30` |
-| `!ssh` | Manage SSH tunnel | `!ssh start` |
 | `!debug` | Diagnostika | `!debug llm` |
+| `!ssh` | SSH tunnel správa | `!ssh start` |
+| `!cmd` | Shell command | `!cmd ls -la` |
+| `!web` | Web interface | `!web start` |
+| `!topic` | Manage topics | `!topic add <text>` |
+| `!report` | Last command report | `!report` |
+| `!upload` | GitHub release | `!upload` |
+| `!disable` | Disable non-admin | `!disable` |
+| `!enable` | Enable all users | `!enable` |
+
+**Celkem:** 10 admin příkazů (requires `ADMIN_USER_IDS`)
 
 ---
-Poslední aktualizace: 2025-12-04  
+
+<a name="restricted-commands"></a>
+## ⛔ Commands Restricted to Admin
+
+Následující shell příkazy jsou v rámci `!cmd` blokovány i pro administrátory, pokud nejsou explicitně povoleny v kódu (bezpečnostní pojistka).
+
+| Příkaz | Důvod |
+|--------|-------|
+| `shutdown` | Vypnutí serveru |
+| `reboot` | Restart serveru |
+| `kill` | Ukončení procesů |
+| `rm -rf` | Destruktivní mazání |
+| `mkfs` | Formátování disku |
+| `dd` | Přímý zápis na disk |
+| `:(){ :|:& };:` | Fork bomb |
+
+**Konfigurace:**
+Seznam je definován v `config_settings.py` jako `ADMIN_RESTRICTED_COMMANDS`.
+
+---
+Poslední aktualizace: 2025-12-05  
 Verze: Alpha  
 Tip: Použij Ctrl+F pro vyhledávání

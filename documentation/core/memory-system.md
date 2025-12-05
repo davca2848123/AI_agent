@@ -1,6 +1,6 @@
 # Paměťový Systém (Memory System)
 
-> **Navigace:** [📂 Dokumentace](../README.md) | [🧠 Core](../README.md#core-jádro) | [Paměťový systém](memory-system.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
+> **Navigace:** [📂 Dokumentace](../README.md) | [🧠 Core](../README.md#core-jádro) | [Paměťový systém](memory-system.md)
 
 > VectorStore a správa vzpomínek agenta.
 > **Verze:** Alpha

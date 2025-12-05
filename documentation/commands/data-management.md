@@ -1,6 +1,6 @@
 # Správa Dat - Data Management Commands
 
-> **Navigace:** [📂 Dokumentace](../README.md) | [💬 Příkazy](../README.md#commands-příkazy) | [Správa dat](data-management.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
+> **Navigace:** [📂 Dokumentace](../README.md) | [💬 Příkazy](../README.md#commands-příkazy) | [Správa dat](data-management.md)
 
 > Příkazy pro správu logů, paměti a export dat.
 > **Verze:** Alpha

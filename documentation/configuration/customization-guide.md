@@ -1,6 +1,6 @@
 # ⚙️ Průvodce Konfigurací (Customization Guide)
 
-> **Navigace:** [📂 Dokumentace](../README.md) | [⚙️ Konfigurace](../README.md#konfigurace) | [Customization Guide](customization-guide.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
+> **Navigace:** [📂 Dokumentace](../README.md) | [⚙️ Konfigurace](../README.md#konfigurace) | [Customization Guide](customization-guide.md)
 
 > Detailní popis všech konfiguračních možností v souboru `config_settings.py`.
 > **Verze:** Alpha

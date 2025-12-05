@@ -1,6 +1,6 @@
 # Základní Příkazy
 
-> **Navigace:** [📂 Dokumentace](../README.md) | [💬 Příkazy](../README.md#commands-příkazy) | [Základní příkazy](basic.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
+> **Navigace:** [📂 Dokumentace](../README.md) | [💬 Příkazy](../README.md#commands-příkazy) | [Základní příkazy](basic.md)
 
 > Základní příkazy pro interakci s agentem a zobrazení stavu.
 > **Verze:** Alpha

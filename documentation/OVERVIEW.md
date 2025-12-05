@@ -1,6 +1,6 @@
 # 📚 Dokumentace - Rychlý Přehled
 
-> **Navigace:** [📂 Dokumentace](README.md) | [📄 Přehled (OVERVIEW)](OVERVIEW.md) | [🔍 Index (INDEX)](INDEX.md) | [📋 API Tasklist (SUMMARY)](SUMMARY.md) | [🏗️ Architektura](architecture.md) | [🆘 Troubleshooting](troubleshooting.md) | [🔍 Hledat](INDEX.md#vyhledavani)
+> **Navigace:** [📂 Dokumentace](README.md) | [📄 Přehled (OVERVIEW)](OVERVIEW.md) | [🔍 Index (INDEX)](INDEX.md) | [📋 API Tasklist (SUMMARY)](SUMMARY.md) | [🏗️ Architektura](architecture.md) | [🆘 Troubleshooting](troubleshooting.md)
 
 > Stručné shrnutí všech dokumentovaných částí projektu.
 > **Verze:** Alpha
@@ -16,11 +16,11 @@
 
 <a name="příkazy-commands"></a>
 ### 💬 Příkazy (Commands)
-- ✅ **[Základní příkazy](commands/basic.md)** - help, status, stats, intelligence
+- ✅ **[Základní příkazy](commands/basic.md)** - help, status, stats, intelligence, documentation
 - ✅ **[Nástroje a učení](commands/tools-learning.md)** - tools, learn, ask, teach, search
 - ✅ **[Správa dat](commands/data-management.md)** - memory, logs, live logs, export
 - ✅ **[Interakce](commands/interaction.md)** - mood, goals, config
-- ✅ **[Administrace](commands/admin.md)** - restart, cmd, monitor, ssh, debug
+- ✅ **[Administrace](commands/admin.md)** - restart, monitor, debug, ssh, cmd, web, topic, report, upload, disable, enable
 
 <a name="nástroje-tools"></a>
 ### 🛠️ Nástroje (Tools)
@@ -46,11 +46,11 @@
 documentation/
 ├── README.md                           # Hlavní index s TOC
 ├── commands/
-│   ├── basic.md                       # 4 příkazy
+│   ├── basic.md                       # 5 příkazů
 │   ├── tools-learning.md              # 5 příkazů
 │   ├── data-management.md             # 4 příkazy
 │   ├── interaction.md                 # 3 příkazy
-│   └── admin.md                       # 5 příkazů
+│   └── admin.md                       # 10 příkazů
 ├── tools/
 │   └── all-tools.md                   # 14 nástrojů
 └── core/
@@ -63,14 +63,15 @@ documentation/
 <a name="pokryté-komponenty"></a>
 ### Pokryté Komponenty
 
-- **✅ 24 Discord příkazů** - Všechny příkazy zdokumentovány
-- **✅ 14 nástrojů** - FileTool, WebTool, MathTool, atd.
+- **✅ 24 Discord příkazů** (5 basic, 5 tools, 4 data, 3 interaction, 10 admin)
+- **✅ 14 nástrojů** - FileTool, WebTool, MathTool, WeatherTool, atd.
 - **✅ 5 core systémů** - Autonomous, Memory, LLM, Resources, Discord
-- **✅ Fuzzy matching** - Automatická korekce překlepů
-- **✅ Command queue** - Asynchronní zpracování
-- **✅ Learning mode** - Systematické učení
-- **✅ 4-tier system** - Resource management
-- **✅ Network monitoring** - Internet disconnect/reconnect
+- **✅ Web Interface** - Flask + ngrok dokumentace s vyhledáváním
+- **✅ Fuzzy matching** - Levenshtein distance auto-korekce
+- **✅ Command queue** - Asynchronní worker loop
+- **✅ Learning mode** - Autonomní i manuální učení (queue)
+- **✅ 4-tier system** - Resource manager (80%/90%/95% prahy)
+- **✅ Network monitoring** - Offline/online detection + recovery
 
 ---
 
@@ -100,10 +101,10 @@ documentation/
 
 <a name="4-discord-integrace"></a>
 ### 4. Discord Integrace
-- 21 příkazů
-- Interactive buttons
-- Status updates
-- Live monitoring
+- 24 příkazů (včetně subcommands)
+- Interactive buttons (dokumentace UI)
+- Status updates a DM kategorie
+- Live monitoring commands
 
 <a name="5-resource-management"></a>
 ### 5. Resource Management

@@ -1,6 +1,6 @@
 # 📚 RPI AI Agent - Kompletní Dokumentace
 
-> **Navigace:** [📂 Dokumentace](README.md) | [📄 Přehled (OVERVIEW)](OVERVIEW.md) | [🔍 Index (INDEX)](INDEX.md) | [📋 API Tasklist (SUMMARY)](SUMMARY.md) | [🏗️ Architektura](architecture.md) | [🆘 Troubleshooting](troubleshooting.md) | [🔍 Hledat](INDEX.md#vyhledavani)
+> **Navigace:** [📂 Dokumentace](README.md) | [📄 Přehled (OVERVIEW)](OVERVIEW.md) | [🔍 Index (INDEX)](INDEX.md) | [📋 API Tasklist (SUMMARY)](SUMMARY.md) | [🏗️ Architektura](architecture.md) | [🆘 Troubleshooting](troubleshooting.md)
 
 > Detailní dokumentace autonomního AI agenta běžícího na Raspberry Pi s Discord integrací.
 > **Verze:** Alpha
@@ -18,11 +18,11 @@
 
 <a name="discord-příkazy"></a>
 ### 💬 Discord Příkazy
-- [**Základní Příkazy**](commands/basic.md) - `!help`, `!status`, `!stats`, `!intelligence`
-- [**Nástroje a Učení**](commands/tools-learning.md) - `!tools`, `!learn`, `!ask`, `!teach`, `!search`
+- [**Základní Příkazy**](commands/basic.md) - `!help`, `!status`, `!stats`, `!intelligence`, `!documentation`
+- [**Nástroje a Učení**](commands/tools-learning.md) - `!learn`, `!tools`, `!ask`, `!teach`, `!search`
 - [**Správa Dat**](commands/data-management.md) - `!memory`, `!logs`, `!live`, `!export`
 - [**Interakce**](commands/interaction.md) - `!mood`, `!goals`, `!config`
-- [**Administrace**](commands/admin.md) - `!restart`, `!monitor`, `!ssh`, `!cmd`, `!debug`
+- [**Administrace**](commands/admin.md) - `!restart`, `!monitor`, `!debug`, `!ssh`, `!cmd`, `!web`, `!topic`, `!report`, `!upload`, `!disable`/`!enable`
 
 <a name="nástroje-tools"></a>
 ### 🛠️ Nástroje (Tools)

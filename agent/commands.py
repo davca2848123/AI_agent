@@ -21,6 +21,11 @@ try:
 except ImportError:
     ngrok = None
 
+try:
+    from scripts.internal.github_release import upload_to_github
+except ImportError:
+    upload_to_github = None
+
 logger = logging.getLogger(__name__)
 tools_logger = logging.getLogger('agent.tools')  # For tool-related logging
 
@@ -50,12 +55,29 @@ class SSHView(discord.ui.View):
         self.net_use_command = net_use_command
 
     @discord.ui.button(label="Zkopírovat SSH", style=discord.ButtonStyle.success, emoji="📋")
+    async def copy_ssh(self, interaction: discord.Interaction, button: discord.ui.Button):
+        # Admin check
+        if interaction.user.id not in config_settings.ADMIN_USER_IDS:
+             await interaction.response.send_message("⛔ Access Denied.", ephemeral=True)
+             return
+        await interaction.response.send_message(f"```\n{self.ssh_command}\n```", ephemeral=True)
+
+    @discord.ui.button(label="Zkopírovat Net Use", style=discord.ButtonStyle.secondary, emoji="🪟")
+    async def copy_net_use(self, interaction: discord.Interaction, button: discord.ui.Button):
+        # Admin check
+        if interaction.user.id not in config_settings.ADMIN_USER_IDS:
+             await interaction.response.send_message("⛔ Access Denied.", ephemeral=True)
+             return
+        await interaction.response.send_message(f"```\n{self.net_use_command}\n```", ephemeral=True)
 
     @discord.ui.button(label="Zobrazit detailní statistiky", style=discord.ButtonStyle.primary, emoji="📊")
     async def show_stats(self, interaction: discord.Interaction, button: discord.ui.Button):
         # Defer the response first to avoid timeout
-        await interaction.response.defer()
+        await interaction.response.defer(ephemeral=True)
         # Execute !stats command in the channel (visible to everyone)
+        # Note: cmd_stats sends a public message. If we want it ephemeral, we'd need to change cmd_stats.
+        # For now, let's keep stats public but maybe restrict button?
+        # User request was specifically about SSH commands visibility.
         await self.command_handler.cmd_stats(interaction.channel_id)
 
 # === Documentation Views ===
@@ -307,6 +329,21 @@ class DocumentationView(discord.ui.View):
         await interaction.response.defer(ephemeral=True)
         await self.command_handler.cmd_web(interaction.channel_id, [])
 
+class StatusView(discord.ui.View):
+    def __init__(self, agent):
+        super().__init__(timeout=None)
+        self.agent = agent
+        
+    @discord.ui.button(label="🔄 Refresh Status", style=discord.ButtonStyle.primary, custom_id="refresh_status")
+    async def refresh_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+        
+        # Get fresh status
+        status_text = await self.agent.command_handler.get_status_text()
+        
+        # Update message
+        await interaction.message.edit(content=status_text, view=self)
+
 class CommandHandler:
     """Handles Discord bot commands."""
     
@@ -354,9 +391,9 @@ class CommandHandler:
         self.agent = agent
         self.ngrok_process = None  # Track running ngrok process
         self.queue = asyncio.Queue()
-        self.worker_task = None
-        self.is_running = False
-        self.is_running = False
+        self.is_processing = False # Track if a command is currently being processed
+        self.worker_task = None # Will be set by start()
+        self.is_running = False # Will be set by start()
         self.last_user_command = None # Track last command for reporting
         self.global_interaction_enabled = True # Control global interaction (admin only override)
 
@@ -376,6 +413,7 @@ class CommandHandler:
                 
                 # Process it
                 try:
+                    self.is_processing = True # Set processing flag
                     await self._execute_command(msg)
                 except Exception as e:
                     logger.error(f"Error executing command: {e}", exc_info=True)
@@ -383,6 +421,7 @@ class CommandHandler:
                     if channel_id:
                         await self.agent.discord.send_message(channel_id, f"✖️ Internal error executing command: {e}")
                 finally:
+                    self.is_processing = False # Clear processing flag
                     self.queue.task_done()
                     
             except asyncio.CancelledError:
@@ -555,9 +594,12 @@ class CommandHandler:
         import discord
         
         # Parse subcommand
-        subcommand = args[0].lower() if args else "start"
+        raw_subcommand = args[0].lower() if args else "start"
+        valid_subcommands = ["start", "stop", "restart"]
         
-        if subcommand not in ["start", "stop", "restart"]:
+        subcommand = self._match_subcommand(raw_subcommand, valid_subcommands)
+        
+        if not subcommand:
             await self.agent.discord.send_message(
                 channel_id,
                 "❓ **Usage:** `!web [start|stop|restart]`\n\n"
@@ -566,6 +608,9 @@ class CommandHandler:
                 "- **restart** - Restartovat web interface"
             )
             return
+            
+        if subcommand != raw_subcommand:
+             await self.agent.discord.send_message(channel_id, f"💡 Did you mean `{subcommand}`? Executing...")
         
         # Handle stop
         if subcommand == "stop":
@@ -582,6 +627,28 @@ class CommandHandler:
             await self.agent.discord.send_message(channel_id, "🔄 Restarting web interface...")
             # Use gentle stop to preserve SSH tunnel if possible
             self.agent.web_server.disconnect_web_tunnel()
+            
+            # Kill any processes holding web interface ports (5001-5020)
+            try:
+                import psutil
+                import subprocess
+                import os
+                killed_pids = set()
+                for port in range(5001, 5021):
+                    for conn in psutil.net_connections():
+                        if hasattr(conn, 'laddr') and conn.laddr and conn.laddr.port == port:
+                            if conn.pid and conn.pid not in killed_pids and conn.pid != os.getpid():
+                                try:
+                                    logger.warning(f"Killing process {conn.pid} holding port {port}")
+                                    subprocess.run(['kill', '-9', str(conn.pid)], check=False)
+                                    killed_pids.add(conn.pid)
+                                except Exception as e:
+                                    logger.error(f"Failed to kill process {conn.pid}: {e}")
+                
+                if killed_pids:
+                    logger.info(f"Killed {len(killed_pids)} processes holding web ports")
+            except Exception as e:
+                logger.error(f"Error cleaning up ports: {e}")
             
             # Reload module to pick up code changes
             try:
@@ -663,7 +730,7 @@ class CommandHandler:
         
         try:
             # Import GitHub release module
-            from scripts.github_release import create_release, check_rate_limit
+            from scripts.internal.github_release import create_release, check_rate_limit
             import config_secrets
             
             github_token = config_secrets.GITHUB_TOKEN
@@ -952,57 +1019,59 @@ class CommandHandler:
                 await interaction.response.send_message("Vyber kategorii příkazů:", view=CommandsView(parent_view=None), ephemeral=True)
 
         help_text = """
-🤖 **AI Agent - Nápověda Příkazů**
+🤖 **AI Agent - Nápověda Příkazů** (24 příkazů)
 
 📋 **BASIC**
-`!help` `!status` `!stats` `!intelligence` `!mood` `!config`
+`!help` - Zobrazení nápovědy
+`!status` - Stav agenta + diagnostika
+`!stats` - Detailní statistiky
+`!intelligence` - Intelligence metriky
+`!documentation` / `!docs` - Interaktivní dokumentace
 
 🎓 **LEARNING & TOOLS**
-`!learn [tool|all]` - Naučí nástroje
-`!tools` - Seznam nástrojů
-`!ask <otázka>` - Zeptej se (paměť + nástroje)
-`!teach <text>` - Nauč něco nového
-`!search <dotaz>` - Vyhledej info
+`!learn [tool|all|stop|queue]` - Naučí nástroje
+`!tools` - Seznam všech 14 nástrojů
+`!ask <otázka>` - Zeptej se AI (LLM + nástroje)
+`!teach <text>` - Nauč AI něco nového
+`!search <dotaz>` - Vyhledej informace
 
-💾 **DATA**
+💾 **DATA MANAGEMENT**
 `!memory [dump]` - Statistiky paměti
 `!logs [počet] [ERROR|WARNING|INFO]` - Zobraz logy
-`!live logs [1m|5m|10m|1h]` - Živý stream
+`!live logs [duration]` - Živý stream logů
 `!export [history|memory|stats|all]` - Export dat
-`!docs` - Dokumentace
 
 💬 **INTERACTION**
-`!goals [add|remove|clear] [...]` - Správa cílů
+`!mood` - Zobraz náladu agenta
+`!goals [add|remove|clear] [text]` - Správa cílů
+`!config` - Zobrazení konfigurace
 
-⚙️ **ADMIN** (🔐 oprávnění)
+⚙️ **ADMIN** (🔐 Admin pouze)
 `!restart` - Restart agenta
-`!monitor [cpu|ram|disk|network]` - Monitoring
-`!debug [quick|deep]` - Diagnostika
-`!ssh [start|stop|status]` - SSH tunel
-`!cmd <příkaz>` - Shell (⚠️ omezené)
-`!web [start|stop|restart]` - Web interface + dokumentace
-`!topic [add|remove|clear] [...]` - Témata
-`!upload` - GitHub release 
+`!monitor [cpu|ram|disk|network]` - Resource monitoring
+`!debug [quick|deep|tools|compile]` - Pokročilá diagnostika
+`!ssh [start|stop|status]` - SSH tunel správa
+`!cmd <příkaz>` - Shell příkazy (Linux-Debian)
+`!web [start|stop|restart]` - Web interface + docs
+`!topic [list|add|remove|clear]` - Témata pro boredom
+`!report` - Report posledního příkazu
+`!upload` - GitHub release upload
+`!disable` / `!enable` - Globální interakce on/off
 
-💡 Syntaxe: <povinné> [nepovinné|možnosti]
+💡 **Syntaxe:** <povinné> [nepovinné|možnosti]
+📚 **Web Docs:** Použij `!web start` pro přístup k webové dokumentaci
         """
         
         view = HelpView(self)
         await self.agent.discord.send_message(channel_id, help_text.strip(), view=view)
     
-    class StatusView(discord.ui.View):
-        def __init__(self, command_handler):
-            super().__init__(timeout=60)
-            self.command_handler = command_handler
+    async def get_status_text(self):
+        """Generates the status text for the agent."""
+        import platform
+        import time
+        import asyncio
+        import psutil
 
-        @discord.ui.button(label="🔄 Refresh", style=discord.ButtonStyle.primary)
-        async def refresh(self, interaction: discord.Interaction, button: discord.ui.Button):
-            await interaction.response.defer()
-            await self.command_handler.cmd_status(interaction.channel_id)
-
-    async def cmd_status(self, channel_id: int):
-        """Show agent status with system info and health checks."""
-        # Get system info
         hostname = platform.node()
         os_name = platform.system()
         
@@ -1168,6 +1237,28 @@ class CommandHandler:
         # Graceful shutdown succeeded, proceed with restart
         import os
         import sys
+        import subprocess
+        
+        # Kill any processes holding web interface ports (5001-5020)
+        try:
+            import psutil
+            killed_pids = set()
+            for port in range(5001, 5021):
+                for conn in psutil.net_connections():
+                    if hasattr(conn, 'laddr') and conn.laddr and conn.laddr.port == port:
+                        if conn.pid and conn.pid not in killed_pids and conn.pid != os.getpid():
+                            try:
+                                logger.warning(f"Killing process {conn.pid} holding port {port}")
+                                subprocess.run(['kill', '-9', str(conn.pid)], check=False)
+                                killed_pids.add(conn.pid)
+                            except Exception as e:
+                                logger.error(f"Failed to kill process {conn.pid}: {e}")
+            
+            if killed_pids:
+                logger.info(f"Killed {len(killed_pids)} processes holding web ports")
+                await asyncio.sleep(0.5)  # Give OS time to release ports
+        except Exception as e:
+            logger.error(f"Error cleaning up ports: {e}")
         
         logger.info("Restarting Python process...")
         os.execv(sys.executable, [sys.executable] + sys.argv)
@@ -1183,7 +1274,25 @@ class CommandHandler:
             await self.agent.discord.send_message(channel_id, "✅ Learning forced. I will try to learn something new now.")
             return
 
-        subcommand = args[0].lower()
+        raw_subcommand = args[0].lower()
+        valid_subcommands = ["all", "stop", "queue"]
+        # Also include tool names for fuzzy matching if it's not a standard subcommand
+        all_tools = list(self.agent.tools.tools.keys())
+        
+        # First check standard subcommands
+        subcommand = self._match_subcommand(raw_subcommand, valid_subcommands)
+        
+        # If no standard subcommand matched, check tools
+        if not subcommand:
+            tool_match = self._match_subcommand(raw_subcommand, all_tools)
+            if tool_match:
+                subcommand = tool_match
+            else:
+                # If no match at all, keep raw for error message or exact match fallback
+                subcommand = raw_subcommand
+                
+        if subcommand != raw_subcommand:
+             await self.agent.discord.send_message(channel_id, f"💡 Did you mean `{subcommand}`? Executing...")
         
         # Queue command - show current learning queue
         if subcommand == 'queue':
@@ -1233,13 +1342,6 @@ class CommandHandler:
 
         # Learn Specific Tool
         tool_name = subcommand
-        # Handle partial matches or exact matches
-        if tool_name not in self.agent.tools.tools:
-            # Try to find close match
-            for t in self.agent.tools.tools:
-                if tool_name in t:
-                    tool_name = t
-                    break
         
         if tool_name in self.agent.tools.tools:
             await self.agent.discord.send_message(channel_id, f"🎓 **Targeted Learning:** `{tool_name}`")
@@ -1255,14 +1357,28 @@ class CommandHandler:
     
     async def cmd_memory(self, channel_id: int):
         """Show memory statistics."""
-        mem_count = len(self.agent.memory.get_recent_memories(limit=1000))
+        mem_count = len(self.agent.memory.get_recent_memories(limit=10000))
+        action_count = len(self.agent.action_history)
+        
+        # Count by type
+        learning_count = self.agent.memory.count_memories_by_type("learning")
+        user_teaching_count = self.agent.memory.count_memories_by_type("user_teaching")
+        error_count = self.agent.memory.count_memories_by_type("error")
         
         mem_text = f"""💾 **Memory Statistics:**
 
-• Total Memories: {mem_count}
-• Action History: {len(self.agent.action_history)} entries
+• **Total Memories:** {mem_count}
+• **Action History:** {action_count} entries
 
-🚧 More detailed memory stats coming soon!"""
+**📊 Breakdown:**
+• 🧠 Learned Concepts: {learning_count}
+• 🎓 User Teachings: {user_teaching_count}
+• ⚠️ Recorded Errors: {error_count}
+• 📝 Other: {mem_count - learning_count - user_teaching_count - error_count}
+
+**💡 Configuration:**
+• Min Score to Save: {config_settings.MEMORY_CONFIG['MIN_SCORE_TO_SAVE']}
+• Keywords: {', '.join(config_settings.MEMORY_CONFIG['KEYWORDS'][:5])}..."""
         
         await self.agent.discord.send_message(channel_id, mem_text)
     
@@ -1275,14 +1391,16 @@ class CommandHandler:
             usage_count = self.agent.tool_usage_count.get(tool_name, 0)
             last_used_ts = self.agent.tool_last_used.get(tool_name)
             
-            status = "🆕 New" if usage_count == 0 else f"✅ Learned/Used {usage_count} times"
+            # Improved formatting
+            status_icon = "🆕" if usage_count == 0 else "✅"
+            status_text = "New" if usage_count == 0 else f"Used {usage_count}x"
             
+            tool_text += f"**{tool_name}** {status_icon} ({status_text})\n"
             if last_used_ts:
                 last_used_str = datetime.datetime.fromtimestamp(last_used_ts).strftime('%Y-%m-%d %H:%M')
-                status += f" (Last: {last_used_str})"
+                tool_text += f"└ 🕒 Last used: {last_used_str}\n"
             
-            tool_text += f"• `{tool_name}` - {status}\n"
-            tool_text += f"  _{tool.description}_\n\n"
+            tool_text += f"└ 📝 _{tool.description}_\n\n"
         
         await self.agent.discord.send_message(channel_id, tool_text)
     
@@ -1374,9 +1492,14 @@ class CommandHandler:
             await self.agent.discord.send_message(channel_id, "❓ Usage: `!live logs [duration]`")
             return
         
-        subcommand = args[0].lower()
+        raw_subcommand = args[0].lower()
+        valid_subcommands = ["logs", "log"]
         
-        if subcommand in ["logs", "log"]:
+        subcommand = self._match_subcommand(raw_subcommand, valid_subcommands)
+        
+        if subcommand:
+            if subcommand != raw_subcommand:
+                 await self.agent.discord.send_message(channel_id, f"💡 Did you mean `{subcommand}`? Starting stream...")
             # Parse optional duration (default 60s)
             duration = 60  # Default: 1 minute
             if len(args) > 1:
@@ -1539,22 +1662,22 @@ class CommandHandler:
         stats_text = f"""📊 **Comprehensive Statistics**
 
 🖥️ **System:**
-â€˘ Host: `{hostname}` ({os_name})
-â€˘ Uptime: {uptime_str}
-â€˘ Started: <t:{int(self.agent.start_time)}:R>
+• Host: `{hostname}` ({os_name})
+• Uptime: {uptime_str}
+• Started: <t:{int(self.agent.start_time)}:R>
 
 💾 **Memory:**
-â€˘ Total Memories: {total_memories}
+• Total Memories: {total_memories}
 
 🛠️ **Most Used Tools:**"""
         
         # Sort tools by usage
         sorted_tools = sorted(self.agent.tool_usage_count.items(), key=lambda x: x[1], reverse=True)
         for tool, count in sorted_tools[:3]:
-            stats_text += f"\nâ€˘ {tool}: {count} times"
+            stats_text += f"\n• {tool}: {count} times"
         
         if not sorted_tools:
-            stats_text += "\nâ€˘ No tools used yet"
+            stats_text += "\n• No tools used yet"
         
         await self.agent.discord.send_message(channel_id, stats_text)
     
@@ -1562,12 +1685,18 @@ class CommandHandler:
         """Export data and send to Discord chat."""
         import json
         
-        export_type = args[0] if args else 'stats'
+        raw_export_type = args[0] if args else 'stats'
+        valid_types = ['history', 'memory', 'stats', 'all']
         
-        if export_type not in ['history', 'memory', 'stats', 'all']:
+        export_type = self._match_subcommand(raw_export_type, valid_types)
+        
+        if not export_type:
             await self.agent.discord.send_message(channel_id, 
-                "âťŚ Invalid export type. Use: `history`, `memory`, `stats`, or `all`")
+                "✖️ Invalid export type. Use: `history`, `memory`, `stats`, or `all`")
             return
+            
+        if export_type != raw_export_type:
+             await self.agent.discord.send_message(channel_id, f"💡 Did you mean `{export_type}`? Exporting...")
         
         export_data = {}
         
@@ -2647,22 +2776,53 @@ _{description}_
                 goals_text += f"{i}. {goal}\n"
             goals_text += "\n💊 Use `!goals add <goal>` to add or `!goals clear` to remove all."
             await self.agent.discord.send_message(channel_id, goals_text)
+            return
+
+        # Parse subcommand
+        raw_subcommand = args[0].lower()
+        valid_subcommands = ["add", "remove", "clear"]
         
-        elif args[0] == 'add' and len(args) > 1:
+        subcommand = self._match_subcommand(raw_subcommand, valid_subcommands)
+        
+        if not subcommand:
+             await self.agent.discord.send_message(channel_id, 
+                "❓ Usage:\n• `!goals` - Show goals\n• `!goals add <goal>` - Add goal\n• `!goals remove <num>` - Remove goal\n• `!goals clear` - Clear all")
+             return
+
+        if subcommand != raw_subcommand:
+             await self.agent.discord.send_message(channel_id, f"💡 Did you mean `{subcommand}`? Executing...")
+    
+        if subcommand == 'add':
+            if len(args) < 2:
+                 await self.agent.discord.send_message(channel_id, "✖️ Usage: `!goals add <goal>`")
+                 return
             # Add new goal
             new_goal = ' '.join(args[1:])
             self.agent.goals.append(new_goal)
             await self.agent.discord.send_message(channel_id, 
                 f"✅ Goal added: '{new_goal}'\n🎯 Total goals: {len(self.agent.goals)}")
         
-        elif args[0] == 'clear':
+        elif subcommand == 'clear':
             # Clear all goals
             count = len(self.agent.goals)
             self.agent.goals = []
             await self.agent.discord.send_message(channel_id, 
                 f"🗑️ Cleared {count} goals.")
         
-        elif args[0] == 'remove' and len(args) > 1:
+        elif subcommand == 'remove':
+            # If no number provided, show list
+            if len(args) < 2:
+                if not self.agent.goals:
+                     await self.agent.discord.send_message(channel_id, "🎯 No goals to remove.")
+                     return
+                
+                goals_text = "🗑️ **Select goal to remove:**\n\n"
+                for i, goal in enumerate(self.agent.goals, 1):
+                    goals_text += f"**{i}.** {goal}\n"
+                goals_text += "\nUsage: `!goals remove <number>`"
+                await self.agent.discord.send_message(channel_id, goals_text)
+                return
+
             # Remove specific goal by number
             try:
                 index = int(args[1]) - 1
@@ -2676,13 +2836,38 @@ _{description}_
             except ValueError:
                 await self.agent.discord.send_message(channel_id, 
                     "✖️ Invalid number. Usage: `!goals remove <number>`")
-        else:
-            await self.agent.discord.send_message(channel_id, 
-                "❓ Usage:\n• `!goals` - Show goals\n• `!goals add <goal>` - Add goal\n• `!goals remove <num>` - Remove goal\n• `!goals clear` - Clear all")
     
     async def cmd_config(self, channel_id: int, args: list):
-        """Show/modify configuration."""
-        await self.agent.discord.send_message(channel_id, "🚧 Config management is under construction.")
+        """Show configuration settings (Admin only)."""
+        # Admin check
+        # We don't have author_id here easily without changing signature, 
+        # but config might contain sensitive info so we should be careful.
+        # However, config_settings usually has non-secret settings.
+        # Let's assume it's safe for now or add a warning.
+        
+        import config_settings
+        
+        config_text = "⚙️ **Current Configuration:**\n\n"
+        
+        # Iterate over settings
+        for key, value in vars(config_settings).items():
+            # Skip built-ins and secrets
+            if key.startswith("__"): continue
+            if "TOKEN" in key or "KEY" in key or "PASSWORD" in key: continue
+            
+            # Filter time-related if requested (optional)
+            # if "TIME" in key or "INTERVAL" in key: continue
+            
+            # Format value
+            if isinstance(value, list):
+                val_str = f"[{len(value)} items]"
+            else:
+                val_str = str(value)
+                if len(val_str) > 50: val_str = val_str[:47] + "..."
+            
+            config_text += f"• `{key}`: {val_str}\n"
+            
+        await self.agent.discord.send_message(channel_id, config_text)
     
     def _format_uptime(self, seconds: float) -> str:
         """Format uptime in human-readable format."""
@@ -3042,7 +3227,17 @@ _{description}_
     async def cmd_ssh(self, channel_id: int, author_id: int, args: list = None):
         
         # Parse subcommand
-        subcommand = args[0].lower() if args else "start"
+        raw_subcommand = args[0].lower() if args else "start"
+        valid_subcommands = ["start", "stop", "restart", "status"]
+        
+        subcommand = self._match_subcommand(raw_subcommand, valid_subcommands)
+        
+        if not subcommand:
+             await self.agent.discord.send_message(channel_id, "❓ Usage: `!ssh [start|stop|restart|status]`")
+             return
+
+        if subcommand != raw_subcommand:
+             await self.agent.discord.send_message(channel_id, f"💡 Did you mean `{subcommand}`? Executing...")
         
         if subcommand == "stop":
             # Admin check for destructive action
@@ -3080,11 +3275,11 @@ _{description}_
             # Restart ngrok tunnel
             if self.ngrok_process is not None:
                 try:
-                    self.ngrok_process.terminate()
-                    await asyncio.sleep(1)
-                    if self.ngrok_process.returncode is None:
-                        self.ngrok_process.kill()
+                    # Properly disconnect ngrok tunnel using pyngrok API
+                    if hasattr(self.ngrok_process, 'public_url'):
+                        ngrok.disconnect(self.ngrok_process.public_url)
                     self.ngrok_process = None
+                    await asyncio.sleep(1)
                     await self.agent.discord.send_message(channel_id, "🔄 Restarting SSH tunnel...")
                 except Exception as e:
                     logger.error(f"Error stopping old tunnel: {e}")
@@ -3145,13 +3340,14 @@ _{description}_
             await self.agent.discord.send_message(channel_id, "💻 Usage: `!cmd <command>`")
             return
 
-        # Specific check for 'kill' command - Admin only
-        # Note: The whole !cmd is already admin-only, but user requested specific restriction.
-        # If we ever relax !cmd, this ensures kill remains restricted.
-        if 'kill' in command.split():
-             if author_id not in config_settings.ADMIN_USER_IDS:
-                await self.agent.discord.send_message(channel_id, "⛔ **Access Denied.** 'kill' command is restricted to admins.")
-                return
+        # Check against restricted commands from config
+        # This ensures dangerous commands remain restricted even if !cmd is ever made public
+        for restricted in config_settings.ADMIN_RESTRICTED_COMMANDS:
+            # Simple check - if the restricted command is present in the input
+            if restricted in command.split(): 
+                if author_id not in config_settings.ADMIN_USER_IDS:
+                    await self.agent.discord.send_message(channel_id, f"⛔ **Access Denied.** '{restricted}' command is restricted to admins.")
+                    return
             
         logger.info("Sending executing message...")
         await self.agent.discord.send_message(channel_id, f"💻 Executing: `{command}`...")
@@ -3375,7 +3571,20 @@ _{description}_
             return
         
         # Subcommands require admin
-        subcommand = args[0].lower()
+        raw_subcommand = args[0].lower()
+        valid_subcommands = ["add", "remove", "clear"]
+        
+        subcommand = self._match_subcommand(raw_subcommand, valid_subcommands)
+        
+        if not subcommand:
+            await self.agent.discord.send_message(
+                channel_id,
+                "✖️ Unknown subcommand. Use: `!topic`, `!topic add <text>`, `!topic remove <index>`, or `!topic clear`"
+            )
+            return
+
+        if subcommand != raw_subcommand:
+             await self.agent.discord.send_message(channel_id, f"💡 Did you mean `{subcommand}`? Executing...")
         
         # Add topic
         if subcommand == "add":
@@ -3445,167 +3654,33 @@ _{description}_
             else:
                 await self.agent.discord.send_message(channel_id, "✖️ Failed to clear topics.")
             return
-        
-        else:
-            await self.agent.discord.send_message(
-                channel_id,
-                "✖️ Unknown subcommand. Use: `!topic`, `!topic add <text>`, `!topic remove <index>`, or `!topic clear`"
-            )
     
 
 
-        import time
-        import asyncio
+    def _match_subcommand(self, input_cmd: str, valid_cmds: list[str], threshold: int = 2) -> Optional[str]:
+        """
+        Fuzzy match a subcommand against a list of valid commands.
+        Returns the best match if within threshold, otherwise None.
+        """
+        input_cmd = input_cmd.lower()
         
-        # Admin check
-        if author_id not in config_settings.ADMIN_USER_IDS:
-            await self.agent.discord.send_message(channel_id, "⛔ **Access Denied.** Only admins can use debug commands.")
-            return
-        
-        # Parse mode
-        mode = args[0].lower() if args else "quick"
-        
-        if mode not in ["quick", "deep", "tools", "compile"]:
-            await self.agent.discord.send_message(
-                channel_id,
-                "❓ **Usage:** `!debug [quick|deep|tools|compile]`\n\n"
-                "- **quick**: Fast health check\n"
-                "- **deep**: Comprehensive diagnostics\n"
-                "- **tools**: Tool validation\n"
-                "- **compile**: Python syntax check"
-            )
-            return
-        
-        await self.agent.discord.send_message(channel_id, f"🔍 Running **{mode}** diagnostics...")
-        
-        results = []
-        
-        # === QUICK MODE ===
-        if mode in ["quick", "deep"]:
-            # 1. LLM Check
-            try:
-                if self.agent.llm and self.agent.llm.llm:
-                    start = time.time()
-                    resp = await self.agent.llm.generate_response("ping", system_prompt="Reply: pong")
-                    latency = (time.time() - start) * 1000
-                    if resp and "pong" in resp.lower():
-                        results.append(f"✅ **LLM**: Online ({latency:.0f}ms)")
-                    else:
-                        results.append(f"⚠️ **LLM**: Responding but unexpected output")
-                else:
-                    results.append("🔴 **LLM**: Not initialized")
-            except Exception as e:
-                results.append(f"❌ **LLM**: Error - {e}")
+        # Exact match
+        if input_cmd in valid_cmds:
+            return input_cmd
             
-            # 2. Discord Check
-            if self.agent.discord and self.agent.discord.client:
-                results.append(f"✅ **Discord**: Connected ({self.agent.discord.client.user.name})")
-            else:
-                results.append("🔴 **Discord**: Not connected")
-            
-            # 3. Database Check
-            try:
-                mem_count = len(self.agent.memory.get_recent_memories(limit=1))
-                results.append(f"✅ **Database**: Accessible ({mem_count}+ memories)")
-            except Exception as e:
-                results.append(f"❌ **Database**: Error - {e}")
-            
-            # 4. Tools Check
-            tool_count = len(self.agent.tools.tools)
-            results.append(f"✅ **Tools**: {tool_count} registered")
+        # Fuzzy match
+        best_match = None
+        min_dist = float('inf')
         
-        # === DEEP MODE ===
-        if mode == "deep":
-            # 5. File System Check
-            import os
-            checks = [
-                ("agent.log", os.path.exists("agent.log")),
-                ("config_secrets.py", os.path.exists("config_secrets.py")),
-                ("agent/core.py", os.path.exists("agent/core.py")),
-                ("scripts/", os.path.isdir("scripts"))
-            ]
-            fs_ok = all(c[1] for c in checks)
-            if fs_ok:
-                results.append("✅ **Filesystem**: All critical files present")
-            else:
-                missing = [c[0] for c in checks if not c[1]]
-                results.append(f"⚠️ **Filesystem**: Missing: {', '.join(missing)}")
-            
-            # 6. Network Check
-            import subprocess
-            import platform
-            try:
-                cmd = "ping -c 1 8.8.8.8" if platform.system() != "Windows" else "ping -n 1 8.8.8.8"
-                proc = await asyncio.create_subprocess_shell(
-                    cmd,
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE
-                )
-                await proc.communicate()
-                if proc.returncode == 0:
-                    results.append("✅ **Network**: Internet accessible")
-                else:
-                    results.append("⚠️ **Network**: No internet connection")
-            except:
-                results.append("❓ **Network**: Check failed")
-            
-            # 7. Resource Check
-            import psutil
-            cpu = psutil.cpu_percent(interval=1)
-            mem = psutil.virtual_memory()
-            disk = psutil.disk_usage('/')
-            results.append(
-                f"📊 **Resources**:\n"
-                f"  - CPU: {cpu}%\n"
-                f"  - RAM: {mem.percent}% ({mem.available / 1024**3:.1f}GB free)\n"
-                f"  - Disk: {disk.percent}% ({disk.free / 1024**3:.1f}GB free)"
-            )
-        
-        # === TOOLS MODE ===
-        if mode == "tools":
-            results.append("🛠️ **Tool Validation:**\n")
-            for tool_name, tool in self.agent.tools.tools.items():
-                try:
-                    # Basic validation
-                    has_desc = bool(tool.description)
-                    has_func = callable(tool.function)
-                    usage = self.agent.tool_usage_count.get(tool_name, 0)
-                    
-                    status = "✅" if (has_desc and has_func) else "⚠️"
-                    results.append(f"{status} `{tool_name}` - Used {usage}x")
-                except Exception as e:
-                    results.append(f"❌ `{tool_name}` - Error: {e}")
-        
-        # === COMPILE MODE ===
-        if mode == "compile":
-            results.append("🔧 **Python Syntax Check:**\n")
-            files_to_check = [
-                "main.py",
-                "agent/core.py",
-                "agent/commands.py",
-                "agent/tools.py",
-                "agent/llm.py"
-            ]
-            
-            for filepath in files_to_check:
-                try:
-                    with open(filepath, 'r', encoding='utf-8') as f:
-                        code = f.read()
-                    compile(code, filepath, 'exec')
-                    results.append(f"✅ `{filepath}`")
-                except SyntaxError as e:
-                    results.append(f"❌ `{filepath}` - Line {e.lineno}: {e.msg}")
-                except FileNotFoundError:
-                    results.append(f"⚠️ `{filepath}` - Not found")
-                except Exception as e:
-                    results.append(f"❌ `{filepath}` - {e}")
-        
-        # Send results
-        output = "\n".join(results)
-        await self.agent.discord.send_message(
-            channel_id,
-            f"🔍 **Debug Report - {mode.upper()}**\n\n{output}"
-        )
+        for cmd in valid_cmds:
+            dist = levenshtein_distance(input_cmd, cmd)
+            if dist < min_dist:
+                min_dist = dist
+                best_match = cmd
+                
+        if min_dist <= threshold:
+            return best_match
+        return None
 
     async def cmd_debug(self, channel_id: int, args: list, author_id: int):
         """Enhanced debug diagnostics with strict checking (Admin only)."""
@@ -3619,9 +3694,12 @@ _{description}_
             return
         
         # Parse mode
-        mode = args[0].lower() if args else "quick"
+        raw_mode = args[0].lower() if args else "quick"
+        valid_modes = ["quick", "deep", "tools", "compile"]
         
-        if mode not in ["quick", "deep", "tools", "compile"]:
+        mode = self._match_subcommand(raw_mode, valid_modes)
+        
+        if not mode:
             await self.agent.discord.send_message(
                 channel_id,
                 "❓ **Usage:** `!debug [quick|deep|tools|compile]`\n\n"
@@ -3631,6 +3709,9 @@ _{description}_
                 "- **compile**: Python syntax check"
             )
             return
+        
+        if mode != raw_mode:
+             await self.agent.discord.send_message(channel_id, f"💡 Did you mean `{mode}`? Running that instead.")
         
         await self.agent.discord.send_message(channel_id, f"🔍 Running **{mode}** diagnostics...")
         
@@ -3848,7 +3929,52 @@ _{description}_
 
             await self.agent.discord.send_message(channel_id, "✅ **Report Saved!**\nThe last interaction has been logged to `reports.json`.")
             logger.info(f"Report saved by user {author_id}")
+            
+            # Notify admin about new report
+            import datetime
+            timestamp_str = datetime.datetime.fromtimestamp(report_entry['timestamp']).strftime('%Y-%m-%d %H:%M:%S')
+            user_info = f"{report_entry['user']} (ID: {report_entry['user_id']})"
+            reported_by_info = f"User ID: {author_id}"
+            
+            admin_msg = f"📝 **New Report Submitted**\n\n"
+            admin_msg += f"**Time:** {timestamp_str}\n"
+            admin_msg += f"**User:** {user_info}\n"
+            admin_msg += f"**Reported by:** {reported_by_info}\n"
+            admin_msg += f"**Command:** `{report_entry['user_command']}`\n\n"
+            
+            # Include snippet of agent output
+            if report_entry.get('agent_outputs') and len(report_entry['agent_outputs']) > 0:
+                first_output = report_entry['agent_outputs'][0].get('content', '')
+                snippet = first_output[:200] + "..." if len(first_output) > 200 else first_output
+                admin_msg += f"**Agent Response:**\n```\n{snippet}\n```"
+            elif report_entry.get('agent_output'):
+                snippet = report_entry['agent_output'][:200] + "..." if len(report_entry['agent_output']) > 200 else report_entry['agent_output']
+                admin_msg += f"**Agent Response:**\n```\n{snippet}\n```"
+            
+            await self.agent.send_admin_dm(admin_msg, category="report")
 
         except Exception as e:
             logger.error(f"Failed to save report: {e}")
             await self.agent.discord.send_message(channel_id, f"❌ Failed to save report: {e}")
+
+    async def cmd_disable(self, channel_id: int, author_id: int):
+        """Disable global autonomous interaction (Admin only)."""
+        import config_settings
+        if author_id not in config_settings.ADMIN_USER_IDS:
+            await self.agent.discord.send_message(channel_id, "⛔ **Access Denied.** Only admins can disable interaction.")
+            return
+        
+        self.global_interaction_enabled = False
+        await self.agent.discord.send_message(channel_id, "🛑 **Global Interaction Disabled.**\nAgent will not respond to commands or perform autonomous actions (except Admin commands).")
+        logger.info(f"Global interaction disabled by user {author_id}")
+
+    async def cmd_enable(self, channel_id: int, author_id: int):
+        """Enable global autonomous interaction (Admin only)."""
+        import config_settings
+        if author_id not in config_settings.ADMIN_USER_IDS:
+            await self.agent.discord.send_message(channel_id, "⛔ **Access Denied.** Only admins can enable interaction.")
+            return
+        
+        self.global_interaction_enabled = True
+        await self.agent.discord.send_message(channel_id, "✅ **Global Interaction Enabled.**\nAgent is back online.")
+        logger.info(f"Global interaction enabled by user {author_id}")

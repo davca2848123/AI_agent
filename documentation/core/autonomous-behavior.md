@@ -1,6 +1,6 @@
 # Autonomní Chování
 
-> **Navigace:** [📂 Dokumentace](../README.md) | [🧠 Core](../README.md#core-jádro) | [Autonomní chování](autonomous-behavior.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
+> **Navigace:** [📂 Dokumentace](../README.md) | [🧠 Core](../README.md#core-jádro) | [Autonomní chování](autonomous-behavior.md)
 
 > Jak agent samostatně rozhoduje a jedná.
 > **Verze:** Alpha

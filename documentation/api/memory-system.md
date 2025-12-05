@@ -1,6 +1,6 @@
 # 🧠 Memory System API
 
-> **Navigace:** [📂 Dokumentace](../README.md) | [📚 API](../INDEX.md#api) | [Memory System](memory-system.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
+> **Navigace:** [📂 Dokumentace](../README.md) | [📚 API](../INDEX.md#api) | [Memory System](memory-system.md)
 
 Dokumentace pro `VectorStore` v `agent/memory.py`.
 

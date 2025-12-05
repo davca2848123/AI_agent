@@ -1,6 +1,6 @@
 # 🔧 config_settings.py Reference
 
-> **Navigace:** [📂 Dokumentace](../README.md) | [⚙️ Konfigurace](../README.md#konfigurace) | [config_settings.py Reference](config_settings_reference.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
+> **Navigace:** [📂 Dokumentace](../README.md) | [⚙️ Konfigurace](../README.md#konfigurace) | [config_settings.py Reference](config_settings_reference.md)
 
 > Detailní popis všech konfiguračních možností v souboru `config_settings.py`.
 > **Verze:** Alpha

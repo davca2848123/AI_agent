@@ -1,126 +1,61 @@
-# Scripts - Přehled
+# Scripts Directory
 
-> Utility skripty pro správu RPI AI agenta přes SSH a lokální setup
+This directory contains **batch scripts (.bat)** for managing the RPI AI Agent remotely via SSH.
 
-## 📁 Struktura
+## Structure
 
-```
-scripts/
-├── rpi_*.bat           # Operace na RPI (přes SSH)
-├── setup_*.bat         # Setup/konfigurace
-├── ssh_connect.bat     # Přímé SSH připojení
-├── internal/           # Python/Shell utility skripty
-└── *.md                # Dokumentace
-```
+- **Root (`scripts/`)**: Contains only `.bat` files for easy access and execution
+- **Internal (`scripts/internal/`)**: Contains Python scripts, shell scripts, and documentation files used by the batch scripts
 
-## 🚀 Kategorie skriptů
+## Available Scripts
 
-### RPI Operace (`rpi_*.bat`)
-Tyto skripty se připojují přes SSH na RPI a vykonávají operace:
+### System Management
+- `rpi_restart_service.bat` - Restart the AI agent service
+- `rpi_stop_service.bat` - Stop the AI agent service
+- `rpi_check_status.bat` - Check system and service status
+- `rpi_health_check.bat` - Comprehensive health diagnostics
 
-| Skript | Popis | Spouští |
-|--------|-------|---------|
-| `rpi_cleanup_logs.bat` | Smaže logy starší než 2 dny | `cleanup_logs.py` |
-| `rpi_cleanup_memory.bat` | Plnohodnotný DB cleanup (analýza + smazání) | `cleanup_memory.py` |
-| `rpi_task_cleanup_boredom.bat` | Rychlé mazání boredom/error memories | `task_cleanup_memory.py` |
-| `rpi_clear_dm.bat` | Smaže bot zprávy v Admin DM | `task_clear_dm.py` |
-| `rpi_fix_llm.bat` | Instalace LLM závislostí | `fix_llm.sh` |
-| `rpi_rebuild_python.bat` | Rebuild Python 3.12 na RPI | `fix_python_build.sh` |
-| `rpi_restart_service.bat` | Restart systemd služby agenta | systemctl restart |
-| `rpi_health_check.bat` | Health check agenta | `health_check.py` |
-| `rpi_setup_swap.bat` | Setup SWAP souboru | `setup_swap_sudo.sh` |
+### Maintenance
+- `rpi_cleanup_logs.bat` - Clean up old log files
+- `rpi_cleanup_memory.bat` - Clean up memory database
+- `rpi_clear_dm.bat` - Clear bot DM messages
+- `rpi_task_cleanup_boredom.bat` - Clean up boredom data
 
-### Setup Skripty (`setup_*.bat`)
-Jednorázové setup/konfigurační skripty:
+### Setup & Configuration
+- `rpi_setup_led.bat` - Setup LED indicators
+- `rpi_setup_swap.bat` - Configure swap memory
+- `setup_rpi_sudoers.bat` - Configure sudo permissions
+- `setup_ssh_passwordless.bat` - Setup passwordless SSH
+- `rpi_fix_llm.bat` - Fix LLM integration issues
+- `rpi_rebuild_python.bat` - Rebuild Python environment
 
-| Skript | Popis |
-|--------|-------|
-| `setup_ssh_passwordless.bat` | Nastaví SSH passwordless login |
-| `setup_rpi_sudoers.bat` | Opraví RPI sudoers pro NOPASSWD |
+### GitHub Management
+- `rpi_delete_todays_releases.bat` - Delete today's GitHub releases
+- `rpi_find_releases.bat` - Find releases by date
 
-### Ostatní
+### Testing
+- `rpi_test_led.bat` - Test LED functionality
 
-| Skript | Popis |
-|--------|-------|
-| `ssh_connect.bat` | Jednoduché SSH připojení na RPI |
+### SSH Utilities
+- `ssh_connect.bat` - Quick SSH connection
+- `ssh_config.bat` - SSH configuration variables (sourced by other scripts)
 
-## 📝 Použití
+## Usage
 
-### Příklad: Cleanup logů
-```batch
-cd z:\rpi_ai\rpi_ai\scripts
-rpi_cleanup_logs.bat
-```
+All scripts are designed to be run from Windows and connect to the Raspberry Pi via SSH.
 
-### Příklad: Health check
-```batch
-cd z:\rpi_ai\rpi_ai\scripts
-rpi_health_check.bat
-```
+Most scripts will:
+1. Load SSH configuration from `ssh_config.bat`
+2. Connect to the RPI via SSH
+3. Execute commands or Python scripts on the remote system
+4. Display results and wait for user input (pause)
 
-### Příklad: Setup SSH
-```batch
-cd z:\rpi_ai\rpi_ai\scripts
-setup_ssh_passwordless.bat
-```
+## Internal Directory
 
-## 🔧 Konfigurace SSH Připojení
+The `internal/` subdirectory contains:
+- Python scripts (`.py`) - Backend logic executed on the RPI
+- Shell scripts (`.sh`) - Bash scripts for RPI
+- Documentation (`.md`) - Guides and references
+- Other support files
 
-### Centrální konfigurační soubor: `ssh_config.bat`
-
-Všechny batch skripty načítají SSH nastavení z **`ssh_config.bat`**, což umožňuje změnit připojení na jednom místě.
-
-**Upravte tento soubor pro vaše nastavení:**
-
-```batch
-@echo off
-REM Raspberry Pi SSH Settings
-set RPI_USER=davca
-set RPI_HOST=192.168.1.200
-set RPI_PORT=22
-
-REM Path to project on RPI
-set RPI_PROJECT_PATH=/home/davca/rpi_ai/rpi_ai
-```
-
-### Jak změnit konfiguraci:
-
-1. Otevřete `scripts/ssh_config.bat`
-2. Upravte hodnoty podle vašeho RPI:
-   - **RPI_USER** - vaše uživatelské jméno na RPI
-   - **RPI_HOST** - IP adresa nebo hostname RPI
-   - **RPI_PORT** - SSH port (výchozí: 22)
-   - **RPI_PROJECT_PATH** - cesta k projektu na RPI
-3. Uložte soubor
-4. Všechny .bat skripty automaticky použijí nové nastavení
-
-> **Poznámka:** Nemusíte upravovat jednotlivé .bat skripty - všechny automaticky načítají `ssh_config.bat`!
-
-## 📂 Internal složka
-
-Složka `internal/` obsahuje Python a Shell skripty, které jsou spouštěny .bat skripty:
-
-### Python skripty:
-- `cleanup_logs.py` - Cleanup logů (podle data)
-- `cleanup_memory.py` - Komplexní DB cleanup
-- `task_cleanup_memory.py` - Rychlý cleanup task
-- `task_clear_dm.py` - Clear DM task
-- `health_check.py` - System health check
-- `task_test_location.py` - Test lokace
-
-### Shell skripty:
-- `fix_llm.sh` - LLM dependencies install
-- `fix_python_build.sh` - Python rebuild
-- `setup_swap_sudo.sh` - SWAP setup
-
-## ⚙️ Pojmenování konvence
-
-- **`rpi_`** - Operace na RPI přes SSH
-- **`setup_`** - Setup/konfigurační skripty
-- **`task_`** (v internal/) - Jednoduché task skripty
-- **`ssh_`** - SSH utility
-
----
-
-**Poslední aktualizace:** 2025-12-02  
-**Verze:** 2.0 (po přejmenování)
+**Note:** You should not need to directly execute files from `internal/` - use the `.bat` files in the root instead.

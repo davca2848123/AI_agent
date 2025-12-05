@@ -1,6 +1,6 @@
 # Architektura Systému
 
-> **Navigace:** [📂 Dokumentace](README.md) | [📄 Přehled (OVERVIEW)](OVERVIEW.md) | [🔍 Index (INDEX)](INDEX.md) | [📋 API Tasklist (SUMMARY)](SUMMARY.md) | [🏗️ Architektura](architecture.md) | [🆘 Troubleshooting](troubleshooting.md) | [🔍 Hledat](INDEX.md#vyhledavani)
+> **Navigace:** [📂 Dokumentace](README.md) | [📄 Přehled (OVERVIEW)](OVERVIEW.md) | [🔍 Index (INDEX)](INDEX.md) | [📋 API Tasklist (SUMMARY)](SUMMARY.md) | [🏗️ Architektura](architecture.md) | [🆘 Troubleshooting](troubleshooting.md)
 
 > Celkový přehled architektury RPI AI Agenta.
 > **Verze:** Alpha
@@ -234,6 +234,39 @@ class Tool(ABC):
 - Disable web tools on disconnect
 - Restore on reconnect
 - Admin notifications
+
+---
+
+<a name="9-web-interface"></a>
+### 9. Web Interface
+
+**Účel:** Webová dokumentace a monitoring
+
+**Komponenty:**
+- Flask server (port 5001+)
+- Ngrok tunnel (public URL)
+- Markdown renderer
+- Search functionality (fuzzy + exact)
+- Live dashboard
+
+**Funkce:**
+- Dashboard s real-time stats
+- Documentation browser
+- Search s Levenshtein distance
+- Auto-refresh (konfiguratelní)
+
+---
+
+<a name="10-error-tracker"></a>
+### 10. Error Tracker
+
+**Účel:** Sledování chyb a restart attemptů
+
+**Funkce:**
+- Tracking startup errors
+- Restart attempt limity
+- Critical error notifications
+- Startup recovery mechanism
 
 ---
 

@@ -1,6 +1,6 @@
 # 📜 Batch Scripts Reference
 
-> **Navigace:** [📂 Dokumentace](../README.md) | [📜 Scripts](../README.md#scripts-skripty) | [Batch Scripts Reference](batch-scripts-reference.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
+> **Navigace:** [📂 Dokumentace](../README.md) | [📜 Scripts](../README.md#scripts-skripty) | [Batch Scripts Reference](batch-scripts-reference.md)
 
 > Kompletní reference všech Windows batch skriptů pro RPI správu.
 > **Verze:** Alpha

@@ -1,6 +1,6 @@
 # Resource Manager
 
-> **Navigace:** [📂 Dokumentace](../README.md) | [🧠 Core](../README.md#core-jádro) | [Resource Manager](resource-manager.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
+> **Navigace:** [📂 Dokumentace](../README.md) | [🧠 Core](../README.md#core-jádro) | [Resource Manager](resource-manager.md)
 
 > 4-tier adaptivní systém pro správu systémových zdrojů.
 > **Verze:** Alpha

@@ -17,21 +17,6 @@ ENV/
 *.swp
 *.swo
 *~
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
-agent.log
-agent_tools.log
-reports.json
-
-# Database
-*.db
-*.db-shm
-*.db-wal
 agent_memory.db
 optimized_memory.db
 optimized_memory.sql
@@ -71,3 +56,10 @@ venv
 .env
 .last_github_upload
 .startup_failures
+.DS_Store
+*.log
+*.db
+*.db-shm
+*.db-wal
+agent.log
+agent_tools.log

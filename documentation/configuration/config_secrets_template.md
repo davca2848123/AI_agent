@@ -1,6 +1,6 @@
 # 🔐 config_secrets.py Template
 
-> **Navigace:** [📂 Dokumentace](../README.md) | [⚙️ Konfigurace](../README.md#konfigurace) | [config_secrets.py Template](config_secrets_template.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
+> **Navigace:** [📂 Dokumentace](../README.md) | [⚙️ Konfigurace](../README.md#konfigurace) | [config_secrets.py Template](config_secrets_template.md)
 
 > Šablona pro soubor s tajnými klíči. Tento soubor **NIKDY** necommitujte do Gitu!
 > **Verze:** Alpha

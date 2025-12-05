@@ -908,6 +908,11 @@ class AutonomousAgent:
             logger.debug("Skipping autonomous action: Agent is already processing.")
             return
 
+        # Check global interaction lock
+        if hasattr(self, 'command_handler') and not self.command_handler.global_interaction_enabled:
+             logger.debug("Skipping autonomous action: Global interaction disabled.")
+             return
+
         self.is_processing = True
         self.led.set_state("BUSY")
         logger.debug("Agent is bored. Deciding what to do...")
@@ -1380,8 +1385,10 @@ class AutonomousAgent:
 
     async def send_admin_dm(self, message: str, category: str = "default"):
         """
-        Send DM to admin user. Edits last message in the same category if < 30m old.
-        Categories: 'default', 'ssh', 'tier', 'error', 'report'
+        Send DM to admin user. Behavior depends on category:
+        - 'error', 'network': Always send new message
+        - 'ssh', 'tier', others: Edit last message if <30min old
+        Categories: 'default', 'ssh', 'tier', 'error', 'network', 'report', 'system'
         """
         try:
             import config_settings
@@ -1403,7 +1410,10 @@ class AutonomousAgent:
                 current_time = time.time()
                 edited = False
                 
-                if (last_id and last_ts and (current_time - last_ts) < 1800): # 30 minute window
+                # Categories that ALWAYS send new messages (no editing)
+                always_new_categories = ['error', 'network', 'report']
+                
+                if category not in always_new_categories and (last_id and last_ts and (current_time - last_ts) < 1800): # 30 minute window
                     logger.debug(f"Attempting to edit last Admin DM (Diff: {current_time - last_ts:.1f}s)")
                     
                     try:
@@ -1436,7 +1446,9 @@ class AutonomousAgent:
                         logger.error(f"Error editing Admin DM: {e}")
                         edited = False
                 else:
-                    if last_ts:
+                    if category in always_new_categories:
+                        logger.debug(f"Category '{category}' always sends new messages")
+                    elif last_ts:
                         logger.debug(f"Last Admin DM too old to edit (Diff: {current_time - last_ts:.1f}s > 1800s)")
                 
                 if not edited:

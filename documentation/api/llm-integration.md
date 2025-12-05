@@ -1,6 +1,6 @@
 # 🧠 LLM Integration API
 
-> **Navigace:** [📂 Dokumentace](../README.md) | [📚 API](../INDEX.md#api) | [LLM Integration](llm-integration.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
+> **Navigace:** [📂 Dokumentace](../README.md) | [📚 API](../INDEX.md#api) | [LLM Integration](llm-integration.md)
 
 Dokumentace pro `LLMClient` v `agent/llm.py`.
 

@@ -1,6 +1,6 @@
 # 🚀 Deployment Guide
 
-> **Navigace:** [📂 Dokumentace](../README.md) | [📜 Scripts](../README.md#scripts-skripty) | [Deployment Guide](deployment-guide.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
+> **Navigace:** [📂 Dokumentace](../README.md) | [📜 Scripts](../README.md#scripts-skripty) | [Deployment Guide](deployment-guide.md)
 
 > Komplexní průvodce nasazením AI Agenta na Raspberry Pi.
 > **Verze:** Alpha

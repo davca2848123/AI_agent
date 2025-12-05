@@ -18,7 +18,7 @@ echo Project path: %RPI_PROJECT_PATH%
 echo.
 
 REM Connect via SSH and run the find script
-ssh %RPI_USER%@%RPI_HOST% -p %RPI_PORT% "cd %RPI_PROJECT_PATH% && python3 scripts/find_releases_by_date.py"
+ssh %RPI_USER%@%RPI_HOST% -p %RPI_PORT% "cd %RPI_PROJECT_PATH% && python3 scripts/internal/find_releases_by_date.py"
 
 echo.
 echo ========================================

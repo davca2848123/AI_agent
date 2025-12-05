@@ -1,6 +1,6 @@
 # 🤖 Discord Client API
 
-> **Navigace:** [📂 Dokumentace](../README.md) | [📚 API](../INDEX.md#api) | [Discord Client](discord-client.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
+> **Navigace:** [📂 Dokumentace](../README.md) | [📚 API](../INDEX.md#api) | [Discord Client](discord-client.md)
 
 Dokumentace pro `DiscordClient` v `agent/discord_client.py`.
 

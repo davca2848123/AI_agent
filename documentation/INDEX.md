@@ -1,6 +1,6 @@
 # 🔍 Rychlý Index - Všechny Příkazy a Funkce
 
-> **Navigace:** [📂 Dokumentace](README.md) | [📄 Přehled (OVERVIEW)](OVERVIEW.md) | [🔍 Index (INDEX)](INDEX.md) | [📋 API Tasklist (SUMMARY)](SUMMARY.md) | [🏗️ Architektura](architecture.md) | [🆘 Troubleshooting](troubleshooting.md) | [🔍 Hledat](INDEX.md#vyhledavani)
+> **Navigace:** [📂 Dokumentace](README.md) | [📄 Přehled (OVERVIEW)](OVERVIEW.md) | [🔍 Index (INDEX)](INDEX.md) | [📋 API Tasklist (SUMMARY)](SUMMARY.md) | [🏗️ Architektura](architecture.md) | [🆘 Troubleshooting](troubleshooting.md)
 
 > Abecední index všech příkazů, nástrojů a funkcí.
 > **Verze:** Alpha
@@ -12,30 +12,34 @@
 
 | Příkaz | Kategorie | Popis | Dokumentace |
 |--------|-----------|-------|-------------|
-| `!ask` | Tools & Learning | Zeptej se AI na otázku | [📖 Zobrazit dokumentaci](commands/tools-learning.md#ask) |
-| `!cmd` | Admin | Spusť shell příkaz | [📖 Zobrazit dokumentaci](commands/admin.md#cmd) |
-| `!config` | Interaction | Zobraz konfiguraci | [📖 Zobrazit dokumentaci](commands/interaction.md#config) |
-| `!documentation` | Basic | Interaktivní dokumentace | [📖 Zobrazit dokumentaci](commands/basic.md#documentation) |
-| `!debug` | Admin | Pokročilá diagnostika | [📖 Zobrazit dokumentaci](commands/admin.md#debug) |
-| `!export` | Data Management | Export dat | [📖 Zobrazit dokumentaci](commands/data-management.md#export) |
-| `!goals` | Interaction | Správa cílů | [📖 Zobrazit dokumentaci](commands/interaction.md#goals) |
 | `!help` | Basic | Zobraz nápovědu | [📖 Zobrazit dokumentaci](commands/basic.md#help) |
-| `!intelligence` | Basic | Intelligence metriky | [📖 Zobrazit dokumentaci](commands/basic.md#intelligence) |
-| `!learn` | Tools & Learning | Nauč se nástroj | [📖 Zobrazit dokumentaci](commands/tools-learning.md#learn) |
-| `!live logs` | Data Management | Live stream logů | [📖 Zobrazit dokumentaci](commands/data-management.md#live-logs) |
-| `!logs` | Data Management | Zobraz logy | [📖 Zobrazit dokumentaci](commands/data-management.md#logs) |
-| `!memory` | Data Management | Statistiky paměti | [📖 Zobrazit dokumentaci](commands/data-management.md#memory) |
-| `!monitor` | Admin | Resource monitoring | [📖 Zobrazit dokumentaci](commands/admin.md#monitor) |
-| `!mood` | Interaction | Zobraz náladu agenta | [📖 Zobrazit dokumentaci](commands/interaction.md#mood) |
-| `!report` | Admin | Generate topics report | [📖 Zobrazit dokumentaci](commands/admin.md#report) |
-| `!restart` | Admin | Restart agenta | [📖 Zobrazit dokumentaci](commands/admin.md#restart) |
-| `!search` | Tools & Learning | Vyhledej informace | [📖 Zobrazit dokumentaci](commands/tools-learning.md#search) |
-| `!ssh` | Admin | Správa SSH tunelu | [📖 Zobrazit dokumentaci](commands/admin.md#ssh) |
-| `!stats` | Basic | Detailní statistiky | [📖 Zobrazit dokumentaci](commands/basic.md#stats) |
 | `!status` | Basic | Stav agenta | [📖 Zobrazit dokumentaci](commands/basic.md#status) |
-| `!teach` | Tools & Learning | Nauč AI něco | [📖 Zobrazit dokumentaci](commands/tools-learning.md#teach) |
+| `!stats` | Basic | Detailní statistiky | [📖 Zobrazit dokumentaci](commands/basic.md#stats) |
+| `!intelligence` | Basic | Intelligence metriky | [📖 Zobrazit dokumentaci](commands/basic.md#intelligence) |
+| `!documentation` | Basic | Interaktivní dokumentace | [📖 Zobrazit dokumentaci](commands/basic.md#documentation) |
+| `!learn` | Tools & Learning | Nauč se nástroj | [📖 Zobrazit dokumentaci](commands/tools-learning.md#learn) |
 | `!tools` | Tools & Learning | Seznam nástrojů | [📖 Zobrazit dokumentaci](commands/tools-learning.md#tools) |
+| `!ask` | Tools & Learning | Zeptej se AI na otázku | [📖 Zobrazit dokumentaci](commands/tools-learning.md#ask) |
+| `!teach` | Tools & Learning | Nauč AI něco | [📖 Zobrazit dokumentaci](commands/tools-learning.md#teach) |
+| `!search` | Tools & Learning | Vyhledej informace | [📖 Zobrazit dokumentaci](commands/tools-learning.md#search) |
+| `!memory` | Data Management | Statistiky paměti | [📖 Zobrazit dokumentaci](commands/data-management.md#memory) |
+| `!logs` | Data Management | Zobraz logy | [📖 Zobrazit dokumentaci](commands/data-management.md#logs) |
+| `!live logs` | Data Management | Live stream logů | [📖 Zobrazit dokumentaci](commands/data-management.md#live-logs) |
+| `!export` | Data Management | Export dat | [📖 Zobrazit dokumentaci](commands/data-management.md#export) |
+| `!mood` | Interaction | Zobraz náladu agenta | [📖 Zobrazit dokumentaci](commands/interaction.md#mood) |
+| `!goals` | Interaction | Správa cílů | [📖 Zobrazit dokumentaci](commands/interaction.md#goals) |
+| `!config` | Interaction | Zobraz konfiguraci | [📖 Zobrazit dokumentaci](commands/interaction.md#config) |
+| `!restart` | Admin | Restart agenta | [📖 Zobrazit dokumentaci](commands/admin.md#restart) |
+| `!monitor` | Admin | Resource monitoring | [📖 Zobrazit dokumentaci](commands/admin.md#monitor) |
+| `!debug` | Admin | Pokročilá diagnostika | [📖 Zobrazit dokumentaci](commands/admin.md#debug) |
+| `!ssh` | Admin | Správa SSH tunelu | [📖 Zobrazit dokumentaci](commands/admin.md#ssh) |
+| `!cmd` | Admin | Spusť shell příkaz | [📖 Zobrazit dokumentaci](commands/admin.md#cmd) |
+| `!web` | Admin | Web interface správa | [📖 Zobrazit dokumentaci](commands/admin.md#web) |
 | `!topic` | Admin | Manage discussion topics | [📖 Zobrazit dokumentaci](commands/admin.md#topic) |
+| `!report` | Admin | Generate topics report | [📖 Zobrazit dokumentaci](commands/admin.md#report) |
+| `!upload` | Admin | GitHub release upload | [📖 Zobrazit dokumentaci](commands/admin.md#upload) |
+| `!disable` | Admin | Vypnout interakci (non-admin) | [📖 Zobrazit dokumentaci](commands/admin.md#disable) |
+| `!enable` | Admin | Zapnout interakci | [📖 Zobrazit dokumentaci](commands/admin.md#enable) |
 
 <a name="nástroje-a-z"></a>
 ## 🛠️ Nástroje (A-Z)

@@ -1,6 +1,6 @@
 # Discord Client
 
-> **Navigace:** [📂 Dokumentace](../README.md) | [🧠 Core](../README.md#core-jádro) | [Discord Client](discord-client.md) | [🔍 Hledat](../INDEX.md#vyhledavani)
+> **Navigace:** [📂 Dokumentace](../README.md) | [🧠 Core](../README.md#core-jádro) | [Discord Client](discord-client.md)
 
 > Integrace s Discord API pro komunikaci.
 > **Verze:** Alpha

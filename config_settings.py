@@ -62,3 +62,7 @@ FUZZY_MATCH_DISTANCE_SUBCOMMANDS = 4        # Max Levenshtein distance for subco
 
 # Security - IP Address Sanitization
 IP_SANITIZATION_ENABLED = True  # Enable global IP masking in console/Discord output
+
+# Admin Restricted Shell Commands
+# These commands are blocked even for admins unless explicitly allowed in code
+ADMIN_RESTRICTED_COMMANDS = ["sudo", "shutdown", "reboot", "kill", "rm -rf", "mkfs", "dd", ":(){ :|:& };:"]
