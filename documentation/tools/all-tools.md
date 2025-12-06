@@ -3,7 +3,7 @@
 > **Navigace:** [📂 Dokumentace](../README.md) | [🛠️ Nástroje](../README.md#tools-nástroje) | [Všechny nástroje](all-tools.md)
 
 > Detailní dokumentace všech dostupných nástrojů agenta.
-> **Verze:** Alpha
+> **Verze:** Beta - CLOSED
 
 ---
 
@@ -20,12 +20,11 @@ Agent má k dispozici následující nástroje:
 6. **[WeatherTool](#weathertool)** - Informace o počasí
 7. **[CodeTool](#codetool)** - Spouštění Python kódu
 8. **[NoteTool](#notetool)** - Správa poznámek
-9. **[GitTool](#gittool)** - Git operace
-10. **[DatabaseTool](#databasetool)** - SQLite dotazy
-11. **[RSSTool](#rsstool)** - Ze čtení RSS feedů
-12. **[TranslateTool](#translatetool)** - Překlady textu
-13. **[WikipediaTool](#wikipediatool)** - Vyhledávání na Wikipedii
-14. **[DiscordActivityTool](#discordactivitytool)** - Sledování Discord aktivit
+9. **[DatabaseTool](#databasetool)** - SQLite dotazy
+10. **[RSSTool](#rsstool)** - Ze čtení RSS feedů
+11. **[TranslateTool](#translatetool)** - Překlady textu
+12. **[WikipediaTool](#wikipediatool)** - Vyhledávání na Wikipedii
+13. **[DiscordActivityTool](#discordactivitytool)** - Sledování Discord aktivit
 
 ---
 
@@ -65,7 +64,8 @@ file_tool.execute(action="list_files", filename=".")
 
 <a name="security"></a>
 ### ⚠️ Security
-- Přístup pouze v rámci workspace directory
+- Přístup pouze v rámci `agent_workspace` directory
+- Ochrana proti accidental modification of core project files
 - Filtruje hidden files (.*)
 - Ignoruje `__pycache__`, `venv`, `node_modules`
 
@@ -133,8 +133,10 @@ web_tool.execute(action="read", url="https://example.com")
 <a name="poznámky"></a>
 ### ⚠️ Poznámky
 - Vyžaduje `duckduckgo_search`, `bs4`, `aiohttp`
+- **Lokální vyhledávání**: Automaticky upravuje dotazy pro preferenci obsahu v češtině, slovenštině a angličtině (přidává filtr `lang:cs OR lang:sk OR lang:en`).
 - Search vrací max 3 výsledky
 - Read extrahuje text pomocí BeautifulSoup
+- **Smart Memory Integration**: Při čtení stránky (`action='read'`) je obsah automaticky zpracován LLM (filtered) a uložen do paměti agenta jako `web_knowledge`.
 
 ---
 
@@ -328,44 +330,10 @@ note_tool.execute(action="search", content="logs")
 
 <a name="storage"></a>
 ### 📝 Storage
-- Soubor: `workspace/notes.json`
+- Soubor: `agent_workspace/notes.json`
 - Format: JSON array s ID, content, tag, timestamp
 
 ---
-
-<a name="gittool"></a>
-## GitTool
-
-<a name="popis"></a>
-### 📋 Popis
-Základní Git operace (status, log) pomocí dulwich.
-
-<a name="parametry"></a>
-### 🔧 Parametry
-
-**Actions:**
-- `status` - Git status
-- `log` - Git log (5 posledních commitů)
-
-**Parameters:**
-- `repo_path` *(optional)* - Cesta k repozitáři (default ".")
-
-<a name="příklady"></a>
-### 💡 Příklady
-
-```python
-# Git status
-git_tool.execute(action="status")
-
-# Git log
-git_tool.execute(action="log")
-```
-
-<a name="poznámky"></a>
-### ⚠️ Poznámky
-- Vyžaduje `dulwich` balíček
-- Pouze read-only operace
-- Commit/push nejsou podporovány (bezpečnost)
 
 ---
 
@@ -396,7 +364,7 @@ database_tool.execute(query="SELECT name, email FROM users WHERE active=1")
 ### ⚠️ Security
 - **POUZE SELECT dotazy**
 - INSERT/UPDATE/DELETE/DROP jsou zakázány
-- Databáze: `workspace/agent.db`
+- Databáze: `agent_workspace/agent.db`
 - Max 10 řádků výstupu
 
 ---
@@ -533,8 +501,8 @@ Current User Activities:
 ### ⚠️ Poznámky
 - Vyžaduje Discord připojení
 - Vyžaduje internet
-- Automaticky researche neznámé aktivity
-- Ukládá aktivity do paměti
+- **Activity Enrichment**: Automaticky provede web search pro nové/neznámé aktivity
+- Ukládá shrnutí aktivity do paměti jako `activity_knowledge`
 
 ---
 
@@ -601,8 +569,9 @@ INFO: web_tool: Completed in 1.23s - Result: Search Results:
 - [📖 Commands - Tools & Learning](../commands/tools-learning.md) - Příkazy pro práci s nástroji
 - [📖 Autonomous Behavior](../core/autonomous-behavior.md) - Jak agent vybírá nástroje
 - [📖 LLM Integration](../core/llm-integration.md) - Jak LLM volá nástroje
+- [🏗️ Architektura](../architecture.md)
 
 ---
-Poslední aktualizace: 2025-12-04  
-Verze: Alpha  
+Poslední aktualizace: 2025-12-06  
+Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

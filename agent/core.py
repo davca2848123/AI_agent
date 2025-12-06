@@ -68,11 +68,11 @@ class AutonomousAgent:
         # Thresholds
         self.BOREDOM_THRESHOLD_LOW = 0.2
         self.BOREDOM_THRESHOLD_HIGH = 0.4
-        self.BOREDOM_DECAY_RATE = 0.01  # Slower decay (1% per interval)
+        self.BOREDOM_DECAY_RATE = 0.05  # Slower decay (1% per interval)
         
         # Import config and load boredom interval
         import config_settings
-        self.BOREDOM_INTERVAL = getattr(config_settings, 'BOREDOM_INTERVAL', 60)  # Default 60s if not in config
+        self.BOREDOM_INTERVAL = getattr(config_settings, 'BOREDOM_INTERVAL', 300)  # Default 300s (5min) if not in config
         
         # Subsystems
         from .memory import VectorStore
@@ -99,17 +99,21 @@ class AutonomousAgent:
         self.web_server = WebServer(self) # Add web interface
         
         # Tools
+        self.agent_workspace = os.path.abspath("agent_workspace")
+        if not os.path.exists(self.agent_workspace):
+             os.makedirs(self.agent_workspace)
+
         self.tools = ToolRegistry()
-        self.tools.register(FileTool())
+        self.tools.register(FileTool(workspace_dir=self.agent_workspace))
         self.tools.register(SystemTool())
-        self.tools.register(WebTool())
+        self.tools.register(WebTool(agent=self))
         self.tools.register(TimeTool())
         self.tools.register(MathTool())
         self.tools.register(WeatherTool())
         self.tools.register(CodeTool())
-        self.tools.register(NoteTool())
+        self.tools.register(NoteTool(notes_file=os.path.join(self.agent_workspace, "notes.json")))
         # git_tool removed - dependency issues and not needed
-        self.tools.register(DatabaseTool())
+        self.tools.register(DatabaseTool(db_path=os.path.join(self.agent_workspace, "agent.db")))
         self.tools.register(DiscordActivityTool(self))
         self.tools.register(RSSTool())
         self.tools.register(TranslateTool())
@@ -120,7 +124,7 @@ class AutonomousAgent:
         from .commands import CommandHandler
         self.command_handler = CommandHandler(self)
     
-    async def graceful_shutdown(self, timeout: int = 10) -> bool:
+    async def graceful_shutdown(self, timeout: int = 10, channel_id: int = None) -> bool:
         """Gracefully shutdown agent, closing all resources safely."""
         logger.info("🔄 Starting graceful shutdown...")
         
@@ -131,6 +135,8 @@ class AutonomousAgent:
         except Exception as e:
             logger.error(f"Failed to create shutdown flag: {e}")
         
+        failed_services = []
+        
         # 0. Stop web server
         try:
             if hasattr(self, 'web_server'):
@@ -138,6 +144,7 @@ class AutonomousAgent:
                 self.web_server.stop()
         except Exception as e:
             logger.error(f"Failed to stop web server: {e}")
+            failed_services.append(f"Web Server ({e})")
         
         shutdown_start = time.time()
         
@@ -153,6 +160,7 @@ class AutonomousAgent:
                 self._save_agent_state()
             except Exception as e:
                 logger.error(f"Failed to save agent state: {e}")
+                failed_services.append("Agent State Save")
             
             # 3. Save tool stats
             logger.info("Saving tool statistics...")
@@ -171,36 +179,89 @@ class AutonomousAgent:
                     logger.info("Database closed successfully")
             except Exception as e:
                 logger.error(f"Failed to close database: {e}")
+                failed_services.append("Database Close")
             
-            # 4.5 Ensure all file handles are closed (topics JSON etc.)
-            logger.info("Ensuring all file handles are flushed...")
+            # 5. Cleanup Ports (Web, Ngrok, etc.)
             try:
-                import sys
-                import gc
-                # Force garbage collection to close any lingering file handles
-                gc.collect()
-                # Flush all open files
-                for handler in logging.root.handlers:
-                    if hasattr(handler, 'flush'):
-                        handler.flush()
-                    if hasattr(handler, 'stream'):
-                        try:
-                            handler.stream.flush()
-                        except:
-                            pass
-                logger.info("File handles flushed")
+                await self._cleanup_ports()
             except Exception as e:
-                logger.error(f"Error during file handle cleanup: {e}")
+                 logger.error(f"Failed to cleanup ports: {e}")
+                 failed_services.append("Port Cleanup")
+
+            # Check timeout
+            elapsed = time.time() - shutdown_start
+            if elapsed > timeout:
+                logger.warning(f"Shutdown exceeded timeout ({elapsed:.1f}s > {timeout}s)")
+                failed_services.append(f"Shutdown Timeout ({elapsed:.1f}s)")
             
-            # 5. Flush logs
+            # INTERACTIVE FORCE SHUTDOWN CHECK
+            if failed_services and channel_id and self.discord:
+                # We have failures and can ask user via Discord
+                logger.warning(f"Shutdown incomplete. Failed services: {failed_services}")
+                
+                # Create interactive view
+                import discord
+                import config_settings
+                
+                # Define View class inline to capture local scope if needed or just use standard
+                class ForceShutdownView(discord.ui.View):
+                    def __init__(self):
+                        super().__init__(timeout=30)
+                        self.value = None
+
+                    @discord.ui.button(label="Force Shutdown", style=discord.ButtonStyle.danger, emoji="⚠️")
+                    async def force(self, interaction: discord.Interaction, button: discord.ui.Button):
+                        if interaction.user.id not in config_settings.ADMIN_USER_IDS:
+                            await interaction.response.send_message("⛔ **Access Denied**: Admin only.", ephemeral=True)
+                            return
+                        await interaction.response.defer()
+                        self.value = True
+                        self.stop()
+
+                    @discord.ui.button(label="Cancel Restart", style=discord.ButtonStyle.secondary, emoji="❌")
+                    async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
+                        if interaction.user.id not in config_settings.ADMIN_USER_IDS:
+                            await interaction.response.send_message("⛔ **Access Denied**: Admin only.", ephemeral=True)
+                            return
+                        await interaction.response.defer()
+                        self.value = False
+                        self.stop()
+                
+                view = ForceShutdownView()
+                service_list = "\n".join([f"- {s}" for s in failed_services])
+                embed = discord.Embed(
+                    title="⚠️ Unclean Shutdown Detected",
+                    description=f"The following services failed to stop gracefully:\n{service_list}\n\nDo you want to force shutdown anyway?",
+                    color=0xff9900
+                )
+                
+                try:
+                    msg = await self.discord.send_message(channel_id, embed=embed, view=view)
+                    if msg:
+                        # Wait for interaction
+                        timed_out = await view.wait()
+                        if timed_out:
+                             # Timeout = Proceed with caution or cancel? Usually force if unattended.
+                             logger.warning("Force shutdown prompt timed out. Proceeding with force shutdown.")
+                             pass
+                        elif view.value is False:
+                             logger.info("User cancelled shutdown.")
+                             return False
+                        else:
+                             logger.info("User confirmed force shutdown.")
+                except Exception as e:
+                    logger.error(f"Failed to send interactive shutdown prompt: {e}")
+
+            # 6. Flush logs
             logger.info("Flushing logs...")
             try:
                 for handler in logging.root.handlers:
-                    handler.flush()
+                    if hasattr(handler, 'flush'): # Verify method exists
+                        handler.flush()
             except Exception as e:
                 logger.error(f"Failed to flush logs: {e}")
             
-            # 6. Close Discord client
+            # 7. Close Discord client (LAST STEP)
             logger.info("Closing Discord connection...")
             try:
                 if self.discord and hasattr(self.discord, 'client'):
@@ -211,13 +272,7 @@ class AutonomousAgent:
                 logger.warning("Discord client close timed out")
             except Exception as e:
                 logger.error(f"Failed to close Discord client: {e}")
-            
-            # Check timeout
-            elapsed = time.time() - shutdown_start
-            if elapsed > timeout:
-                logger.warning(f"Shutdown exceeded timeout ({elapsed:.1f}s > {timeout}s)")
-                return False
-            
+
             # Remove incomplete shutdown flag
             try:
                 if os.path.exists(".shutdown_incomplete"):
@@ -231,6 +286,57 @@ class AutonomousAgent:
         except Exception as e:
             logger.error(f"Error during graceful shutdown: {e}", exc_info=True)
             return False
+
+    async def _cleanup_ports(self):
+        """Force kills processes holding critical ports (Web, Ngrok)."""
+        logger.info("Cleaning up network ports...")
+        try:
+            import psutil
+            killed_pids = set()
+            current_pid = os.getpid()
+            
+            # 1. Kill processes on Web Interface Ports (5001-5051)
+            for port in range(5001, 5051):
+                try:
+                    for conn in psutil.net_connections():
+                        if hasattr(conn, 'laddr') and conn.laddr and conn.laddr.port == port:
+                            if conn.pid and conn.pid != current_pid and conn.pid not in killed_pids:
+                                try:
+                                    logger.warning(f"Killing process {conn.pid} holding port {port}")
+                                    proc = psutil.Process(conn.pid)
+                                    proc.terminate() # SIGTERM
+                                    killed_pids.add(conn.pid)
+                                except psutil.NoSuchProcess:
+                                    pass
+                                except Exception as e:
+                                    logger.error(f"Failed to kill process {conn.pid}: {e}")
+                except Exception:
+                    pass
+
+            # 2. Cleanup Ngrok
+            # Try to use command handler's method if available
+            if hasattr(self, 'command_handler') and hasattr(self.command_handler, '_kill_ngrok_processes'):
+                 await self.command_handler._kill_ngrok_processes()
+            
+            # Also generic check for ngrok processes if not killed yet
+            for proc in psutil.process_iter(['pid', 'name']):
+                try:
+                    if proc.info['name'] and 'ngrok' in proc.info['name'].lower() and proc.pid != current_pid:
+                        if proc.pid not in killed_pids:
+                            logger.info(f"Killing lingering ngrok process {proc.pid}")
+                            proc.terminate()
+                            killed_pids.add(proc.pid)
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    pass
+            
+            if killed_pids:
+                logger.info(f"Killed {len(killed_pids)} processes. Waiting for cleanup...")
+                await asyncio.sleep(1.0) # Give OS time to release ports
+                logger.info(f"Killed {len(killed_pids)} processes holding ports.")
+                await asyncio.sleep(0.5) # Allow time for OS to release ports
+                
+        except Exception as e:
+             logger.error(f"Error during port cleanup: {e}")
 
     async def start(self):
         """Starts the agent's main loops."""
@@ -344,12 +450,14 @@ class AutonomousAgent:
         # SSH tunnel already started above
         
         try:
-            await asyncio.gather(
-                self.boredom_loop(),
-                self.observation_loop(),
-                self.action_loop(),
-                self.backup_loop()
-            )
+            self.loop_tasks = [
+                asyncio.create_task(self.boredom_loop()),
+                asyncio.create_task(self.observation_loop()),
+                asyncio.create_task(self.action_loop()),
+                asyncio.create_task(self.backup_loop())
+            ]
+            
+            await asyncio.gather(*self.loop_tasks)
         except Exception as e:
             logger.critical(f"Agent crashed: {e}")
             await self.report_error(e)
@@ -512,14 +620,14 @@ class AutonomousAgent:
                         self._web_server_down_since = current_time
                         logger.warning("Web server is down! Starting restart timer...")
                     
-                    # Check if down for > 10 seconds
+                    # Check if down for >10 seconds
                     elif current_time - self._web_server_down_since > 10:
                         logger.warning("Web server down for >10s. Attempting auto-restart...")
                         try:
                             self.web_server.start()
                             self._web_server_down_since = None # Reset
                             logger.info("Web server auto-restarted successfully.")
-                            await self.discord.send_admin_dm("🔄 **Web Server Auto-Restarted**\nService was down for >10s.", category="system")
+                            await self.send_admin_dm("🔄 **Web Server Auto-Restarted**\nService was down for >10s.", category="system")
                         except Exception as e:
                             logger.error(f"Web server auto-restart failed: {e}")
                             # Reset timer to try again in 10s (prevent rapid loop)
@@ -563,9 +671,16 @@ class AutonomousAgent:
                     # Force restart
                     self.command_handler.ngrok_process = None 
                     await self.command_handler.start_ssh_tunnel()
-                    await self.discord.send_admin_dm("🔄 **SSH Tunnel Auto-Restarted**\nTunnel was missing.", category="system")
+                    await self.send_admin_dm("🔄 **SSH Tunnel Auto-Restarted**\nTunnel was missing.", category="system")
         except Exception as e:
             logger.error(f"Error checking SSH tunnel health: {e}")
+
+        # 3. Loop Health Monitor
+        try:
+            if hasattr(self, 'command_handler'):
+                await self.command_handler._check_loop_health()
+        except Exception as e:
+            logger.error(f"Error in Loop Health Monitor: {e}")
 
 
     async def observation_loop(self):
@@ -575,75 +690,84 @@ class AutonomousAgent:
         last_subsystem_check = 0
         
         while self.is_running:
-            # Check Discord Messages
-            messages = await self.discord.get_messages()
-            if messages:
-                logger.debug(f"Processing {len(messages)} Discord messages.")
-                self.reduce_boredom(0.1)
-                
-                for msg in messages:
-                    # Track message stats
-                    self.messages_processed += 1
-                    self.last_message_time = time.time()
-                    self.last_message_content = msg['content']
-                    if msg.get('is_dm'):
-                        self.dm_count += 1
-                    else:
-                        self.channel_count += 1
-                    if msg.get('mentions_bot'):
-                        self.mention_count += 1
+            try:
+                # Check Discord Messages
+                messages = await self.discord.get_messages()
+                if messages:
+                    logger.debug(f"Processing {len(messages)} Discord messages.")
+                    self.reduce_boredom(0.1)
                     
-                    # Check for commands first - process immediately
-                    if msg['content'].startswith('!'):
-                        # Create task for immediate processing (bypasses queue)
-                        asyncio.create_task(self.handle_command_immediate(msg))
-                    # If directly addressed or DM, reply immediately
-                    elif msg['is_dm'] or msg['mentions_bot']:
-                        logger.info(f"Direct interaction from {msg['author']}. Replying...")
-                        # Generate reply using LLM
-                        response = await self.llm.generate_response(
-                            prompt=f"User {msg['author']} says: {msg['content']}",
-                            system_prompt="You are a helpful AI assistant. Answer in Czech language (čeština) unless asked otherwise. Be concise and accurate."
-                        )
-                        await self.discord.send_message(msg['channel_id'], response)
-            
-            # Resource monitoring (every 10 seconds)
-            current_time = asyncio.get_event_loop().time()
-            if current_time - last_resource_check >= 10:
-                usage = self.resource_manager.check_resources()
-                tier = self.resource_manager.get_tier(usage)
+                    for msg in messages:
+                        # Track message stats
+                        self.messages_processed += 1
+                        self.last_message_time = time.time()
+                        self.last_message_content = msg['content']
+                        if msg.get('is_dm'):
+                            self.dm_count += 1
+                        else:
+                            self.channel_count += 1
+                        if msg.get('mentions_bot'):
+                            self.mention_count += 1
+                        
+                        # Check for commands first - process immediately
+                        if msg['content'].startswith('!'):
+                            # Create task for immediate processing (bypasses queue)
+                            asyncio.create_task(self.handle_command_immediate(msg))
+                        # If directly addressed or DM, reply immediately
+                        elif msg['is_dm'] or msg['mentions_bot']:
+                            logger.info(f"Direct interaction from {msg['author']}. Replying...")
+                            # Generate reply using LLM
+                            response = await self.llm.generate_response(
+                                prompt=f"User {msg['author']} says: {msg['content']}",
+                                system_prompt="You are a helpful AI assistant. Answer in Czech language (čeština) unless asked otherwise. Be concise and accurate."
+                            )
+                            await self.discord.send_message(msg['channel_id'], response)
                 
-                # Check for tier change
-                if tier != self.resource_manager.current_tier:
-                    logger.info(f"Resource tier changed: {self.resource_manager.current_tier} -> {tier}")
-                    self.resource_manager.current_tier = tier
-                    await self.handle_resource_tier(tier, usage)
-                
-                last_resource_check = current_time
-            
-            # Subsystem Health Check (every 30 seconds)
-            if current_time - last_subsystem_check >= 30:
-                await self.check_subsystems()
-                last_subsystem_check = current_time
-            
-            # Network monitoring (every 60 seconds)
-            if current_time - self.network_monitor.last_check >= self.network_monitor.check_interval:
-                is_online = await self.network_monitor.check_connectivity()
-                
-                # Handle state transitions
-                if not is_online and self.network_monitor.is_online:
-                    # Went offline
-                    await self.network_monitor.handle_disconnect()
-                    self.network_monitor.is_online = False
-                elif is_online and not self.network_monitor.is_online:
-                    # Came back online
-                    await self.network_monitor.handle_reconnect()
-                    self.network_monitor.is_online = True
+                # Resource monitoring (every 10 seconds)
+                current_time = asyncio.get_event_loop().time()
+                if current_time - last_resource_check >= 10:
+                    usage = self.resource_manager.check_resources()
+                    tier = self.resource_manager.get_tier(usage)
                     
-                    # Restart SSH tunnel if needed
-                    asyncio.create_task(self.command_handler.start_ssh_tunnel())
+                    # Check for tier change
+                    if tier != self.resource_manager.current_tier:
+                        logger.info(f"Resource tier changed: {self.resource_manager.current_tier} -> {tier}")
+                        self.resource_manager.current_tier = tier
+                        await self.handle_resource_tier(tier, usage)
+                    
+                    last_resource_check = current_time
                 
-                self.network_monitor.last_check = current_time
+                # Subsystem Health Check (every 30 seconds)
+                if current_time - last_subsystem_check >= 30:
+                    await self.check_subsystems()
+                    last_subsystem_check = current_time
+                
+                # Network monitoring (every 60 seconds)
+                if self.network_monitor.last_check is None:
+                     self.network_monitor.last_check = 0
+                
+                if current_time - self.network_monitor.last_check >= self.network_monitor.check_interval:
+                    is_online = await self.network_monitor.check_connectivity()
+                    
+                    # Handle state transitions
+                    if not is_online and self.network_monitor.is_online:
+                        # Went offline
+                        await self.network_monitor.handle_disconnect()
+                        self.network_monitor.is_online = False
+                    elif is_online and not self.network_monitor.is_online:
+                        # Came back online
+                        await self.network_monitor.handle_reconnect()
+                        self.network_monitor.is_online = True
+                        
+                        # Restart SSH tunnel if needed
+                        asyncio.create_task(self.command_handler.start_ssh_tunnel())
+                    
+                    self.network_monitor.last_check = current_time
+            
+            except Exception as e:
+                logger.error(f"Error in observation_loop: {e}")
+                # Wait a bit before retrying to avoid log spam if error persists
+                await asyncio.sleep(5)
             
             await asyncio.sleep(1)
 
@@ -675,26 +799,71 @@ class AutonomousAgent:
                 query = f"What is {activity_name} video game?"
                 search_result = await web_tool._execute_with_logging(action='search', query=query)
                 
+                if "Error" not in search_result:
+                    # Enrich and store
+                    logger.info(f"Found info for {activity_name}. Summarizing and storing...")
+                    await self.add_filtered_memory(
+                        content=f"{activity_name}: {search_result}",
+                        metadata={
+                            'type': 'activity_knowledge',
+                            'activity': activity_name,
+                            'source': 'discord_activity',
+                            'original_user': user_name
+                        }
+                    )
+                
                 # Track usage
                 self.tool_usage_count['web_tool'] = self.tool_usage_count.get('web_tool', 0) + 1
                 self._save_tool_stats()
-                            
-                # Store in memory
-                content = f"Activity: {activity_name}\nInfo: {search_result[:500]}...\nPlayed by: {user_name} (ID: {user_id})"
-                self.memory.add_memory(
-                    content=content,
-                    metadata={
-                        "type": "activity_knowledge",
-                        "activity": activity_name,
-                        "first_seen_user_id": user_id,
-                        "first_seen_user_name": user_name,
-                        "timestamp": time.time()
-                    }
-                )
-                logger.info(f"Learned about {activity_name} and saved to memory.")
-                
+            
             except Exception as e:
                 logger.error(f"Failed to research activity {activity_name}: {e}")
+
+
+
+
+    async def add_filtered_memory(self, content: str, metadata: dict = None):
+        """
+        Adds a memory after filtering it through the LLM to extract only essential information.
+        """
+        if not content:
+            return
+
+        # 1. Summarize/Filter with LLM
+        try:
+            prompt = (
+                f"You are a memory optimizer. Extract the core, factual information from the following text. "
+                f"Remove fluff, 'user taught me' prefixes, conversational assignments, and unnecessary details. "
+                f"Keep it concise. If the text is already concise, return it as is.\n\n"
+                f"Text: {content}"
+            )
+            filtered_content = await self.llm.generate_response(prompt, system_prompt="You are a strict data filter. Output ONLY the filtered fact.")
+            
+            # Clean up potential LLM verbosity if it didn't follow instructions perfectly
+            filtered_content = filtered_content.strip('"').strip("'").strip()
+            
+            if not filtered_content:
+                logger.warning("LLM filtered content to empty string. Using original.")
+                filtered_content = content
+
+        except Exception as e:
+            logger.error(f"Failed to filter memory with LLM: {e}. Using original content.")
+            filtered_content = content
+
+        # 2. Add to memory
+        if metadata is None:
+            metadata = {}
+        
+        # Ensure we have a type
+        if 'type' not in metadata:
+            metadata['type'] = 'general_knowledge'
+
+        logger.info(f"Storing filtered memory: {filtered_content} (Meta: {metadata})")
+        self.memory.add_memory(filtered_content, metadata)
+                            
+
+                
+
 
     def _simplify_action(self, action: str) -> str:
         """Simplifies English action to concise form for Discord status."""
@@ -749,23 +918,25 @@ class AutonomousAgent:
         
         while self.is_running:
             try:
-                # Check time since last backup
+                # 1. Failsafe Loop Check (Run every 30 mins)
+                try:
+                    if hasattr(self, 'command_handler'):
+                        await self.command_handler._check_loop_health()
+                except:
+                    pass
+
+                # 2. Database Backup Logic
                 backup_dir = "backup"
                 backups = sorted(glob.glob(os.path.join(backup_dir, "agent_memory_*.db")))
                 
                 should_backup = True
                 if backups:
                     last_backup = backups[-1]
-                    # Extract timestamp from filename: agent_memory_1234567890.db
                     try:
                         timestamp = int(last_backup.split("_")[-1].split(".")[0])
+                        # If less than 12 hours since last backup, skip
                         if time.time() - timestamp < 12 * 60 * 60:
                             should_backup = False
-                            # Calculate sleep time
-                            sleep_time = (12 * 60 * 60) - (time.time() - timestamp)
-                            logger.info(f"Last backup was recent. Sleeping for {sleep_time/3600:.1f} hours.")
-                            await asyncio.sleep(sleep_time)
-                            continue
                     except ValueError:
                         logger.warning("Could not parse backup timestamp. Forcing backup.")
                 
@@ -780,8 +951,8 @@ class AutonomousAgent:
             except Exception as e:
                 logger.error(f"Error in backup loop: {e}")
             
-            # Check again in 1 hour if we just backed up or failed
-            await asyncio.sleep(60 * 60)
+            # Check again in 30 minutes
+            await asyncio.sleep(30 * 60)
     
     async def action_loop(self):
         """Executes queued actions (placeholder)."""

@@ -1,9 +1,13 @@
 import logging
 import threading
 import os
+import platform
 import markdown
-from flask import Flask, render_template_string, send_from_directory, abort, request
+import secrets
+from flask import Flask, render_template_string, send_from_directory, abort, request, jsonify, g
+from flask_socketio import SocketIO, emit
 from pyngrok import ngrok, conf
+import config_settings
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +32,116 @@ def levenshtein_distance(s1: str, s2: str) -> int:
     return previous_row[-1]
 
 
+
+def sanitize_log_line(line: str) -> str:
+    """Basic sanitization and colorization for log lines."""
+    import html
+    import re
+    
+    # Strip ANSI codes (in case log file contains them)
+    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+    line = ansi_escape.sub('', line)
+    
+    # Escape HTML special characters
+    safe_line = html.escape(line.strip())
+    
+    # regex for standard log format: YYYY-MM-DD HH:MM:SS,mmm - [Host] - Logger - Level - Message
+    # Allow dot or comma for milliseconds
+    log_pattern = re.compile(r'^(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}(?:[,\.]\d{3})?)\s+-\s+(\[.*?\])\s+-\s+(.*?)\s+-\s+(.*?)\s+-\s+(.*)$')
+    match = log_pattern.match(safe_line)
+    
+    if match:
+        timestamp, host, logger_name, level, message = match.groups()
+        
+        # Colorize Level
+        level_color = "#dcddde"
+        if "ERROR" in level or "CRITICAL" in level:
+            level_color = "#f04747"
+        elif "WARNING" in level:
+            level_color = "#faa61a"
+        elif "DEBUG" in level:
+            level_color = "#72767d"
+        elif "INFO" in level:
+            level_color = "#43b581"
+            
+        # Mask sensitive parts of URLs (path/query) with ****
+        # Matches http(s)://domain and captures the rest, preserving domain visibility.
+        # Added tcp support
+        url_mask_pattern = re.compile(r'((?:[a-zA-Z0-9+\.-]+)://)([^/\s]+)(/[^\s]*)?')
+        
+        def mask_url_match(m):
+            proto = m.group(1)
+            domain = m.group(2)
+            path = m.group(3)
+            
+            # Check if domain is an IP address
+            ip_match = re.match(r'^(\d{1,3})\.(\d{1,3})\.\d{1,3}\.\d{1,3}$', domain)
+            if ip_match:
+                # Keep first 2 octets for IPs
+                if domain in ['0.0.0.0']: # Keep ignoring 0.0.0.0 for bind addrs if strictly needed, but masking consistent is better. 
+                  # User complained about 127... so let's mask 127 too. 
+                    masked_domain = f"{ip_match.group(1)}.{ip_match.group(2)}.***.***"
+                else:
+                    masked_domain = f"{ip_match.group(1)}.{ip_match.group(2)}.***.***"
+            else:
+                # For regular domains, mask each part but preserve dots
+                parts = domain.split('.')
+                masked_parts = []
+                for part in parts:
+                    if len(part) > 3:
+                        masked_parts.append(part[:3] + '***')
+                    else:
+                        masked_parts.append(part)
+                masked_domain = '.'.join(masked_parts)
+            
+            masked_path = ""
+            if path and len(path) > 1: # Only mask if there's a path
+                # Show first 3 chars of path if possible, then mask
+                if len(path) > 5:
+                     masked_path = f'{path[:3]}****'
+                else:
+                     masked_path = '/****'
+            
+            return f'{proto}{masked_domain}{masked_path}'
+            
+        message = url_mask_pattern.sub(mask_url_match, message)
+        
+        # Mask IP addresses (IPv4)
+        # Exclude 127.0.0.1 and 0.0.0.0
+        ip_pattern = re.compile(r'\b(?:\d{1,3}\.){3}\d{1,3}\b')
+        
+        def mask_ip_match(m):
+            ip = m.group(0)
+            parts = ip.split('.')
+            return f"{parts[0]}.{parts[1]}.***.***"
+            return f"{parts[0]}.{parts[1]}.***.***"
+            
+        message = ip_pattern.sub(mask_ip_match, message)
+
+            
+        # Highlight numbers
+        number_pattern = re.compile(r'\b\d+\b')
+        message = number_pattern.sub(r'<span style="color: #00b0f4;">\g<0></span>', message)
+
+        colored_line = (
+             f'<div id="log-{hash(line)}" class="log-entry">'
+             f'<span style="color: #43b581;">{timestamp}</span> - '
+             f'<span style="color: #ffffff;">{host}</span> - '
+             f'<span style="color: #00b0f4;">{logger_name}</span> - '
+             f'<span style="color: {level_color}; font-weight: bold;">{level}</span> - '
+             f'{message}'
+             f'</div>'
+        )
+        return colored_line
+    else:
+        # Fallback for non-standard lines
+        if "ERROR" in safe_line or "CRITICAL" in safe_line or "Exception" in safe_line:
+            return f'<div class="log-entry" style="color: #f04747;">{safe_line}</div>'
+        elif "WARNING" in safe_line:
+            return f'<div class="log-entry" style="color: #faa61a;">{safe_line}</div>'
+        
+        return f'<div class="log-entry">{safe_line}</div>'
+
 # Discord-themed CSS for the documentation
 DOCS_CSS = """
     /* Base styles with Discord color scheme */
@@ -46,8 +160,6 @@ DOCS_CSS = """
         margin: 0 auto; 
         padding: 20px;
     }
-    
-    /* Navigation bar */
     .nav { 
         background: #202225;
         margin: -20px -20px 30px -20px;
@@ -140,6 +252,23 @@ DOCS_CSS = """
         color: #dcddde;
     }
     
+    /* Search highlighting */
+    .highlight-exact {
+        background: #43b581;
+        color: white;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-weight: 600;
+    }
+    
+    .highlight-fuzzy {
+        background: #faa61a;
+        color: white;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-weight: 600;
+    }
+    
     /* Status cards */
     .status-card { 
         background: linear-gradient(135deg, #36393f 0%, #2f3136 100%);
@@ -151,9 +280,12 @@ DOCS_CSS = """
     }
     
     .status-item { 
-        margin-bottom: 12px;
-        padding: 8px 0;
+        min-height: 45px;
+        display: flex;
+        align-items: center;
         border-bottom: 1px solid #40444b;
+        padding: 5px 0;
+        margin: 0;
     }
     
     .status-item:last-child {
@@ -165,7 +297,26 @@ DOCS_CSS = """
         color: #5865F2;
         margin-right: 8px;
         display: inline-block;
-        min-width: 120px;
+        min-width: 160px;
+    }
+    
+    .status-row {
+        display: flex;
+        flex-wrap: wrap;
+    }
+    
+    .status-col {
+        width: 50%;
+        box-sizing: border-box;
+    }
+    
+    .status-col:first-child {
+        padding-right: 25px;
+        border-right: 1px solid #40444b;
+    }
+    
+    .status-col:last-child {
+        padding-left: 25px;
     }
     
     /* Lists */
@@ -246,10 +397,109 @@ DOCS_CSS = """
     }
 
     /* Mobile Responsive Styles */
+    /* Modal Styles */
+    .modal {
+        display: none; 
+        position: fixed; 
+        z-index: 100; 
+        left: 0;
+        top: 0;
+        width: 100%; 
+        height: 100%; 
+        overflow: auto; 
+        background-color: rgba(0,0,0,0.6); 
+    }
+    .modal-content {
+        background-color: #2f3136;
+        margin: 5% auto; /* Less top margin on mobile */
+        padding: 15px;
+        border: 1px solid #40444b;
+        width: 95%; /* Wider on mobile */
+        max-width: 600px;
+        border-radius: 8px;
+        color: #dcddde;
+        max-height: 90vh; /* Prevent overflow on small screens */
+        overflow-y: auto; /* Scrollable content */
+    }
+    .proc-table { width: 100%; border-collapse: collapse; font-size: 0.8em; margin-bottom: 20px; table-layout: fixed; }
+    .proc-table th { text-align: left; border-bottom: 1px solid #40444b; padding: 8px 4px; color: #b9bbbe; }
+    .proc-table td { border-bottom: 1px solid #2f3136; padding: 6px 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    /* Column widths */
+    .proc-table th:nth-child(1), .proc-table td:nth-child(1) { width: 20%; } /* PID */
+    .proc-table th:nth-child(2), .proc-table td:nth-child(2) { width: 50%; } /* Name */
+    .proc-table th:nth-child(3), .proc-table td:nth-child(3) { width: 30%; text-align: right; } /* Value */
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .close:hover,
+    .close:focus {
+        color: #fff;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .detail-btn {
+        background-color: #5865F2;
+        border: none;
+        color: white;
+        padding: 8px 15px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 14px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .detail-btn:hover { background-color: #4752c4; }
+    .proc-table { width: 100%; font-size: 0.9em; margin-bottom: 20px; }
+    .proc-table th { text-align: left; border-bottom: 1px solid #40444b; padding: 5px; color: #b9bbbe; }
+    .proc-table td { border-bottom: 1px solid #2f3136; padding: 5px; }
+
+    /* Dashboard */
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid #40444b;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+    .dashboard-title {
+        font-size: 2.5em;
+        font-weight: 600;
+        color: #5865F2;
+    }
+    .connection-status {
+        font-weight: bold;
+        font-size: 1.1em;
+        color: #faa61a;
+    }
+
+    .resources-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .resources-title {
+        margin: 0;
+    }
+
     /* Mobile Responsive Styles */
     @media (max-width: 768px) {
+        .status-label {
+             min-width: 80px;
+        }
         body {
             padding: 10px;
+        }
+
+        .detail-btn {
+            padding: 5px 10px;
+            font-size: 12px;
         }
         
         .nav {
@@ -269,8 +519,14 @@ DOCS_CSS = """
             font-size: 0.9em;
         }
         
-        h1 {
+        h1, .dashboard-title {
             font-size: 1.5em; /* Reduced from 1.8em */
+        }
+
+        .connection-status {
+            font-size: 0.9em;
+            white-space: nowrap;
+            margin-left: 10px;
         }
         
         h2 {
@@ -286,6 +542,20 @@ DOCS_CSS = """
             padding: 15px;
         }
         
+        .status-col {
+            width: 100%;
+        }
+        .status-col:first-child {
+            border-right: none;
+            padding-right: 0;
+            border-bottom: 1px solid #40444b;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+        .status-col:last-child {
+            padding-left: 0;
+        }
+
         table {
             display: block;
             overflow-x: auto;
@@ -300,7 +570,8 @@ TEMPLATE_BASE = """
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title }} - RPI AI Agent</title>
-    <style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" nonce="{{ nonce }}"></script>
+    <style nonce="{{ nonce }}">
         {{ css }}
         .search-form {
             display: inline-block;
@@ -319,6 +590,18 @@ TEMPLATE_BASE = """
             outline: none;
             border-color: #5865F2;
         }
+        .log-viewer {
+            background: #202225;
+            color: #b9bbbe;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85em;
+            padding: 10px;
+            border-radius: 8px;
+            height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            border: 1px solid #40444b;
+        }
         @media (max-width: 768px) {
             .nav {
                 flex-wrap: wrap;
@@ -335,7 +618,6 @@ TEMPLATE_BASE = """
             }
         }
     </style>
-    {{ refresh_meta | safe }}
 </head>
 <body>
     <div class="nav">
@@ -345,7 +627,232 @@ TEMPLATE_BASE = """
             <input type="text" name="q" placeholder="🔍 Vyhledat v dokumentaci" />
         </form>
     </div>
-    {{ content | safe }}
+    <div id="content">
+        {{ content | safe }}
+    </div>
+    
+    <script nonce="{{ nonce }}">
+        // Process Modal Functions (Moved here to avoid CSP issues)
+        function openProcessModal() {
+            document.getElementById('processModal').style.display = 'block';
+            fetchProcesses();
+        }
+        function closeProcessModal() {
+            document.getElementById('processModal').style.display = 'none';
+        }
+        window.onclick = function(event) {
+            var modal = document.getElementById('processModal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+        
+        function updateProcessTable(data) {
+            if (!data) return;
+            
+            let cpuRows = '<tr><th>PID</th><th>Name</th><th>CPU %</th></tr>';
+            if (data.cpu) {
+                data.cpu.forEach(p => {
+                    cpuRows += `<tr><td>${p.pid}</td><td>${p.name}</td><td style="text-align: right;">${p.cpu_percent.toFixed(2)}%</td></tr>`;
+                });
+            }
+            document.getElementById('cpu-table').innerHTML = cpuRows;
+            
+            let ramRows = '<tr><th>PID</th><th>Name</th><th>RAM</th></tr>';
+            if (data.memory) {
+                data.memory.forEach(p => {
+                    let memText = p.memory_mb + ' MB';
+                    if (p.memory_percent !== undefined) {
+                        memText = `${p.memory_percent.toFixed(1)}% (${p.memory_mb} MB)`;
+                    }
+                    ramRows += `<tr><td>${p.pid}</td><td>${p.name}</td><td style="text-align: right;">${memText}</td></tr>`;
+                });
+            }
+            document.getElementById('ram-table').innerHTML = ramRows;
+        }
+        
+        function fetchProcesses() {
+            fetch('/api/processes')
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) { console.error('Error:', data.error); return; }
+                updateProcessTable(data);
+            })
+            .catch(err => console.error('Fetch error:', err));
+        }
+
+        var socket = io();
+        window.autoScrollEnabled = true;
+
+        // Attach event listeners (CSP compliance)
+        (function() {
+            var detailsBtn = document.getElementById('details-btn');
+            if(detailsBtn) detailsBtn.addEventListener('click', openProcessModal);
+            
+            var closeBtn = document.getElementById('modal-close-btn');
+            if(closeBtn) closeBtn.addEventListener('click', closeProcessModal);
+            
+            var scrollBtn = document.getElementById('scroll-btn');
+            if(scrollBtn) scrollBtn.addEventListener('click', resumeAutoScroll);
+        })();
+
+        function resumeAutoScroll() {
+            var logViewer = document.getElementById('log-viewer');
+            logViewer.scrollTop = logViewer.scrollHeight;
+            window.autoScrollEnabled = true;
+            document.getElementById('scroll-btn').style.display = 'none';
+        }
+        
+        socket.on('connect', function() {
+            // Init log viewer scroll listener
+            var logViewer = document.getElementById('log-viewer');
+            if (logViewer) {
+                logViewer.addEventListener('scroll', function() {
+                    // Check if user scrolled up (threshold 50px)
+                    var isAtBottom = logViewer.scrollHeight - logViewer.scrollTop - logViewer.clientHeight < 50;
+                    
+                    if (!isAtBottom) {
+                         window.autoScrollEnabled = false;
+                         var btn = document.getElementById('scroll-btn');
+                         if(btn) btn.style.display = 'block';
+                    } else {
+                         window.autoScrollEnabled = true;
+                         var btn = document.getElementById('scroll-btn');
+                         if(btn) btn.style.display = 'none';
+                    }
+                });
+            }
+
+            console.log('Connected to WebSocket');
+            var el = document.getElementById('connection-status');
+            if(el) {
+                el.innerText = '● Live';
+                el.style.color = '#43b581';
+            }
+        });
+        
+        socket.on('disconnect', function() {
+            console.log('Disconnected from WebSocket');
+            var el = document.getElementById('connection-status');
+            if(el) {
+                el.innerText = '● Disconnected';
+                el.style.color = '#f04747';
+            }
+        });
+        
+        socket.on('status_update', function(data) {
+            // Update Status Card
+            document.getElementById('status-running').innerHTML = data.is_running ? '🟢 Running' : '🔴 Stopped';
+            document.getElementById('status-boredom').innerText = (data.boredom_score * 100).toFixed(1) + '%';
+            document.getElementById('status-uptime').innerText = data.uptime;
+            document.getElementById('status-tools').innerText = data.tools_used + ' / ' + data.tools_total;
+            
+            // Update Loops
+            if (data.loop_status) {
+                var loopBoredom = document.getElementById('loop-boredom');
+                if(loopBoredom) loopBoredom.innerText = data.loop_status.boredom_loop || 'N/A';
+                
+                var loopObs = document.getElementById('loop-observation');
+                if(loopObs) loopObs.innerText = data.loop_status.observation_loop || 'N/A';
+                
+                var loopAct = document.getElementById('loop-action');
+                if(loopAct) loopAct.innerText = data.loop_status.action_loop || 'N/A';
+                
+                var loopBack = document.getElementById('loop-backup');
+                if(loopBack) loopBack.innerText = data.loop_status.backup_loop || 'N/A';
+            }
+            
+            // Update Resources
+            document.getElementById('res-cpu').innerText = data.cpu_percent + '%';
+            document.getElementById('res-ram').innerText = data.ram_percent + '% (' + data.ram_used + ' / ' + data.ram_total + ')';
+            document.getElementById('res-disk').innerText = data.disk_percent + '% (' + data.disk_used + ' / ' + data.disk_total + ')';
+            
+            // Update Activity
+            var activityList = document.getElementById('activity-list');
+            activityList.innerHTML = '';
+            if (data.action_history.length > 0) {
+                data.action_history.forEach(function(action) {
+                    var li = document.createElement('li');
+                    li.innerText = action;
+                    activityList.appendChild(li);
+                });
+            } else {
+                activityList.innerHTML = '<li>No recent activity</li>';
+            }
+            
+            // Update Log
+            var logViewer = document.getElementById('log-viewer');
+            
+            // Set content
+            var isAtBottom = logViewer.scrollHeight - logViewer.scrollTop - logViewer.clientHeight < 50;
+
+            // Only update if content changed prevents heavy DOM updates/selection loss
+            // Only update if content changed prevents heavy DOM updates/selection loss
+            if (logViewer.innerHTML !== data.log_tail) {
+                // Find visible element to anchor to
+                var savedElementId = null;
+                var savedOffset = 0;
+                
+                if (!window.autoScrollEnabled) {
+                     var children = logViewer.children;
+                     for (var i = 0; i < children.length; i++) {
+                         var el = children[i];
+                         // Find first element that is within or below the top of container (visible)
+                         if (el.offsetTop >= logViewer.scrollTop) {
+                             savedElementId = el.id;
+                             savedOffset = el.offsetTop - logViewer.scrollTop;
+                             break;
+                         }
+                     }
+                }
+                
+                logViewer.innerHTML = data.log_tail;
+                
+                // Auto-scroll logic
+                if (window.autoScrollEnabled) {
+                    logViewer.scrollTop = logViewer.scrollHeight;
+                } else if (savedElementId) {
+                    // Try to restore position to exact element
+                    var el = document.getElementById(savedElementId);
+                    if (el) {
+                        logViewer.scrollTop = el.offsetTop - savedOffset;
+                    } else {
+                        // Element fell off, maintain bottom distance as fallback
+                         // (Actually strictly speaking if element fell off we can't scroll to it, 
+                         //  so we might just stay where we are or let browser handle it.
+                         //  Since browser reset scrollTop might happen, let's trust scrollTop 
+                         //  adjustment isn't needed or handle via relative bottom if we tracked it.)
+                         //  
+                         // Simpler fallback: If reading history and that history is gone, 
+                         // we probably end up at top.
+                    }
+                }
+            }
+            
+            // On Scroll Event to detect manual scroll up
+            logViewer.onscroll = function() {
+                // If user scrolls up (is not at bottom), disable auto-scroll
+                if (logViewer.scrollHeight - logViewer.scrollTop - logViewer.clientHeight > 50) {
+                    window.autoScrollEnabled = false;
+                    document.getElementById('scroll-btn').style.display = 'block';
+                } else {
+                    // If user scrolls back to bottom, re-enable auto-scroll
+                    window.autoScrollEnabled = true;
+                    document.getElementById('scroll-btn').style.display = 'none';
+                }
+            };
+            
+            // Update Info Stats if present
+            if (data.info) {
+                 // We might want to render this dynamically or just update specific fields if we add them to the DOM
+            }
+            
+            // Update Processes via WS if modal is open (data.processes provided by backend now)
+            if (data.processes) {
+                updateProcessTable(data.processes);
+            }
+        });
+    </script>
 </body>
 </html>
 """
@@ -354,37 +861,74 @@ class WebServer:
     def __init__(self, agent):
         self.agent = agent
         self.app = Flask(__name__)
+        self.socketio = SocketIO(self.app, cors_allowed_origins="*", async_mode='threading')
         self.port = 5001  # Changed from 5000 due to port conflict
         self.thread = None
         self.public_url = None
         self.manual_stop = False # Track intentional stops
         self.docs_dir = os.path.abspath("documentation")
+        self.connected_clients = 0 # Track active WS connections
+        self.start_time = 0 # Track server start time for auto-shutdown
+        
+        # Cache for process objects to get accurate CPU % (needs state)
+        self.process_cache = {}
         
         # Configure routes
         self.app.add_url_rule('/', 'index', self.index)
         self.app.add_url_rule('/docs', 'docs_list', self.docs_list)
         self.app.add_url_rule('/docs/<path:filename>', 'docs_view', self.docs_view)
         self.app.add_url_rule('/search', 'search_docs', self.search_docs)
+        self.app.add_url_rule('/api/processes', 'get_processes', self.get_processes)
         self.app.add_url_rule('/test', 'test', lambda: "Flask is running! ✅")
-        self.app.add_url_rule('/shutdown', 'shutdown', self._shutdown, methods=['POST'])
+        
+        # Endpoint /shutdown removed per user request.
+        # Shutdown is now handled via manual_stop flag checked in _emit_updates loop.
+        
+        # SocketIO Event Handlers
+        @self.socketio.on('connect')
+        def handle_connect():
+            self.connected_clients += 1
+            logger.info(f"Client connected. Active clients: {self.connected_clients}")
+            
+        @self.socketio.on('disconnect')
+        def handle_disconnect():
+            if self.connected_clients > 0:
+                self.connected_clients -= 1
+            logger.info(f"Client disconnected. Active clients: {self.connected_clients}")
         
         # Disable Flask logging
         log = logging.getLogger('werkzeug')
         log.setLevel(logging.ERROR)
-    
-    def _shutdown(self):
-        """Shutdown Flask server gracefully."""
-        from flask import request
-        func = request.environ.get('werkzeug.server.shutdown')
-        if func is None:
-            # Werkzeug 2.1+ doesn't have shutdown function
-            import os
-            import signal
-            os.kill(os.getpid(), signal.SIGINT)
-            return 'Server shutting down...'
-        func()
-        return 'Server shutting down...'
 
+        @self.app.before_request
+        def generate_nonce():
+            g.nonce = secrets.token_hex(16)
+
+        @self.app.context_processor
+        def inject_nonce():
+            return dict(nonce=g.nonce)
+
+        @self.app.after_request
+        def add_security_headers(response):
+            # CVE-2025-XSS Mitigation - Best Practice
+            # Strict CSP with Nonce (Blocking unsafe-inline)
+            # allow cdnjs for socket.io if nonce fails (but nonce should work)
+            nonce = getattr(g, 'nonce', '')
+            csp = (
+                f"default-src 'self'; "
+                f"script-src 'self' 'nonce-{nonce}' https://cdnjs.cloudflare.com; "
+                f"style-src 'self' 'nonce-{nonce}'; "
+                f"connect-src 'self'; "
+                f"img-src 'self' data:; "
+                f"font-src 'self'; "
+                f"object-src 'none'; "
+                f"base-uri 'self';"
+            )
+            response.headers['Content-Security-Policy'] = csp
+            response.headers['X-Content-Type-Options'] = 'nosniff'
+            response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+            return response
+    
     def index(self):
         """Main dashboard."""
         import psutil
@@ -394,12 +938,23 @@ class WebServer:
         ram = psutil.virtual_memory()
         disk = psutil.disk_usage('/')
         
+        # Get consistent RAM usage from processes
+        proc_data = self.get_processes_data()
+        total_mem_from_procs = proc_data.get('total_mem_bytes', 0)
+        
+        if total_mem_from_procs > 0:
+            ram_used_val = total_mem_from_procs
+            ram_percent_val = (total_mem_from_procs / ram.total) * 100
+        else:
+            ram_used_val = ram.used
+            ram_percent_val = ram.percent
+        
         # Format bytes to GB
         def to_gb(bytes_val):
             return f"{bytes_val / (1024**3):.1f} GB"
             
-        ram_percent = ram.percent
-        ram_used = to_gb(ram.used)
+        ram_percent = f"{ram_percent_val:.1f}"
+        ram_used = to_gb(ram_used_val)
         ram_total = to_gb(ram.total)
         
         disk_percent = disk.percent
@@ -407,57 +962,130 @@ class WebServer:
         disk_total = to_gb(disk.total)
 
         status_html = f"""
-        <h1>🤖 Agent Dashboard</h1>
+        <div class="dashboard-header">
+            <div class="dashboard-title">🤖 Agent Dashboard</div>
+            <div id="connection-status" class="connection-status">● Connecting...</div>
+        </div>
         
         <div class="status-card">
-            <div class="status-item">
-                <span class="status-label">Status:</span> 
-                {'🟢 Running' if self.agent.is_running else '🔴 Stopped'}
-            </div>
-            <div class="status-item">
-                <span class="status-label">Boredom:</span> 
-                {self.agent.boredom_score * 100:.1f}%
-            </div>
-            <div class="status-item">
-                <span class="status-label">Uptime:</span> 
-                {self._get_uptime()}
-            </div>
-            <div class="status-item">
-                <span class="status-label">Tools Learned:</span> 
-                {len([t for t, c in self.agent.tool_usage_count.items() if c > 0])}
+            <div class="status-row">
+                <div class="status-col">
+                    <div class="status-item">
+                        <span class="status-label">Status:</span> 
+                        <span id="status-running">{'🟢 Running' if self.agent.is_running else '🔴 Stopped'}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Boredom:</span> 
+                        <span id="status-boredom">{self.agent.boredom_score * 100:.1f}%</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Uptime:</span> 
+                        <span id="status-uptime">{self._get_uptime()}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Tools Learned:</span> 
+                        <span id="status-tools">{len([t for t, c in self.agent.tool_usage_count.items() if c > 0])} / {len(self.agent.tools.tools)}</span>
+                    </div>
+                </div>
+                <div class="status-col">
+                    <div class="status-item"><span class="status-label">Boredom loop:</span> <span id="loop-boredom">Loading...</span></div>
+                    <div class="status-item"><span class="status-label">Observation loop:</span> <span id="loop-observation">Loading...</span></div>
+                    <div class="status-item"><span class="status-label">Action loop:</span> <span id="loop-action">Loading...</span></div>
+                    <div class="status-item"><span class="status-label">Backup loop:</span> <span id="loop-backup">Loading...</span></div>
+                </div>
             </div>
         </div>
 
         <div class="status-card">
-            <h3>🖥️ System Resources</h3>
+            <div class="resources-header">
+                <h3 class="resources-title">🖥️ System Resources</h3>
+                <button id="details-btn" class="detail-btn">🔍 Details</button>
+            </div>
             <div class="status-item">
                 <span class="status-label">CPU Usage:</span> 
-                {cpu_percent}%
+                <span id="res-cpu">{cpu_percent}%</span>
             </div>
             <div class="status-item">
                 <span class="status-label">RAM Usage:</span> 
-                {ram_percent}% ({ram_used} / {ram_total})
+                <span id="res-ram">{ram_percent}% ({ram_used} / {ram_total})</span>
             </div>
             <div class="status-item">
                 <span class="status-label">Disk Usage:</span> 
-                {disk_percent}% ({disk_used} / {disk_total})
+                <span id="res-disk">{disk_percent}% ({disk_used} / {disk_total})</span>
             </div>
         </div>
         
+        <div class="status-card">
+            <h3>ℹ️ System Info</h3>
+            <div class="status-item"><span class="status-label">OS:</span> {self._get_os_info()} running on {self._get_hardware_info()}</div>
+            <div class="status-item"><span class="status-label">Python:</span> {platform.python_version()}</div>
+            <div class="status-item"><span class="status-label">LLM Model:</span> {self._get_llm_display_name()}</div>
+            <div class="status-item"><span class="status-label">Project Version:</span> Beta - CLOSED</div>
+        </div>
+        
         <h3>Recent Activity</h3>
-        <ul>
+        <ul id="activity-list">
         {''.join([f'<li>{a}</li>' for a in self.agent.action_history[-5:]]) if self.agent.action_history else '<li>No recent activity</li>'}
         </ul>
+        
+        <h3>📜 Log Viewer</h3>
+        <div class="log-wrapper">
+            <div id="log-viewer" class="log-viewer">Loading logs...</div>
+            <button id="scroll-btn" style="display: none;">⬇️ Resume Auto-scroll</button>
+        </div>
+        
+        <!-- Modal -->
+        <div id="processModal" class="modal">
+            <div class="modal-content">
+                <span id="modal-close-btn" class="close">&times;</span>
+                <h2>📊 Resource Details</h2>
+                
+                <h3>🔥 Top CPU</h3>
+                <table class="proc-table" id="cpu-table">
+                    <tr><th>PID</th><th>Name</th><th>CPU %</th></tr>
+                    <tr><td colspan="3">Loading...</td></tr>
+                </table>
+                
+                <h3>💾 Top RAM</h3>
+                <table class="proc-table" id="ram-table">
+                    <tr><th>PID</th><th>Name</th><th>RAM (MB)</th></tr>
+                    <tr><td colspan="3">Loading...</td></tr>
+                </table>
+            </div>
+        </div>
+
+
         """
-        import config_settings
-        refresh_interval = getattr(config_settings, 'WEB_DASHBOARD_REFRESH_INTERVAL', 10)
         
         return render_template_string(
             TEMPLATE_BASE, 
             title="Dashboard", 
             content=status_html, 
-            css=DOCS_CSS,
-            refresh_meta=f'<meta http-equiv="refresh" content="{refresh_interval}">'
+            css=DOCS_CSS + """
+            .log-wrapper { position: relative; }
+            .log-viewer { width: 100%; }
+            #scroll-btn { 
+                position: absolute; 
+                top: 10px; 
+                right: 20px; 
+                background: rgba(88, 101, 242, 0.8); /* 80% opacity */
+                color: white; 
+                border: none; 
+                padding: 5px 10px; 
+                border-radius: 4px; 
+                cursor: pointer; 
+                z-index: 10;
+            }
+            #scroll-btn:hover {
+                background: rgba(88, 101, 242, 1.0);
+            }
+            @media (max-width: 768px) {
+                #scroll-btn { 
+                    padding: 12px 18px; /* Larger padding for mobile */
+                    font-size: 1.1em;   /* Larger text for mobile */
+                }
+            }
+            """
         )
 
     def docs_list(self):
@@ -504,15 +1132,21 @@ class WebServer:
             return render_template_string(TEMPLATE_BASE, title="Search", css=DOCS_CSS, 
                                           content="<h1>🔍 Vyhledávání</h1><p>Prázdný dotaz.</p><p><a href='/docs'>← Zpět na dokumentaci</a></p>")
         
-        if not os.path.exists(self.docs_dir):
-            return render_template_string(TEMPLATE_BASE, title="Search", css=DOCS_CSS, 
-                                          content="<h1>🔍 Vyhledávání</h1><p>Dokumentace nenalezena.</p>")
+        # Joke XSS Detection
+        import re
+        xss_detected = False
+        # Detects tags, protocols, event handlers (on...), and dangerous functions
+        xss_pattern = re.compile(r'(<(script|iframe|object|embed|svg|style|link|meta)|(javascript|vbscript):|\bon\w+\s*=| (alert|prompt|confirm|eval|setTimeout|setInterval)\s*\()', re.IGNORECASE)
+        if xss_pattern.search(query):
+            query = "dobrý pokus 😉"
+            xss_detected = True
         
         results = []
         query_lower = query.lower()
         
-        # Search through all .md files
-        for root, dirs, filenames in os.walk(self.docs_dir):
+        # Search through all .md files (Skip if XSS detected)
+        search_iter = os.walk(self.docs_dir) if not xss_detected else []
+        for root, dirs, filenames in search_iter:
             for f in filenames:
                 if f.endswith('.md'):
                     file_path = os.path.join(root, f)
@@ -548,6 +1182,10 @@ class WebServer:
                             query_words = query_lower.split()
                             
                             # 1. Exact phrase matching
+                            import html
+                            # Escape query for regex to match against HTML-escaped snippet
+                            escaped_query_for_regex = re.escape(html.escape(query))
+                            
                             for match in re.finditer(re.escape(query_lower), content_lower):
                                 pos = match.start()
                                 
@@ -577,8 +1215,8 @@ class WebServer:
                                 
                                 # Highlight exact match
                                 import re as regex
-                                snippet = regex.sub(f'({re.escape(query)})', 
-                                                   r'<strong style="background: #43b581; color: white; padding: 2px 4px;">\1</strong>', 
+                                snippet = regex.sub(f'({escaped_query_for_regex})', 
+                                                   r'<strong class="highlight-exact">\1</strong>', 
                                                    snippet, flags=regex.IGNORECASE)
                                 
                                 matches.append({
@@ -628,7 +1266,7 @@ class WebServer:
                                                 snippet = content_cleaned[start:end].replace('<', '&lt;').replace('>', '&gt;')
                                                 
                                                 # Highlight fuzzy match (case-insensitive replacement)
-                                                snippet = re.sub(re.escape(word), f'<strong style="background: #faa61a; color: white; padding: 2px 4px;">{word}</strong>', snippet, flags=re.IGNORECASE)
+                                                snippet = re.sub(re.escape(word), f'<strong class="highlight-fuzzy">{word}</strong>', snippet, flags=re.IGNORECASE)
                                                 
                                                 # Score based on distance (closer = better)
                                                 score = 80 - (distance * 10)
@@ -661,7 +1299,9 @@ class WebServer:
                         logger.error(f"Error searching {file_path}: {e}")
         
         # Build results HTML
-        results_html = f"<h1>🔍 Výsledky vyhledávání: '{query}'</h1>"
+        import html
+        safe_query = html.escape(query)
+        results_html = f"<h1>🔍 Výsledky vyhledávání: '{safe_query}'</h1>"
         results_html += f"<p><a href='/docs'>← Zpět na dokumentaci</a></p>"
         
         # Add legend
@@ -669,11 +1309,11 @@ class WebServer:
         <div class="status-card" style="margin-bottom: 20px; padding: 16px;">
             <h3 style="margin-top: 0;">📖 Nápověda</h3>
             <p style="margin: 8px 0;">
-                <strong style="background: #43b581; color: white; padding: 2px 6px; border-radius: 3px;">Zelená</strong> 
+                <strong class="highlight-exact">Zelená</strong> 
                 = Přesná shoda
             </p>
             <p style="margin: 8px 0;">
-                <strong style="background: #faa61a; color: white; padding: 2px 6px; border-radius: 3px;">Oranžová</strong> 
+                <strong class="highlight-fuzzy">Oranžová</strong> 
                 = Nepřesná shoda (fuzzy)
             </p>
         </div>
@@ -734,9 +1374,212 @@ class WebServer:
         seconds = int(time.time() - self.agent.start_time)
         return str(datetime.timedelta(seconds=seconds))
 
+    def _get_log_tail(self, lines=100):
+        """Get the last N lines of the agent log."""
+        log_file = "agent.log"
+        if os.path.exists(log_file):
+            try:
+                with open(log_file, 'r', encoding='utf-8', errors='ignore') as f:
+                    # Seek to end and read back a bit to save memory if file is huge, 
+                    # but for now simple readlines is fine for < 100MB logs
+                    all_lines = f.readlines()
+                    last_lines = all_lines[-lines:]
+                    
+                    # Filter out spammy/verbose logs
+                    ignored_phrases = ['msg="join connections"', 'navigation lines from']
+                    filtered_lines = [l for l in last_lines if not any(phrase in l for phrase in ignored_phrases)]
+                    
+                    # Sanitize and colorize each line
+                    processed_lines = [sanitize_log_line(line) for line in filtered_lines]
+                    return "".join(processed_lines)
+            except Exception as e:
+                return f"Error reading log: {e}"
+        return "Log file not found."
+
+    def _get_llm_display_name(self):
+        """Parses model filename to friendly name."""
+        import re
+        filename = getattr(self.agent.llm, 'model_filename', 'Unknown')
+        if filename == 'Unknown':
+             # Try to fallback to model_repo if filename missing
+             return getattr(self.agent.llm, 'model_repo', 'Unknown')
+            
+        # Example: qwen2.5-0.5b-instruct-q4_k_m.gguf -> QWEN 2.5 0.5b - instruct
+        try:
+            name = filename.lower()
+            if 'qwen' in name:
+                # Remove extension and quantization tag
+                clean_name = name.replace('.gguf', '').replace('-q4_k_m', '')
+                
+                # Split qwen2.5 -> qwen, 2.5
+                if 'qwen' in clean_name:
+                    # qwen2.5-0.5b-instruct -> ['qwen2.5', '0.5b', 'instruct']
+                    parts = clean_name.split('-')
+                    base = parts[0] # qwen2.5
+                    
+                    # Extract version from base (2.5 from qwen2.5)
+                    version_match = re.search(r'qwen([\d\.]+)', base)
+                    ver = version_match.group(1) if version_match else ""
+                    
+                    # Join specific parts e.g. "0.5b - instruct"
+                    rest = " - ".join(parts[1:])
+                    
+                    return f"QWEN {ver} {rest}".strip()
+                    
+            return filename
+        except Exception as e:
+            logger.error(f"Error parsing LLM name: {e}")
+            return filename
+
+    def _get_hardware_info(self):
+        """Attempts to get specific hardware model."""
+        try:
+            # Raspberry Pi specific check
+            if os.path.exists('/proc/device-tree/model'):
+                with open('/proc/device-tree/model', 'r') as f:
+                    model = f.read().strip()
+                    # Simplify model name: "Raspberry Pi 4 Model B Rev 1.5" -> "Raspberry Pi 4B"
+                    import re
+                    # Replace " Model X Rev Y.Y" with "X"
+                    # Capture "Raspberry Pi N" and "Model X"
+                    simple_model = re.sub(r' Model ([A-Z]) Rev [\d\.]+', r'\1', model)
+                    
+                    # Get RAM
+                    import psutil
+                    total_ram_gb = round(psutil.virtual_memory().total / (1024**3))
+                    
+                    return f"{simple_model} ({total_ram_gb}GB)"
+            
+            # Fallback
+            return platform.machine()
+        except:
+            return "Unknown Hardware"
+
+    def _get_os_info(self):
+        """Returns formatted OS string: Linux (debian) <version>"""
+        sys_name = platform.system() # Linux
+        release = platform.release().replace("+rpt-rpi-v8", "") # 6.12...
+        
+        distro = ""
+        if sys_name == "Linux":
+            try:
+                # Try to get distribution ID
+                import re
+                if os.path.exists('/etc/os-release'):
+                    with open('/etc/os-release') as f:
+                        content = f.read()
+                        # Look for ID=debian or ID="debian"
+                        match = re.search(r'^ID=["\']?([^"\'\n\r]+)["\']?', content, re.MULTILINE)
+                        if match:
+                            distro = f"({match.group(1)}) "
+            except:
+                pass
+                
+        return f"{sys_name} {distro}{release}"
+
+    def _emit_updates(self):
+        """Background task to emit status updates via WebSocket."""
+        import config_settings
+        import time
+        import psutil
+        import platform
+        
+        interval = getattr(config_settings, 'WEB_WEBSOCKET_UPDATE_INTERVAL', 2)
+        logger.info(f"WebSocket update loop started (interval: {interval}s)")
+        
+        while True:
+            # Check for manual stop signal
+            if self.manual_stop:
+                logger.info("Manual stop signal received in background task. Stopping SocketIO...")
+                self.socketio.stop()
+                break
+                
+            # 1. Check Auto-Shutdown (Configurable timeout)
+            timeout = getattr(config_settings, 'WEB_INTERFACE_TIMEOUT', 3600)
+            if self.start_time > 0 and (time.time() - self.start_time) > timeout:
+                logger.info(f"⏱️ Web server auto-shutdown: {timeout/3600:.1f} hour limit reached.")
+                self.stop()
+                continue # loop will catch manual_stop on next iter
+                
+            # 2. Check Active Clients (Pause if 0)
+            if self.connected_clients <= 0:
+                # Wait a bit and continue to save resources
+                time.sleep(1)
+                continue
+
+            try:
+                # Get Process Data First (includes total mem sum)
+                proc_data = self.get_processes_data()
+                total_mem_from_procs = proc_data.get('total_mem_bytes', 0)
+                
+                # Gather stats
+                cpu_percent = psutil.cpu_percent()
+                ram = psutil.virtual_memory()
+                disk = psutil.disk_usage('/')
+                
+                # Override RAM stats with sum of processes (for consistency)
+                # Keep total from system, but used/percent from sum
+                if total_mem_from_procs > 0:
+                     ram_used_val = total_mem_from_procs
+                     ram_percent_val = (total_mem_from_procs / ram.total) * 100
+                else:
+                     ram_used_val = ram.used
+                     ram_percent_val = ram.percent
+
+                def to_gb(bytes_val):
+                    return f"{bytes_val / (1024**3):.1f} GB"
+                
+                # Check Loop Status
+                loop_status = {}
+                loop_names = ['boredom_loop', 'observation_loop', 'action_loop', 'backup_loop']
+                if hasattr(self.agent, 'loop_tasks'):
+                    for i, task in enumerate(self.agent.loop_tasks):
+                        name = loop_names[i] if i < len(loop_names) else f'loop_{i}'
+                        if not task.done():
+                            loop_status[name] = '🟢 Running'
+                        else:
+                            loop_status[name] = '🔴 Stopped'
+                else:
+                    for name in loop_names:
+                        loop_status[name] = '❌ Not Init'
+
+                stats = {
+                    'is_running': self.agent.is_running,
+                    'loop_status': loop_status,
+                    'boredom_score': self.agent.boredom_score,
+                    'uptime': self._get_uptime(),
+                    'tools_used': len([t for t, c in self.agent.tool_usage_count.items() if c > 0]),
+                    'tools_total': len(self.agent.tools.tools),
+                    'cpu_percent': cpu_percent,
+                    'ram_percent': round(ram_percent_val, 1),
+                    'ram_used': to_gb(ram_used_val),# Format bytes to GB
+                    'ram_total': to_gb(ram.total),
+                    'disk_percent': disk.percent,
+                    'disk_used': to_gb(disk.used),
+                    'disk_total': to_gb(disk.total),
+                    'action_history': self.agent.action_history[-20:] if self.agent.action_history else [],
+                    'log_tail': self._get_log_tail(),
+                    'info': {
+                        'os': self._get_os_info(),
+                        'python': platform.python_version(),
+                        'agent_version': getattr(config_settings, 'AGENT_VERSION', 'Unknown')
+                    },
+                    'processes': proc_data
+                }
+                
+                self.socketio.emit('status_update', stats)
+                time.sleep(interval)
+            except Exception as e:
+                logger.error(f"Error emitting updates: {e}")
+                time.sleep(5)
+
     def start(self):
         """Start the Flask server on an available port."""
+        import time
         self.manual_stop = False # Reset manual stop flag
+        self.start_time = time.time() # Start timer for auto-shutdown
+        self.connected_clients = 0 # Reset client count
+        
         if self.thread and self.thread.is_alive():
             return
 
@@ -745,7 +1588,7 @@ class WebServer:
         import psutil
         
         found_port = None
-        for port in range(5001, 5020): # Increased range
+        for port in range(5001, 5051): # Expanded range to match cleanup
             try:
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 # Set SO_REUSEADDR to avoid TIME_WAIT issues, but we want to know if it's genuinely in use
@@ -769,19 +1612,22 @@ class WebServer:
             self.thread = threading.Thread(target=self._run_flask, daemon=True)
             self.thread.start()
         else:
-            logger.error("Could not find any available port for Web Interface (5001-5020). Web server will NOT start.")
+            logger.error("Could not find any available port for Web Interface (5001-5051). Web server will NOT start.")
             # We should probably notify the user via Discord if possible, but this is a synchronous method called during startup.
             # The agent will continue without web interface.
 
     def _run_flask(self):
         try:
-            logger.info(f"Flask server starting on {self.port}...")
+            logger.info(f"Flask SocketIO server starting on {self.port}...")
             # Disable Flask's default logging to reduce noise
             import logging as flask_logging
             flask_log = flask_logging.getLogger('werkzeug')
             flask_log.setLevel(flask_logging.ERROR)
             
-            self.app.run(host='0.0.0.0', port=self.port, use_reloader=False, threaded=True)
+            # Start background task
+            self.socketio.start_background_task(self._emit_updates)
+            
+            self.socketio.run(self.app, host='0.0.0.0', port=self.port, use_reloader=False, allow_unsafe_werkzeug=True)
         except Exception as e:
             logger.error(f"Web server failed: {e}", exc_info=True)
 
@@ -800,7 +1646,17 @@ class WebServer:
             
         try:
             # Check if ngrok is already running for this port
-            tunnels = ngrok.get_tunnels()
+            # Check if ngrok is already running for this port
+            # Add retry logic for get_tunnels as it might timeout during heavy load/startup
+            tunnels = []
+            for attempt in range(3):
+                try:
+                    tunnels = ngrok.get_tunnels()
+                    break
+                except Exception as e:
+                    logger.warning(f"ngrok.get_tunnels failed (attempt {attempt+1}/3): {e}")
+                    time.sleep(1 * (attempt + 1))
+            
             for t in tunnels:
                 if t.config['addr'].endswith(str(self.port)):
                     self.public_url = t.public_url
@@ -821,27 +1677,8 @@ class WebServer:
 
     def disconnect_web_tunnel(self):
         """Stop Flask server and disconnect ONLY the web tunnel (preserves SSH)."""
-        # 1. Stop Flask server
-        if self.thread and self.thread.is_alive():
-            try:
-                logger.info(f"Stopping Flask server on port {self.port}...")
-                # Try to make a shutdown request to Flask
-                import requests
-                try:
-                    requests.post(f'http://localhost:{self.port}/shutdown', timeout=2)
-                    logger.info("Flask shutdown request sent")
-                except:
-                    pass  # Ignore if shutdown endpoint doesn't respond
-                
-                # Give it a moment to shut down gracefully
-                import time
-                time.sleep(1)
-                
-                self.thread = None
-                logger.info("Flask server stopped")
-            except Exception as e:
-                logger.error(f"Error stopping Flask server: {e}")
-        
+        # Signal background loop to stop
+        self.manual_stop = True
         # 2. Disconnect web tunnel
         try:
             tunnels = ngrok.get_tunnels()
@@ -882,3 +1719,108 @@ class WebServer:
             logger.warning(f"Could not force-kill ngrok processes: {e}")
         
         logger.info("Web server full stop complete")
+
+    def get_processes_data(self):
+        """Internal helper to get process data using cache for accurate CPU."""
+        import psutil
+        import os
+        try:
+            # 1. Update cache with current processes
+            current_pids = set()
+            procs_info = []
+            total_mem_usage = 0
+            
+            # Get totals for normalization
+            cpu_count = psutil.cpu_count() or 1
+            total_mem = psutil.virtual_memory().total
+            
+            for p in psutil.process_iter(['pid', 'name', 'username']):
+                try:
+                    pid = p.info['pid']
+                    current_pids.add(pid)
+                    
+                    # Get or Create Process Object in Cache
+                    if pid not in self.process_cache:
+                        self.process_cache[pid] = p
+                    
+                    proc_obj = self.process_cache[pid]
+                    
+                    # Ensure process is still running with this PID
+                    if not proc_obj.is_running():
+                        continue
+                        
+                    # Get Stats
+                    # cpu_percent(interval=None) calculates % since last call.
+                    # This returns value summed across cores (can be > 100%).
+                    raw_cpu = proc_obj.cpu_percent(interval=None)
+                    
+                    # Normalize to 0-100% System Scale
+                    normalized_cpu = raw_cpu / cpu_count
+                    
+                    # Memory: PSS (Proportional) is best for summing up to Total.
+                    # USS (Unique) is strict private. RSS is total resident (includes shared).
+                    mem_bytes = 0
+                    metric_used = "unknown"
+                    try:
+                        # memory_full_info is expensive but needed for PSS/USS
+                        mem_info = proc_obj.memory_full_info()
+                        # Try PSS first, then USS, then fallback to RSS
+                        if hasattr(mem_info, 'pss'):
+                            mem_bytes = mem_info.pss
+                            metric_used = "pss"
+                        elif hasattr(mem_info, 'uss'):
+                            mem_bytes = mem_info.uss
+                            metric_used = "uss"
+                        else:
+                            mem_bytes = mem_info.rss
+                            metric_used = "rss"
+                    except (psutil.AccessDenied, AttributeError):
+                        # Fallback for permission errors or missing attrs
+                        mem_info = proc_obj.memory_info()
+                        mem_bytes = mem_info.rss
+                        # Try to subtract shared memory to approximate private/USS
+                        if hasattr(mem_info, 'shared'):
+                            mem_bytes -= mem_info.shared
+                            metric_used = "rss_minus_shared"
+                        else:
+                            metric_used = "rss_fallback"
+
+                    if pid == os.getpid() and not hasattr(self, '_mem_debug_logged'):
+                        logger.debug(f"Process Memory Metric: {metric_used} | Val: {mem_bytes/1024/1024:.1f}MB")
+                        self._mem_debug_logged = True
+                        
+                    mem_mb = round(mem_bytes / (1024 * 1024), 1)
+                    mem_percent = (mem_bytes / total_mem) * 100
+                    
+                    total_mem_usage += mem_bytes
+                    
+                    procs_info.append({
+                        'pid': pid,
+                        'name': p.info['name'],
+                        'cpu_percent': normalized_cpu,
+                        'memory_mb': mem_mb,
+                        'memory_percent': mem_percent
+                    })
+                    
+                except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                    pass
+            
+            # Clean up cache
+            cached_pids = list(self.process_cache.keys())
+            for old_pid in cached_pids:
+                if old_pid not in current_pids:
+                    del self.process_cache[old_pid]
+                    
+            # Sort Top 5 (Sort by Percent)
+            top_cpu = sorted(procs_info, key=lambda x: x['cpu_percent'], reverse=True)[:5]
+            top_mem = sorted(procs_info, key=lambda x: x['memory_percent'], reverse=True)[:5]
+            
+            return {'cpu': top_cpu, 'memory': top_mem, 'total_mem_bytes': total_mem_usage}
+            
+        except Exception as e:
+            logger.error(f"Error getting process data: {e}")
+            return {'cpu': [], 'memory': [], 'total_mem_bytes': 0}
+
+    def get_processes(self):
+        """API Endpoint."""
+        return jsonify(self.get_processes_data())

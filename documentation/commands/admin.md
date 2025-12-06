@@ -3,7 +3,7 @@
 > **Navigace:** [📂 Dokumentace](../README.md) | [💬 Příkazy](../README.md#commands-příkazy) | [Administrační příkazy](admin.md)
 
 > Admin-only příkazy pro správu a diagnostiku systému.
-> **Verze:** Alpha
+> **Verze:** Beta - CLOSED
 
 ---
 
@@ -105,6 +105,42 @@ os.execv(sys.executable, [sys.executable] + sys.argv)
 
 ---
 
+<a name="shutdown"></a>
+## `!shutdown`
+
+<a name="popis"></a>
+### 📋 Popis
+Bezpečně vypne agenta (graceful shutdown). Ukončí všechny procesy a zastaví systémovou službu (`rpi_ai.service`).
+
+### ⚙️ Použití
+```
+!shutdown
+```
+
+### 💡 Logika
+1. **Admin Check** - Pouze pro administrátory
+2. **Notifikace** - Informuje o zahájení vypínání
+3. **Graceful Shutdown** - Pokusí se ukončit zdroje (DB, Discord, Threads)
+4. **Service Stop** - Spustí `sudo systemctl stop rpi_ai.service`
+5. **Exit** - Pokud služba ihned neukončí proces, zavolá `sys.exit(0)`
+
+### 📝 Příklady
+
+**Úspěšné vypnutí:**
+```
+User: !shutdown
+
+Bot: 🛑 **Shutting down agent...**
+     Stopping service and killing all processes.
+```
+
+### ⚠️ Poznámky
+- **Admin only**
+- Zastaví celou systemd službu (agent se **nespustí** automaticky znovu)
+- Ukončí kompletně procesovou stromovou strukturu služby
+
+---
+
 <a name="cmd"></a>
 ## `!cmd`
 
@@ -117,6 +153,7 @@ Spustí shell příkaz přímo na serveru.
 ```
 !cmd <příkaz>
 ```
+*Spuštění bez parametrů zobrazí nápovědu a informace o operačním systému.*
 
 <a name="bezpečnost"></a>
 ### 💡 Bezpečnost
@@ -357,96 +394,83 @@ async with aiohttp.ClientSession() as session:
 
 <a name="popis"></a>
 ### 📋 Popis
-Pokročilá diagnostika systému s detailními kontrolami.
+Pokročilá diagnostika systému s detailními kontrolami integrity a dostupnosti služeb.
 
 <a name="použití"></a>
 ### ⚙️ Použití
 
-**All checks:**
+**Základní diagnostika:**
 ```
 !debug
-!debug all
+(spustí !debug quick)
 ```
 
-**Specific area:**
+**Specifické režimy:**
 ```
-!debug <area>
+!debug <mode>
 ```
 
-<a name="oblasti"></a>
-### 🔧 Oblasti
+<a name="režimy"></a>
+### 🔧 Režimy
 
-| Area | Co kontroluje |
+| Mode | Co kontroluje |
 |------|---------------|
-| `all` | Všechny oblasti |
-| `quick` | Základní rychlé testy |
-| `tools` | Tool registrace a funkčnost |
-| `llm` | LLM status a latence |
-| `network` | Internet a  DNS |
-| `ngrok` | Ngrok tunel status |
-| `database` | Memory database health |
-| `filesystem` | Disk space a permissions |
-| `memory` | Python memory usage |
+| `quick` | LLM, Discord, Database, Tools (Health Check) |
+| `deep` | Vše z `quick` + Filesystem, Network, Resources |
+| `tools` | Validace registrace a funkčnosti všech 14 nástrojů |
+| `compile` | Kontrola syntaxe Python souborů (Syntax Check) |
 
 <a name="příklady"></a>
 ### 📝 Příklady
 
-**Quick check:**
+**Quick Check:**
 ```
 User: !debug quick
 
-Bot: 🔍 **Quick Diagnostic:**
+Bot: 🔍 **Debug Report - QUICK**
 
-✅ LLM: Online (250ms)
-✅ Internet: Connected
-✅ Discord: Ready
-✅ Database: OK
-⚠️ Disk: 85% (15GB free)
+     ✅ **LLM**: Online (250ms)
+     ✅ **Discord**: Connected (AI Agent)
+     ✅ **Database**: Accessible (234+ memories)
+     ✅ **Tools**: 14 registered
 ```
 
-**LLM detailed:**
+**Deep Diagnostic:**
 ```
-User: !debug llm
+User: !debug deep
 
-Bot: 🧠 **LLM Diagnostic:**
+Bot: 🔍 **Debug Report - DEEP**
 
-**Status:** ✅ Online
-**Provider:** Local (llama-cpp)
-**Model:** Qwen2.5-0.5B-Instruct
-**Latency:** 245ms (avg)
-**Context Window:** 2048 tokens
-**Threads:** 4
-
-**Test Generation:**
-Prompt: "ping"
-Response: "pong"
-Time: 0.245s
-✅ Pass
+     ✅ **LLM**: Online (245ms)
+     ...
+     ✅ **Filesystem**: All critical files present
+     ✅ **Network**: Internet accessible
+     📊 **Resources**:
+       - CPU: 45%
+       - RAM: 72% (1.5GB free)
+       - Disk: 28% (15.3GB free)
 ```
 
-**Database check:**
+**Syntax Check:**
 ```
-User: !debug database
+User: !debug compile
 
-Bot: 💾 **Database Diagnostic:**
+Bot: 🔍 **Debug Report - COMPILE**
 
-**File:** agent_memory.db
-**Size:** 1.2 MB
-**Tables:** 3 (memories, metadata, fts_index)
-**Total Records:** 234
-**FTS Index:** ✅ Healthy
-**Last Backup:** 2h ago
-
-**Test Query:**
-```SELECT COUNT(*) FROM memories``` → 234
-✅ Pass
+     🔧 **Python Syntax Check:**
+     ✅ `main.py`
+     ✅ `agent/core.py`
+     ✅ `agent/commands.py`
+     ...
 ```
 
 <a name="poznámky"></a>
 ### ⚠️ Poznámky
 - Pouze admin
-- Některé testy mohou trvat několik sekund
-- `all` může generovat dlouhý output
+- `deep` může trvat několik sekund kvůli network testům
+- `compile` ověřuje základní syntax error bez spuštění kódu
+- `quick` je bezpečný pro časté použití
+
 
 ---
 
@@ -592,6 +616,46 @@ Bot: ✅ Removed topic: "Study async programming patterns"
 
 ---
 
+<a name="config"></a>
+## `!config`
+
+<a name="popis"></a>
+### 📋 Popis
+Zobrazí aktuální konfiguraci agenta (Settings, LLM params, Boredom thresholds).
+
+<a name="použití"></a>
+### ⚙️ Použití
+```
+!config
+```
+
+<a name="co-zobrazuje"></a>
+### 💡 Co zobrazuje
+- **Boredom System** (Thresholds, Decay rates)
+- **LLM Settings** (Model path, Context window, Token limits)
+- **Discord Settings** (Activity status, Channels)
+- **Resource Limits** (CPU/RAM tiers)
+
+<a name="příklad"></a>
+### 📝 Příklad
+```
+User: !config
+
+Bot: ⚙️ **Current Configuration:**
+     • `BOREDOM_THRESHOLD_HIGH`: 0.4
+     • `LLM_MODEL`: qwen-2.5-0.5b
+     • `MAX_TOKENS`: 256
+     ...
+```
+
+<a name="poznámky"></a>
+### ⚠️ Poznámky
+- **Admin only** - Obsahuje interní nastavení
+- Read-only zobrazení `config_settings.py` proměnných
+- Hesla a klíče jsou filtrovány
+
+---
+
 <a name="report"></a>
 ## `!report`
 
@@ -683,6 +747,7 @@ Bot: ⏳ **Rate Limit Active**
 ### 🔧 Implementace
 
 **Rate limiting:**
+
 - Minimální 2 hodiny mezi uploady
 - Timestamp uložen v `.last_github_upload`
 - Kontrola před uploadem
@@ -792,40 +857,45 @@ Bot: 🤖 **AI Agent - Nápověda Příkazů**...
 | Příkaz | Účel | Příklad |
 |--------|------|---------|
 | `!restart` | Restart agenta | `!restart` |
+| `!shutdown` | Vypnutí agenta | `!shutdown` |
 | `!monitor` | Resource monitoring | `!monitor 30` |
 | `!debug` | Diagnostika | `!debug llm` |
 | `!ssh` | SSH tunnel správa | `!ssh start` |
 | `!cmd` | Shell command | `!cmd ls -la` |
-| `!web` | Web interface | `!web start` |
-| `!topic` | Manage topics | `!topic add <text>` |
+| `!goals` | Správa cílů | `!goals add text` |
 | `!report` | Last command report | `!report` |
 | `!upload` | GitHub release | `!upload` |
 | `!disable` | Disable non-admin | `!disable` |
 | `!enable` | Enable all users | `!enable` |
 
-**Celkem:** 10 admin příkazů (requires `ADMIN_USER_IDS`)
+**Celkem:** 11 admin příkazů (requires `ADMIN_USER_IDS`)
 
 ---
 
 <a name="restricted-commands"></a>
 ## ⛔ Commands Restricted to Admin
 
-Následující shell příkazy jsou v rámci `!cmd` blokovány i pro administrátory, pokud nejsou explicitně povoleny v kódu (bezpečnostní pojistka).
+Následující shell příkazy jsou v rámci `!cmd` **blokovány pro běžné uživatele** a může je spustit **pouze administrátor**.
 
-| Příkaz | Důvod |
-|--------|-------|
-| `shutdown` | Vypnutí serveru |
-| `reboot` | Restart serveru |
-| `kill` | Ukončení procesů |
-| `rm -rf` | Destruktivní mazání |
-| `mkfs` | Formátování disku |
-| `dd` | Přímý zápis na disk |
-| `:(){ :|:& };:` | Fork bomb |
+| Kategorie | Příkazy |
+|-----------|---------|
+| **Destruktivní** | `rm -rf`, `mkfs`, `dd`, `reboot`, `shutdown`, `kill` |
+| **File Ops** | `mv`, `cp`, `mkdir`, `touch`, `chmod`, `chown` |
+| **Execution** | `python`, `node`, `bash`, `sh`, `:(){ :|:& };:` |
+| **Network/Pkg** | `wget`, `curl`, `ngrok`, `apt`, `systemctl` |
 
 **Konfigurace:**
-Seznam je definován v `config_settings.py` jako `ADMIN_RESTRICTED_COMMANDS`.
+Seznam je definován v `config_settings.py` jako `ONLY_ADMIN_RESTRICTED_COMMANDS`.
+
+
+<a name="související"></a>
+## 🔗 Související
+
+- [📋 Všechny příkazy](../SUMMARY.md#commands-api)
+- [🏗️ Command Architecture](../architecture.md#command-layer)
+- [🆘 Troubleshooting](../troubleshooting.md#command-errors)
 
 ---
 Poslední aktualizace: 2025-12-05  
-Verze: Alpha  
+Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

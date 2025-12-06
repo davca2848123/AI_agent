@@ -3,7 +3,7 @@
 > **Navigace:** [📂 Dokumentace](../README.md) | [⚙️ Konfigurace](../README.md#konfigurace) | [Configuration Guide](complete-configuration-guide.md)
 
 > Kompletní průvodce konfigurací RPI AI Agenta.
-> **Verze:** Alpha
+> **Verze:** Beta - CLOSED
 
 ---
 
@@ -701,15 +701,16 @@ ln -sf config_settings_prod.py config_settings.py
 
 ---
 
-<a name="related-documentation"></a>
-## 🔗 Related Documentation
+<a name="související"></a>
+## 🔗 Související
 
 - [📖 Deployment Guide](../scripts/deployment-guide.md) - Initial setup
-- [📖 Troubleshooting](../troubleshooting.md) - Common config issues
+- [🆘 Troubleshooting](../troubleshooting.md) - Common config issues
 - [📖 Memory System](../core/memory-system.md) - Memory scoring details
 - [📖 Resource Manager](../core/resource-manager.md) - Tier system
+- [🏗️ Architektura](../architecture.md)
 
 ---
-Poslední aktualizace: 2025-12-04  
-Verze: Alpha  
+Poslední aktualizace: 2025-12-06  
+Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

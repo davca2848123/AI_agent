@@ -3,7 +3,7 @@
 > **Navigace:** [📂 Dokumentace](README.md) | [📄 Přehled (OVERVIEW)](OVERVIEW.md) | [🔍 Index (INDEX)](INDEX.md) | [📋 API Tasklist (SUMMARY)](SUMMARY.md) | [🏗️ Architektura](architecture.md) | [🆘 Troubleshooting](troubleshooting.md)
 
 > Stručné shrnutí všech dokumentovaných částí projektu.
-> **Verze:** Alpha
+> **Verze:** Beta - CLOSED
 
 ---
 
@@ -12,27 +12,15 @@
 
 <a name="hlavní-dokumentace"></a>
 ### 📖 Hlavní Dokumentace
-- ✅ **[README.md](README.md)** - Hlavní dokumentace s kompletním obsahem
-
-<a name="příkazy-commands"></a>
-### 💬 Příkazy (Commands)
-- ✅ **[Základní příkazy](commands/basic.md)** - help, status, stats, intelligence, documentation
-- ✅ **[Nástroje a učení](commands/tools-learning.md)** - tools, learn, ask, teach, search
-- ✅ **[Správa dat](commands/data-management.md)** - memory, logs, live logs, export
-- ✅ **[Interakce](commands/interaction.md)** - mood, goals, config
-- ✅ **[Administrace](commands/admin.md)** - restart, monitor, debug, ssh, cmd, web, topic, report, upload, disable, enable
-
-<a name="nástroje-tools"></a>
-### 🛠️ Nástroje (Tools)
-- ✅ **[Všechny nástroje](tools/all-tools.md)** - Kompletní dokumentace všech 14 nástrojů
-
-<a name="core-funkcionality"></a>
 ### 🧠 Core Funkcionality
 - ✅ **[Autonomní chování](core/autonomous-behavior.md)** - Boredom, decision making, learning mode
 - ✅ **[Paměťový systém](core/memory-system.md)** - VectorStore, FTS5, backup/restore
 - ✅ **[LLM integrace](core/llm-integration.md)** - Qwen 2.5, generování, tool calling
 - ✅ **[Resource Manager](core/resource-manager.md)** - 4-tier system, SWAP, network monitor
 - ✅ **[Discord Client](core/discord-client.md)** - Discord bot integrace
+- ✅ **[Error Tracker](api/error-tracker.md)** - Sledování a prevence pádů
+- ✅ **[Startup Protection](api/utils-startup.md)** - Prevence boot loopu
+- ✅ **[Hardware Monitor](api/hardware-monitor.md)** - Sledování teplot a LED
 
 ---
 
@@ -63,7 +51,12 @@ documentation/
 <a name="pokryté-komponenty"></a>
 ### Pokryté Komponenty
 
-- **✅ 24 Discord příkazů** (5 basic, 5 tools, 4 data, 3 interaction, 10 admin)
+- **✅ 24 Discord příkazů:**
+    - **Basic:** `!help`, `!status`, `!stats`, `!intelligence`, `!documentation`, `!web`
+    - **Tools:** `!learn`, `!tools`, `!ask`, `!teach`, `!search`
+    - **Data:** `!memory`, `!logs`, `!live logs`, `!export`
+    - **Interaction:** `!mood`, `!goals`, `!config`, `!monitor`
+    - **Admin:** `!restart`, `!shutdown`, `!debug`, `!ssh`, `!cmd`, `!topic`, `!report`, `!upload`, `!disable`
 - **✅ 14 nástrojů** - FileTool, WebTool, MathTool, WeatherTool, atd.
 - **✅ 5 core systémů** - Autonomous, Memory, LLM, Resources, Discord
 - **✅ Web Interface** - Flask + ngrok dokumentace s vyhledáváním
@@ -72,6 +65,8 @@ documentation/
 - **✅ Learning mode** - Autonomní i manuální učení (queue)
 - **✅ 4-tier system** - Resource manager (80%/90%/95% prahy)
 - **✅ Network monitoring** - Offline/online detection + recovery
+- **✅ Local Models** - GGUF management ([models.md](configuration/models.md))
+- **✅ Database Tools** - CLI Memory Manager ([memory-manager.md](scripts/memory-manager.md))
 
 ---
 
@@ -174,20 +169,6 @@ documentation/
 
 ---
 
-<a name="co-ještě-chybí"></a>
-## ⚠️ Co Ještě Chybí
-
-Sekce které zatím nejsou dokončeny:
-
-- [ ] API Reference (podrobná)
-- [x] Troubleshooting guide
-- [x] Advanced topics (fuzzy matching)
-- [x] Scripts documentation
-- [x] Configuration guide
-- [x] Installation guide
-
----
-
 <a name="aktualizace-dokumentace"></a>
 ## 🔄 Aktualizace Dokumentace
 
@@ -199,7 +180,15 @@ Po každé změně v kódu nezapomeň aktualizovat příslušnou dokumentaci!
 3. Změnil jsi core logiku? → Aktualizuj `core/*.md`
 4. Přidal jsi funkci? → Aktualizuj `README.md` obsah
 
+
+<a name="související"></a>
+## 🔗 Související
+
+- [🏗️ Architektura](architecture.md)
+- [🚀 Deployment Guide](scripts/deployment-guide.md)
+- [📋 Týdenní Tasklist](SUMMARY.md)
+
 ---
-Poslední aktualizace: 2025-12-04  
-Verze: Alpha  
+Poslední aktualizace: 2025-12-06  
+Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

@@ -1,5 +1,8 @@
 # 🤖 RPI AI Agent
 
+> **Created in collaboration with Antigravity**  
+> Powered by Discord, ngrok, and local LLMs.
+
 > Autonomní Discord AI Agent běžící na Raspberry Pi s lokálním LLM
 
 <div align="center">
@@ -9,7 +12,7 @@
 [![Raspberry Pi](https://img.shields.io/badge/Raspberry_Pi-4B-C51A4A.svg?style=for-the-badge&logo=raspberry-pi)](https://raspberrypi.org)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 
-![Version](https://img.shields.io/badge/version-1.1.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-Beta_CLOSED-blue?style=flat-square)
 ![Docs](https://img.shields.io/badge/docs-18_files-success?style=flat-square)
 ![Commands](https://img.shields.io/badge/commands-24-orange?style=flat-square)
 ![Tools](https://img.shields.io/badge/tools-14-purple?style=flat-square)
@@ -178,6 +181,13 @@ documentation/
 │   ├── interaction.md          # !mood, !goals
 │   └── admin.md                # !restart, !debug, !ssh
 │
+├── 📚 api/                      ← API Reference
+│   ├── agent-core.md
+│   ├── discord-client.md
+│   ├── tools-api.md
+│   ├── error-tracker.md        # Error handling
+│   └── utils-startup.md        # Startup protection
+│
 ├── 🛠️ tools/                    ← 14 nástrojů
 │   └── all-tools.md
 │
@@ -190,12 +200,15 @@ documentation/
 │
 ├── 📜 scripts/                  ← Deployment
 │   ├── deployment-guide.md     🚀 SETUP GUIDE
+│   ├── testing-guide.md        # Tests & Verification
+│   ├── memory-manager.md       # DB Maintenance
 │   └── batch-scripts-reference.md
 │
 ├── 🎓 advanced/
 │   └── fuzzy-matching-algorithm.md  🔍 Levenshtein
 │
 └── ⚙️ configuration/
+    ├── models.md               # Local LLM Guide
     └── customization-guide.md
 ```
 
@@ -532,9 +545,11 @@ sudo systemctl restart rpi-agent.service
 ## 📝 Changelog
 
 <details open>
-<summary><b>v1.1.0 (2025-12-03)</b> - Current</summary>
+<summary><b>v1.2.0 (2025-12-06)</b> - Beta CLOSED</summary>
 
 #### ⭐ New Features
+- **Project Structure Optimization** - Enhanced documentation and gitignore
+- **Security Updates** - Removed sensitive documentation
 - **Memory Scoring System** - Pokročilé 70-bodové filtrování
 - **Fuzzy Command Matching** - Auto-korekce překlepů (Levenshtein)
 - **!documentation UI** - Interactive button navigation
@@ -617,8 +632,8 @@ Autonomous Discord Bot for Raspberry Pi
 
 ---
 
-**Last Updated:** 2025-12-03  
-**Version:** 1.1.0  
+**Last Updated:** 2025-12-06  
+**Version:** Beta - CLOSED  
 **Status:** ✅ Production Ready
 
 Made with ❤️ for Raspberry Pi

@@ -33,7 +33,7 @@ if %errorlevel% neq 0 (
 
 echo.
 echo [2/3] Restarting agent service...
-ssh -p %RPI_PORT% %RPI_USER%@%RPI_HOST% "sudo systemctl restart %SERVICE_NAME%"
+ssh -p %RPI_PORT% %RPI_USER%@%RPI_HOST% "rm -f /home/davca/rpi_ai/rpi_ai/.startup_failures && sudo systemctl restart %SERVICE_NAME%"
 
 echo.
 echo [3/3] Checking service status...

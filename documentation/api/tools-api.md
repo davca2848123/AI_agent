@@ -40,18 +40,20 @@ Wrapper pro `execute`, který zajišťuje:
 <a name="filetool"></a>
 ### `FileTool`
 Práce se souborovým systémem.
-- **Akce**: `read`, `write`, `list`, `delete`.
-- **Bezpečnost**: Omezeno na workspace adresář.
+- **Akce**: `read`, `write`, `list_files`.
+- **Bezpečnost**: Omezeno na `agent_workspace` adresář.
 
 <a name="webtool"></a>
 ### `WebTool`
 Vyhledávání na internetu a stahování obsahu.
-- **Akce**: `search`, `read_page`.
+- **Akce**: `search`, `read`.
+- **Lokalizace**: Prioritizuje `cs`, `sk`, `en` obsah.
+- **Automatizace**: Při `read` ukládá faktické shrnutí do paměti jako `web_knowledge`.
 
 <a name="systemtool"></a>
 ### `SystemTool`
 Informace o systému.
-- **Akce**: `info`, `processes`.
+- **Akce**: `info`, `process_list`.
 
 <a name="timetool"></a>
 ### `TimeTool`
@@ -68,7 +70,47 @@ Matematické výpočty a převody jednotek.
 Spouštění Python kódu (sandbox).
 - **Akce**: `execute`.
 
+<a name="notetool"></a>
+### `NoteTool`
+Správa textových poznámek.
+- **Akce**: `add`, `list`, `search`.
+
+
+<a name="databasetool"></a>
+### `DatabaseTool`
+Provádění SQL dotazů (pouze SELECT) nad pamětí agenta.
+- **Akce**: `execute`.
+
+<a name="rsstool"></a>
+### `RSSTool`
+Čtení RSS kanálů.
+- **Akce**: `read_feed`.
+
+<a name="translatetool"></a>
+### `TranslateTool`
+Překlad textu pomocí Google Translate.
+- **Akce**: `translate_text`.
+
+<a name="wikipediatool"></a>
+### `WikipediaTool`
+Vyhledávání na Wikipedii.
+- **Akce**: `search`, `summary`.
+
+<a name="discordactivitytool"></a>
+### `DiscordActivityTool`
+Monitoring aktivit uživatelů na Discordu.
+- **Akce**: `get_activities`.
+- **Enrichment**: Automatický web search a uložení infa o aktivitě (`activity_knowledge`) probíhá **na pozadí** (asynchronně), aby neblokoval diagnostiku.
+
+
+<a name="související"></a>
+## 🔗 Související
+
+- [🏗️ Architektura](../architecture.md)
+- [🧠 Core Documentation](../core/)
+- [📂 Source Code](../agent/)
+
 ---
-Poslední aktualizace: 2025-12-04  
-Verze: Alpha  
+Poslední aktualizace: 2025-12-06  
+Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

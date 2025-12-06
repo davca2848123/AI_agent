@@ -3,7 +3,7 @@
 > **Navigace:** [📂 Dokumentace](README.md) | [📄 Přehled (OVERVIEW)](OVERVIEW.md) | [🔍 Index (INDEX)](INDEX.md) | [📋 API Tasklist (SUMMARY)](SUMMARY.md) | [🏗️ Architektura](architecture.md) | [🆘 Troubleshooting](troubleshooting.md)
 
 > Celkový přehled architektury RPI AI Agenta.
-> **Verze:** Alpha
+> **Verze:** Beta - CLOSED
 
 ---
 
@@ -267,6 +267,7 @@ class Tool(ABC):
 - Restart attempt limity
 - Critical error notifications
 - Startup recovery mechanism
+- [📖 Detailní API Dokumentace](../api/error-tracker.md)
 
 ---
 
@@ -438,8 +439,11 @@ if author_id not in config_settings.ADMIN_USER_IDS:
 - [📖 Memory System](core/memory-system.md)
 - [📖 Resource Manager](core/resource-manager.md)
 - [📂 All Commands](commands/)
+- [🆘 Troubleshooting](troubleshooting.md)
+- [🚀 Deployment](scripts/deployment-guide.md)
 
 ---
-Poslední aktualizace: 2025-12-04  
-Verze: Alpha  
+Poslední aktualizace: 2025-12-06  
+Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání
+

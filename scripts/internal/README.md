@@ -122,5 +122,5 @@ Složka `internal/` obsahuje Python a Shell skripty, které jsou spouštěny .ba
 
 ---
 
-**Poslední aktualizace:** 2025-12-02  
+**Poslední aktualizace:** 2025-12-06  
 **Verze:** 2.0 (po přejmenování)

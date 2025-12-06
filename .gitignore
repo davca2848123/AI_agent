@@ -1,5 +1,4 @@
-# Git and Python cache
-.git
+# Python cache
 __pycache__/
 *.pyc
 *.pyo
@@ -17,23 +16,38 @@ ENV/
 *.swp
 *.swo
 *~
-agent_memory.db
-optimized_memory.db
-optimized_memory.sql
 
 # Secrets and config
 config_secrets.py
 
-# Runtime state
+# Runtime state files
 tool_stats.json
 tool_timestamps.json
 .agent_state.json
 agent_state.json
 .restart_flag
 .shutdown_incomplete
+crash_marker
 boredom_topics.json
 startup_tracker.json
 .startup_state
+.startup_failures
+.last_github_upload
+agent_goals.json
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+agent_memory.db
+optimized_memory.db
+optimized_memory.sql
+
+# Log files
+*.log
+agent.log
+agent_tools.log
+discord_messages.log
 
 # Backups and temporary
 backup/
@@ -47,19 +61,36 @@ boredom_topics.json.test_backup
 # Tests
 tests/
 test_*.py
+*_test.py
+repro_*.py
+.pytest_cache/
+htmlcov/
+.coverage
+.tox/
+build/
+dist/
+*.egg-info/
 
 # Documentation drafts
 *.draft.md
+*_draft.md
 
+# Temporary files
+*.swp
+*.swo
+*~
+.tmp/
+
+# OS specific
+.DS_Store
+.env
+
+# Script outputs
+*.zip
+*.tar.gz
+release_*.txt
+
+
+changelog.md
 __pycache__
 venv
-.env
-.last_github_upload
-.startup_failures
-.DS_Store
-*.log
-*.db
-*.db-shm
-*.db-wal
-agent.log
-agent_tools.log

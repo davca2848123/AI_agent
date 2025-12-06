@@ -51,10 +51,11 @@ DOCUMENTATION_WEB_URL = "http://localhost:5001/docs"  # URL for web documentatio
 
 # Web Interface
 WEB_DASHBOARD_REFRESH_INTERVAL = 10
-WEB_SERVER_AUTO_RESTART = True  # Seconds between dashboard auto-refreshes
+WEB_SERVER_AUTO_RESTART = True  # Enable auto-restart if crashed (unless manually stopped)
 
 # Web Interface
 WEB_INTERFACE_TIMEOUT = 1 * 60 * 60  # Auto-shutdown after 1 hour of inactivity (in seconds)
+WEB_WEBSOCKET_UPDATE_INTERVAL = 2  # Seconds between real-time updates via WebSocket
 
 # Fuzzy Command Matching
 FUZZY_MATCH_DISTANCE_BASE_COMMANDS = 2      # Max Levenshtein distance for base commands (e.g., !help → !helps)
@@ -63,6 +64,62 @@ FUZZY_MATCH_DISTANCE_SUBCOMMANDS = 4        # Max Levenshtein distance for subco
 # Security - IP Address Sanitization
 IP_SANITIZATION_ENABLED = True  # Enable global IP masking in console/Discord output
 
-# Admin Restricted Shell Commands
-# These commands are blocked even for admins unless explicitly allowed in code
-ADMIN_RESTRICTED_COMMANDS = ["sudo", "shutdown", "reboot", "kill", "rm -rf", "mkfs", "dd", ":(){ :|:& };:"]
+# Shell Command Restrictions
+# Commands that can ONLY be used by admins (blocked for non-admin users)
+ONLY_ADMIN_RESTRICTED_COMMANDS = [
+    # Extremely dangerous operations
+    "rm -rf", "mkfs", "dd",
+    # File operations
+    'rm ', 'del ', 'remove', 'mv ', 'cp ', 'move', 'copy', 'mkdir', 'touch',
+    # File editing
+    'nano', 'vim', 'vi', 'edit',
+    # File creation/overwrite
+    'echo >', 'cat >', '> ',
+    # Script execution
+    'python', 'python3', 'node', 'bash', 'sh',
+    # Permission changes
+    'chmod', 'chown',
+    # Privilege escalation
+    'sudo', 'su',
+    # Downloads
+    'wget', 'curl',
+    # Repository operations
+    'git clone', 'git pull',
+    # Package managers
+    'apt', 'yum', 'dnf', 'pacman',
+    # Service management
+    'systemctl', 'service',
+    # System control
+    'reboot', 'shutdown', 'poweroff',
+    # Process termination
+    'kill', 'pkill',
+    # Tunnel management
+    'ngrok',
+]
+
+# Agent Version
+AGENT_VERSION = "Beta - CLOSED"
+
+# Discord Activity Tool Settings
+DISCORD_ACTIVITY_IGNORE_USERS = []  # List of user IDs to ignore in activity checks
+
+# File Paths
+STARTUP_FAILURE_FILE = ".startup_failures"
+LOG_FILE_MAIN = "agent.log"
+LOG_FILE_TOOLS = "agent_tools.log"
+CRASH_MARKER_FILE = "crash_marker"
+SHUTDOWN_INCOMPLETE_FILE = ".shutdown_incomplete"
+
+# Agent Behavior
+BOREDOM_THRESHOLDS = {
+    "LOW": 0.2,
+    "HIGH": 0.4
+}
+BOREDOM_DECAY_RATE = 0.05  # Slower decay (1% per interval)
+DEFAULT_AGENT_GOALS = [
+    "Learn new things using tools",
+    "Try to maintain boredom below 70%",
+    "Use diverse tools",
+    "Build knowledge base"
+]
+GOALS_FILE = "agent_goals.json"

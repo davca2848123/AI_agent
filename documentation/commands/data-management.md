@@ -3,7 +3,7 @@
 > **Navigace:** [📂 Dokumentace](../README.md) | [💬 Příkazy](../README.md#commands-příkazy) | [Správa dat](data-management.md)
 
 > Příkazy pro správu logů, paměti a export dat.
-> **Verze:** Alpha
+> **Verze:** Beta - CLOSED
 
 ---
 
@@ -404,7 +404,15 @@ Bot: 📦 Exporting all data...
 | `!live logs` | Live stream logů | `!live logs 2m` |
 | `!export` | Export dat | `!export memory` |
 
+
+<a name="související"></a>
+## 🔗 Související
+
+- [📋 Všechny příkazy](../SUMMARY.md#commands-api)
+- [🏗️ Command Architecture](../architecture.md#command-layer)
+- [🆘 Troubleshooting](../troubleshooting.md#command-errors)
+
 ---
-Poslední aktualizace: 2025-12-04  
-Verze: Alpha  
+Poslední aktualizace: 2025-12-06  
+Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

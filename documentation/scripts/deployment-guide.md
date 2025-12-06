@@ -3,7 +3,7 @@
 > **Navigace:** [📂 Dokumentace](../README.md) | [📜 Scripts](../README.md#scripts-skripty) | [Deployment Guide](deployment-guide.md)
 
 > Komplexní průvodce nasazením AI Agenta na Raspberry Pi.
-> **Verze:** Alpha
+> **Verze:** Beta - CLOSED
 
 ---
 
@@ -428,14 +428,15 @@ sudo dpkg-reconfigure --priority=low unattended-upgrades
 
 ---
 
-<a name="související-dokumentace"></a>
-## 📚 Související Dokumentace
+<a name="související"></a>
+## 🔗 Související
 
 - [Batch Scripts Reference](batch-scripts-reference.md) - Detaily všech `.bat` skriptů
 - [RPI Sudoers Guide](../scripts/RPI_Sudoers_NOPASSWD_Guide.md) - Sudo bez hesla
 - [Configuration Guide](../configuration/customization-guide.md) - Konfigurace nastavení
+- [🏗️ Architektura](../architecture.md)
 
 ---
-Poslední aktualizace: 2025-12-04  
-Verze: Alpha  
+Poslední aktualizace: 2025-12-06  
+Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

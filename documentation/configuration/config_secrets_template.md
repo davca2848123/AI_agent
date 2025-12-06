@@ -3,7 +3,7 @@
 > **Navigace:** [📂 Dokumentace](../README.md) | [⚙️ Konfigurace](../README.md#konfigurace) | [config_secrets.py Template](config_secrets_template.md)
 
 > Šablona pro soubor s tajnými klíči. Tento soubor **NIKDY** necommitujte do Gitu!
-> **Verze:** Alpha
+> **Verze:** Beta - CLOSED
 
 ---
 
@@ -80,7 +80,15 @@ config_secrets.py
 agent.log
 ```
 
+
+<a name="související"></a>
+## 🔗 Související
+
+- [🚀 Deployment Guide](../scripts/deployment-guide.md)
+- [🆘 Troubleshooting](../troubleshooting.md)
+- [📜 Scripts](../scripts/batch-scripts-reference.md)
+
 ---
-Poslední aktualizace: 2025-12-04  
-Verze: Alpha  
+Poslední aktualizace: 2025-12-06  
+Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

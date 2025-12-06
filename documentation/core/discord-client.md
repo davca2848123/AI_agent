@@ -3,7 +3,7 @@
 > **Navigace:** [📂 Dokumentace](../README.md) | [🧠 Core](../README.md#core-jádro) | [Discord Client](discord-client.md)
 
 > Integrace s Discord API pro komunikaci.
-> **Verze:** Alpha
+> **Verze:** Beta - CLOSED
 
 ---
 
@@ -336,22 +336,11 @@ while True:
 <a name="související"></a>
 ## 🔗 Související
 
-- [📂 Commands](../commands/README.md) - Příkazy přes Discord
-- [📖 Autonomous Behavior](autonomous-behavior.md) - Agent posílá updates
-- [`!ssh`](../commands/admin.md#ssh) - SSH notifications
+- [📖 Autonomous Behavior](autonomous-behavior.md) - Reakce na tier changes
+- [📚 API Reference](../api/discord-client.md)
+- [🏗️ Architektura](../architecture.md)
 
 ---
-Poslední aktualizace: 2025-12-04  
-Verze: Alpha  
-Tip: Použij Ctrl+F pro vyhledávání
-
-<a name="související"></a>
-## 🔗 Související
-
-- [📖 Autonomous Behavior](autonomous-behavior.md) - Jak agent používá Discord
-- [📚 API Reference](../api/discord-client.md) - Technická dokumentace tříd a metod
-
----
-Poslední aktualizace: 2025-12-04  
-Verze: Alpha  
+Poslední aktualizace: 2025-12-06  
+Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

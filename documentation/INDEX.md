@@ -3,7 +3,7 @@
 > **Navigace:** [📂 Dokumentace](README.md) | [📄 Přehled (OVERVIEW)](OVERVIEW.md) | [🔍 Index (INDEX)](INDEX.md) | [📋 API Tasklist (SUMMARY)](SUMMARY.md) | [🏗️ Architektura](architecture.md) | [🆘 Troubleshooting](troubleshooting.md)
 
 > Abecední index všech příkazů, nástrojů a funkcí.
-> **Verze:** Alpha
+> **Verze:** Beta - CLOSED
 
 ---
 
@@ -82,6 +82,11 @@
 | **Tools API** | Tool base class & implementations | [📖 API Docs](api/tools-api.md) |
 | **Discord Client** | DiscordClient wrapper | [📖 API Docs](api/discord-client.md) |
 | **LLM Integration** | LLMClient class | [📖 API Docs](api/llm-integration.md) |
+| **Error Tracker** | ErrorTracking & Recovery | [📖 API Docs](api/error-tracker.md) |
+| **Sanitizer** | Data Masking Utils | [📖 API Docs](api/utils-sanitizer.md) |
+| **Startup Utils** | Boot loop protection | [📖 API Docs](api/utils-startup.md) |
+| **Hardware** | Monitor & LED Control | [📖 API Docs](api/hardware-monitor.md) |
+| **Web Interface** | Logs & Process API | [📖 API Docs](api/api-logs.md) |
 
 <a name="konfigurace"></a>
 ## ⚙️ Konfigurace
@@ -102,6 +107,8 @@
 | **Deployment** | Průvodce nasazením | [📖 Zobrazit](scripts/deployment-guide.md) |
 | **Maintenance** | Údržba systému | [📖 Zobrazit](scripts/maintenance.md) |
 | **Batch Scripts** | Referenční příručka skriptů | [📖 Zobrazit](scripts/batch-scripts-reference.md) |
+| **Testing Guide** | Testování a verifikace | [📖 Zobrazit](scripts/testing-guide.md) |
+| **Memory Manager** | Database CLI Tool | [📖 Zobrazit](scripts/memory-manager.md) |
 | **Fuzzy Matching** | Algoritmus vyhledávání | [📖 Zobrazit](advanced/fuzzy-matching-algorithm.md) |
 
 <a name="hlavní-dokumenty"></a>
@@ -148,25 +155,6 @@
 **Jaké nástroje jsou dostupné?**
 → [📖 All Tools](tools/all-tools.md)
 
-<a name="dokumentace-podle-role"></a>
-## 📖 Dokumentace Podle Role
-
-<a name="nový-uživatel"></a>
-### 🆕 Nový Uživatel
-1. [📖 README.md](README.md) - Start here
-2. [📖 Basic Commands](commands/basic.md) - `!help`, `!status`
-3. [📖 Tools & Learning](commands/tools-learning.md) - `!ask`, `!learn`
-
-<a name="běžný-uživatel"></a>
-### 👤 Běžný Uživatel
-1. [📖 Interaction](commands/interaction.md) - `!mood`, `!goals`
-2. [📖 Data Management](commands/data-management.md) - `!memory`, `!logs`
-3. [📖 All Tools](tools/all-tools.md) - Co všechno umí
-
-<a name="administrátor"></a>
-### 👨‍💼 Administrátor
-1. [📖 Admin Commands](commands/admin.md) - `!restart`, `!monitor`, `!debug`
-2. [📖 Resource Manager](core/resource-manager.md) - Tier system
 3. [📖 Architecture](architecture.md) - Jak to funguje
 
 <a name="vývojář"></a>
@@ -175,7 +163,15 @@
 2. [📖 Core Systems](core/) - Implementace
 3. [📖 All Tools](tools/all-tools.md) - Tool development
 
+
+<a name="související"></a>
+## 🔗 Související
+
+- [📄 Přehled (OVERVIEW)](OVERVIEW.md)
+- [🏗️ Architektura](architecture.md)
+- [📋 Tasklist (SUMMARY)](SUMMARY.md)
+
 ---
-Poslední aktualizace: 2025-12-04  
-Verze: Alpha  
+Poslední aktualizace: 2025-12-06  
+Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

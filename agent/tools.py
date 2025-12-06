@@ -212,6 +212,9 @@ class SystemTool(Tool):
             return "Error: Unknown action."
 
 class WebTool(Tool):
+    def __init__(self, agent=None):
+        self.agent = agent
+
     @property
     def name(self) -> str:
         return "web_tool"
@@ -231,8 +234,16 @@ class WebTool(Tool):
         try:
             if action == "search":
                 if not query: return "Error: Query required."
-                results = DDGS().text(query, max_results=3)
-                output = "Search Results:\n"
+                
+                # Append language filter: Czech, Slovak, English
+                # Using standard OR operator for languages/sites to guide the search engine
+                enhanced_query = f"{query} (lang:cs OR lang:sk OR lang:en)"
+                
+                results = DDGS().text(enhanced_query, max_results=3)
+                output = f"Search Results (Query: {query}):\n"
+                if not results:
+                    output += "(No results found with language filter)\n"
+                    
                 for i, r in enumerate(results, 1):
                     output += f"\n{i}. {r['title']}\n"
                     output += f"   URL: {r['href']}\n"
@@ -248,6 +259,24 @@ class WebTool(Tool):
                         soup = BeautifulSoup(html, 'html.parser')
                         # Extract text and limit length
                         text = soup.get_text(separator=' ', strip=True)
+                        
+                        # Store in memory if agent is available
+                        if self.agent:
+                            try:
+                                logger.info(f"WebTool: Processing content from {url} for memory...")
+                                # We pass the full text (or a larger chunk) to the filter
+                                # The filter will extract the "core, factual information"
+                                await self.agent.add_filtered_memory(
+                                    content=text[:5000], # Pass reasonable amount for LLM
+                                    metadata={
+                                        'type': 'web_knowledge',
+                                        'source': url,
+                                        'title': soup.title.string if soup.title else 'Webpage'
+                                    }
+                                )
+                            except Exception as e:
+                                logger.error(f"WebTool: Failed to process memory: {e}")
+                        
                         return text[:limit] + ("..." if len(text) > limit else "") # Limit context
             else:
                 return "Error: Unknown action."
@@ -554,7 +583,9 @@ class RSSTool(Tool):
             return "Error: URL required"
         
         try:
-            feed = feedparser.parse(url)
+            # Use run_in_executor to avoid blocking event loop
+            loop = asyncio.get_running_loop()
+            feed = await loop.run_in_executor(None, feedparser.parse, url)
             if not feed.entries:
                 return "No entries found"
             
@@ -640,16 +671,32 @@ class DiscordActivityTool(Tool):
 
         try:
             activities = await self.agent.discord.get_online_activities()
-            if not activities:
+            
+            # Filter ignored users
+            import config_settings
+            ignored_users = getattr(config_settings, 'DISCORD_ACTIVITY_IGNORE_USERS', [])
+            
+            filtered_activities = []
+            for act in activities:
+                user_id = act.get('user_id')
+                try:
+                    user_id_int = int(user_id) if user_id else 0
+                except:
+                    user_id_int = 0
+                    
+                if user_id_int not in ignored_users:
+                    filtered_activities.append(act)
+            
+            if not filtered_activities:
                 return "No users are currently performing any public activities."
             
             # Process activities to ensure learning
-            for activity in activities:
-                await self.agent._process_activity(activity)
+            for activity in filtered_activities:
+                asyncio.create_task(self.agent._process_activity(activity))
             
             # Format output
             output = "Current User Activities:\n"
-            for act in activities:
+            for act in filtered_activities:
                 output += f"- {act['user_name']} is playing/doing: {act['name']}\n"
             
             return output

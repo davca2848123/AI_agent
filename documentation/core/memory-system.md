@@ -3,14 +3,21 @@
 > **Navigace:** [📂 Dokumentace](../README.md) | [🧠 Core](../README.md#core-jádro) | [Paměťový systém](memory-system.md)
 
 > VectorStore a správa vzpomínek agenta.
-> **Verze:** Alpha
+> **Verze:** Beta - CLOSED
 
 ---
 
 <a name="přehled"></a>
 ## 📋 Přehled
 
-Agent používá SQLite databázi s FTS5 (Full-Text Search) pro ukládání a vyhledávání vzpomínek. **Nově** obsahuje pokročilý scoring systém pro inteligentní filtrování vzpomínek.
+Agent používá SQLite databázi s FTS5 (Full-Text Search) pro ukládání a vyhledávání vzpomínek. **Nově** obsahuje systém pro inteligentní filtrování a scoring vzpomínek.
+
+<a name="intelligent-memory-filtering"></a>
+### 🧠 Intelligent Memory Filtering
+Před vlastním scoringem probíhá **pre-processing** pomocí LLM (metoda `add_filtered_memory` v `AutonomousAgent`).
+- **Cíl**: Odstranit balast ("fluff"), konverzační výplň a zachovat pouze faktickou podstatu.
+- **Použití**: `WebTool` (obsah stránek), `DiscordActivityTool` (popis aktivit), `!teach` (uživatelské učení).
+- **Výsledek**: Do databáze se dostane pouze kondenzovaná informace.
 
 ---
 
@@ -374,8 +381,8 @@ memory.delete_boredom_memories()
 
 ```sql
 DELETE FROM memories 
-WHERE content LIKE '%boredom%' 
-   OR content LIKE '%waiting%'
+WHERE content LIKE '%Boredom:%' 
+   OR json_extract(metadata, '$.type') = 'boredom'
 ```
 
 <a name="delete_error_memories"></a>
@@ -389,7 +396,7 @@ memory.delete_error_memories()
 
 ```sql
 DELETE FROM memories 
-WHERE content LIKE '%Error:%' 
+WHERE content LIKE '%Error%' 
    OR content LIKE '%LLM not available%'
 ```
 
@@ -481,17 +488,14 @@ WHERE json_extract(metadata, '$.type') = ?
 
 ```python
 conn.execute("PRAGMA journal_mode=WAL")  # Write-Ahead Logging
-conn.execute("PRAGMA synchronous=NORMAL")
-conn.execute("PRAGMA cache_size=10000")
-conn.execute("PRAGMA temp_store=MEMORY")
+conn.execute("PRAGMA foreign_keys=ON")
 ```
 
 <a name="výhody"></a>
 ### 📊 Výhody
 
 - **WAL Mode** - Lepší concurrency, rychlejší zápisy
-- **Cache** - Méně disk I/O
-- **Temp Memory** - Rychlejší temporary operace
+- **Foreign Keys** - Integrita dat (pokud jsou relace)
 
 ---
 
@@ -506,8 +510,8 @@ def _initialize_db(self):
     try:
         # Try to open database
         self.conn = sqlite3.connect(self.db_path)
-        # Test connection
-        self.conn.execute("SELECT 1")
+        # Integrity check
+        self.conn.execute("PRAGMA integrity_check")
     except sqlite3.DatabaseError:
         logger.error("Database corrupted! Auto-recovering...")
         self._backup_corrupted_and_start_fresh()
@@ -535,16 +539,21 @@ def _initialize_db(self):
 # Initialize memory
 self.memory = VectorStore()
 
-# Add memory during actions (projde scoring)
-self.memory.add_memory(
-    content=f"Used {tool_name}: {result}",
-    metadata={"type": "action", "tool": tool_name}
-)
+# Add memory using Intelligent Filtering (for big content)
+if hasattr(self, 'add_filtered_memory'):
+    await self.add_filtered_memory(
+        content=raw_web_content,
+        metadata={"type": "web_knowledge", "source": url}
+    )
 
-# Add user teaching (BYPASS scoring)
-self.memory.add_memory(
-    content=f"User taught me: {info}",
-    metadata={"type": "user_teaching", "importance": "high"}
+# Add user teaching (uses filtered memory + special metadata)
+await self.add_filtered_memory(
+    content=info,
+    metadata={
+        "type": "user_teaching", 
+        "importance": "high",
+        "taught_by_user": True
+    }
 )
 
 # Search for relevant context
@@ -562,9 +571,10 @@ context = "\n".join([m['content'] for m in memories])
 - [`!export memory`](../commands/data-management.md#export) - Export paměti
 - [`!teach`](../commands/tools-learning.md#teach) - Učení agenta (bypass scoring)
 - [📚 API Reference](../api/memory-system.md) - Technická dokumentace tříd a metod
+- [🏗️ Architektura](../architecture.md)
 
 
 ---
-Poslední aktualizace: 2025-12-04  
-Verze: Alpha  
+Poslední aktualizace: 2025-12-06  
+Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

@@ -3,7 +3,7 @@
 > **Navigace:** [📂 Dokumentace](../README.md) | [🧠 Core](../README.md#core-jádro) | [LLM Integrace](llm-integration.md)
 
 > Lokální LLM pomocí llama-cpp-python.
-> **Verze:** Alpha
+> **Verze:** Beta - CLOSED
 
 ---
 
@@ -157,10 +157,11 @@ async def generate_response(self, prompt: str, system_prompt: str = "You are an 
 
 | Parametr | Hodnota | Popis |
 |----------|---------|-------|
-| `max_tokens` | 256 | Max délka odpovědi |
-| `temperature` | 0.7 | Kreativita (0-1) |
-| `top_p` | 0.9 | Nucleus sampling |
-| `stop` | `["User:",  "\n\n"]` | Stop sekvence |
+| Parametr | Hodnota | Popis |
+|----------|---------|-------|
+| `max_tokens` | 128 | Max délka odpovědi (dynamicky 1024 // 8) |
+| `temperature` | N/A | Default (není explicitně nastaveno) |
+| `stop` | `["<|im_end|>"]` | Stop sekvence |
 
 ---
 
@@ -373,9 +374,10 @@ Pokud LLM selže:
 - [`!ask`](../commands/tools-learning.md#ask) - Příkaz s LLM
 - [📖 Resource Manager](resource-manager.md) - Adaptivní parametry LLM
 - [📚 API Reference](../api/llm-integration.md) - Technická dokumentace tříd a metod
+- [🏗️ Architektura](../architecture.md)
 
 
 ---
-Poslední aktualizace: 2025-12-04  
-Verze: Alpha  
+Poslední aktualizace: 2025-12-06  
+Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

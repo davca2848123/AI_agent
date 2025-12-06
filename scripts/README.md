@@ -59,3 +59,8 @@ The `internal/` subdirectory contains:
 - Other support files
 
 **Note:** You should not need to directly execute files from `internal/` - use the `.bat` files in the root instead.
+
+---
+
+**Poslední aktualizace:** 2025-12-06  
+**Verze:** Beta - CLOSED

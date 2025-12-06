@@ -3,7 +3,7 @@
 > **Navigace:** [📂 Dokumentace](../README.md) | [💬 Příkazy](../README.md#commands-příkazy) | [Základní příkazy](basic.md)
 
 > Základní příkazy pro interakci s agentem a zobrazení stavu.
-> **Verze:** Alpha
+> **Verze:** Beta - CLOSED
 
 ---
 
@@ -30,6 +30,7 @@ Zobrazí kompletní seznam všech dostupných příkazů s krátkým popisem jej
 <a name="výstup"></a>
 ### 💡 Výstup
 Příkaz vrátí strukturovanou zprávu obsahující:
+
 - **Základní funkce** - `!help`, `!status`, `!stats`, `!intelligence`
 - **Nástroje a učení** - `!tools`, `!learn`, `!ask`, `!teach`, `!search`
 - **Správa dat** - `!memory`, `!logs`, `!live`, `!export`
@@ -59,6 +60,81 @@ Bot: 📋 **Available Commands:**
 
 ---
 
+<a name="documentation"></a>
+## `!documentation` / `!docs`
+
+<a name="popis"></a>
+### 📋 Popis
+Otevře interaktivní dokumentaci přímo v Discordu nebo odkáže na webovou verzi.
+
+<a name="použití"></a>
+### ⚙️ Použití
+```
+!documentation
+!docs
+```
+
+<a name="příklad"></a>
+### 📝 Příklad
+```
+User: !docs
+
+Bot: 📚 **AI Agent Documentation**
+     Vyberte kategorii:
+     [Basic] [Tools] [Admin] [Web]
+```
+
+<a name="související"></a>
+### 🔗 Související
+- [`!help`](#help) - Základní nápověda
+- [`!web`](#web) - Web interface
+
+---
+
+<a name="web"></a>
+## `!web`
+
+<a name="popis"></a>
+### 📋 Popis
+Správa webového rozhraní (Flask server + ngrok tunnel).
+
+<a name="použití"></a>
+### ⚙️ Použití
+
+**Start:**
+```
+!web start
+!web
+```
+
+**Stop:**
+```
+!web stop
+```
+
+**Restart:**
+```
+!web restart
+```
+
+<a name="příklady"></a>
+### 📝 Příklady
+
+```
+User: !web start
+
+Bot: 🌐 Starting web tunnel...
+     ✅ **Web Interface Online!**
+     [🏠 Dashboard] [📚 Documentation]
+```
+
+<a name="související"></a>
+### 🔗 Související
+- [`!info`](#info) - Systémové informace
+- [`!status`](#status) - Stav agenta
+
+---
+
 <a name="status"></a>
 ## `!status`
 
@@ -76,6 +152,7 @@ Zobrazí aktuální stav agenta včetně diagnostických kontrol LLM, internetu 
 ### 💡 Co zobrazuje
 
 **Základní informace:**
+
 - Hostname a operační systém
 - Stav běhu agenta
 
@@ -153,26 +230,31 @@ Zobrazí kompletní statistiky agenta včetně uptime, intelligence score, aktiv
 ### 💡 Co zobrazuje
 
 **1. Systém:**
+
 - Hostname a OS
 - Uptime (formátovaný)
 - Čas spuštění (Discord timestamp)
 
 **2. Intelligence (0-1000 bodů):**
+
 - **Tool Diversity** - Počet různých použitých nástrojů (max 500 bodů)
 - **Usage Efficiency** - Celkový počet použití nástrojů (max 300 bodů)
 - **Learnings** - Počet naučených věcí (max 200 bodů)
 
 **3. Aktivita:**
+
 - Zpracované zprávy
 - Autonomní akce
 - Activity Rate (akce za minutu)
 - Aktuální boredom %
 
 **4. Paměť:**
+
 - Počet vzpomínek
 - Velikost historie akcí
 
 **5. Top 5 Nástrojů:**
+
 - Nejpoužívanější nástroje s počty
 
 <a name="příklad"></a>
@@ -266,12 +348,14 @@ nebo
 ### 💡 Co zobrazuje
 
 **Metriky:**
+
 - Overall Intelligence (0-100)
 - Tool Diversity
 - Total Tool Uses
 - Successful Learnings
 
 **Analýza úrovně:**
+
 - **< 20:** Very low - Just starting out
 - **20-49:** Low - Learning the basics
 - **50-74:** Moderate - Getting smarter!
@@ -336,9 +420,24 @@ nebo
 
 <a name="funkce"></a>
 ### 💡 Funkce
+
 - Zobrazí rozcestník kategorií
 - Tlačítka pro navigaci (Overview, Commands, Tools, Core)
 - Odesílá soubory dokumentace jako přílohy (ephemeral messages)
+
+<a name="příklad"></a>
+### 📝 Příklad
+```
+User: !docs
+
+Bot: 📚 **AI Agent Dokumentace**
+     Vyberte kategorii:
+     
+     [📖 Overview] [💬 Příkazy] [🛠️ Nástroje] [🧠 Core]
+     
+     (Po kliknutí na '💬 Příkazy'):
+     Bot: Odesílám soubor: commands.md
+```
 
 ---
 
@@ -358,6 +457,7 @@ distance = levenshtein_distance(user_command, valid_command)
 ```
 
 **2. Auto-korekce:**
+
 - Pokud distance ≤ 2, příkaz se auto-opraví
 - Uživatel dostane notifikaci o korekci
 - Příkaz se normálně vykoná
@@ -396,6 +496,7 @@ def levenshtein_distance(s1: str, s2: str) -> int:
 
 <a name="poznámky"></a>
 ### ⚠️ Poznámky
+
 - Funguje pro všechny příkazy
 - Threshold je 2 znaky (příliš vzdálené příkazy se neopraví)
 - Pokud ne existuje blízká shoda, vrátí se error "Unknown command"
@@ -430,6 +531,7 @@ while self.is_running:
 
 <a name="výhody"></a>
 ### 💡 Výhody
+
 - Příkazy se nezablokují
 - Můžeš poslat více příkazů najednou
 - Error v jednom příkazu nezastaví ostatní
@@ -448,6 +550,7 @@ Bot: [Zpracovává !stats]
 
 <a name="poznámky"></a>
 ### ⚠️ Poznámky
+
 - Všechny příkazy se vykonají v pořadí
 - Pokud příkaz vyhodí error, ostatní pokračují
 - Worker běží jako background task (`asyncio.create_task`)
@@ -464,8 +567,80 @@ Bot: [Zpracovává !stats]
 | `!stats` | Detailní statistiky | Intelligence, aktivita, top nástroje |
 | `!intelligence` | Intelligence metriky | Skóre 0-100 + analýza |
 | `!documentation` | Dokumentace | Interaktivní tlačítka |
+| `!info` | Systémové info | Detailní HW/SW informace |
 
 ---
-Poslední aktualizace: 2025-12-04  
-Verze: Alpha  
+
+<a name="info"></a>
+## `!info`
+
+<a name="popis"></a>
+### 📋 Popis
+Zobrazí detailní informace o systému, hardwaru a běžícím agentovi, napodobující data z Web Dashboardu.
+
+<a name="použití"></a>
+### ⚙️ Použití
+```
+!info
+```
+
+<a name="co-zobrazuje"></a>
+### 💡 Co zobrazuje
+
+**1. System Info:**
+- OS a verze
+- Hardware model (Raspberry Pi model)
+- Verze Pythonu a projektu
+- Použitý LLM model
+
+**2. Resources:**
+- Využití CPU, RAM a Disku (v GB a %)
+
+**3. Environment:**
+- Discord Latency
+- Local Time
+
+**4. About:**
+- Informace o tvůrcích a technologiích
+
+<a name="příklad"></a>
+### 📝 Příklad
+```
+User: !info
+
+Bot: ℹ️ **System & Agent Information**
+
+     **System Info:**
+     **OS:** Linux (Raspbian GNU/Linux 11) running on Raspberry Pi 4B (4GB)
+     **Python:** 3.11.2
+     **LLM Model:** QWEN 0.5B Instruct
+     **Project Version:** Beta - CLOSED
+
+     **Environment:**
+     **Discord Latency:** 23ms
+     **Local Time:** 2025-12-06 18:30:00
+
+     **About:**
+     Created in collaboration with Antigravity
+     Powered by Discord, ngrok, and local LLMs.
+```
+
+<a name="poznámky"></a>
+### ⚠️ Poznámky
+
+- Slouží jako rychlý přehled bez nutnosti otevírat web interface
+- Zobrazuje statičtější data než `!monitor` (live)
+
+
+
+<a name="související"></a>
+## 🔗 Související
+
+- [📋 Všechny příkazy](../SUMMARY.md#commands-api)
+- [🏗️ Command Architecture](../architecture.md#command-layer)
+- [🆘 Troubleshooting](../troubleshooting.md#command-errors)
+
+---
+Poslední aktualizace: 2025-12-06  
+Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

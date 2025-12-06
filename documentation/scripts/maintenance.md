@@ -3,7 +3,7 @@
 > **Navigace:** [📂 Dokumentace](../README.md) | [📜 Scripts](../README.md#scripts-skripty) | [Maintenance Scripts](maintenance.md)
 
 > Skripty pro údržbu a správu agenta.
-> **Verze:** Alpha
+> **Verze:** Beta - CLOSED
 
 ---
 
@@ -48,7 +48,7 @@ rpi_cleanup_logs.bat
 ### 💡 Jak to funguje
 
 1. **Vypočítá cutoff datum** - Dnešní datum - 2 dny (od 00:00)
-2. **Načte oba log soubory** - agent.log a agent_tools.log
+2. **Načte log soubory** - agent.log, agent_tools.log, discord_messages.log
 3. **Parsuje timestamp** - Z každého řádku (formát: `YYYY-MM-DD HH:MM:SS`)
 4. **Filtruje řádky** - Odstraní řádky starší než cutoff datum
 5. **Přepíše soubory** - S čistými logy
@@ -73,6 +73,7 @@ if timestamp_match:
 **Zpracované soubory:**
 - `agent.log` - Hlavní log agenta
 - `agent_tools.log` - Logy použití nástrojů
+- `discord_messages.log` - Log všech zpráv odeslaných na Discord
 
 <a name="příklad-výstupu"></a>
 ### 📝 Příklad výstupu
@@ -91,6 +92,12 @@ Total lines: 5678
 Deleted lines: 2341
 Kept lines: 3337
 Done cleaning agent_tools.log
+
+Processing discord_messages.log...
+Total lines: 1245
+Deleted lines: 500
+Kept lines: 745
+Done cleaning discord_messages.log
 
 All log files processed.
 ```
@@ -114,18 +121,99 @@ All log files processed.
 
 <a name="future-scripts"></a>
 
+---
+
+<a name="memory_managerpy"></a>
+## `memory_manager.py`
+
+<a name="popis-mm"></a>
+### 📋 Popis
+Interaktivní nástroj pro správu databáze vzpomínek. Umožňuje prohlížení statistik, mazání chybových záznamů, duplicit a specifických typů vzpomínek.
+
+<a name="použití-mm"></a>
+### ⚙️ Použití
+**Spuštění:**
+```bash
+python3 scripts/internal/memory_manager.py
+# Nebo pomocí batche:
+scripts/memory_manager.bat
+```
+
+<a name="funkce-mm"></a>
+### 💡 Funkce
+- **Statistics** - Přehled počtu vzpomínek podle typu
+- **Show Errors** - Zobrazení vzpomínek obsahujících chyby
+- **Delete Duplicates** - Inteligentní detekce a mazání duplicitního obsahu
+- **Search** - Vyhledávání v obsahu vzpomínek
+
+---
+
+<a name="health_checkpy"></a>
+## `health_check.py`
+
+<a name="popis-hc"></a>
+### 📋 Popis
+Komplexní diagnostický skript, který ověřuje stav systému před spuštěním agenta.
+
+<a name="použití-hc"></a>
+### ⚙️ Použití
+**Spuštění:**
+```bash
+python3 scripts/internal/health_check.py
+# Nebo pomocí batche:
+scripts/rpi_health_check.bat
+```
+
+<a name="kontroly-hc"></a>
+### 💡 Co kontroluje
+1. **Dependencies** - Python balíčky (`discord.py`, `aiohttp`, `psutil`...)
+2. **Files** - Existence klíčových souborů (`core.py`, `config_settings.py`)
+3. **Model** - Dostupnost LLM modelu
+4. **Permissions** - Zápisová práva do adresáře a logů
+5. **System Info** - Verze OS, Pythonu, dostupná RAM
+
+---
+
+<a name="manage_swappy"></a>
+## `manage_swap` (Shell Script)
+
+<a name="popis-sw"></a>
+### 📋 Popis
+Skript pro dynamickou správu SWAP paměti na Raspberry Pi.
+
+<a name="použití-sw"></a>
+### ⚙️ Použití
+```bash
+sudo scripts/internal/setup_swap_sudo.sh
+```
+
+<a name="funkce-sw"></a>
+### 💡 Funkce
+- Automaticky nastaví velikost SWAPu (default 2GB - 8GB)
+- Optimalizuje `swappiness` a `vfs_cache_pressure`
+- Zajistí persistenci po restartu
+
+---
+
+<a name="future-scripts"></a>
+
 <a name="budoucí-skripty"></a>
 ## Budoucí Skripty
 
 Plánované utility skripty:
 
-- [ ] `cleanup_memory.py` - Čištění staré databáze vzpomínek
-- [ ] `backup_database.py` - Zálohování agent_memory.db
-- [ ] `optimize_database.py` - VACUUM a optimalizace SQLite
-- [ ] `check_health.py` - Health check celého systému
-- [ ] `manage_swap.py` - Správa SWAP souboru
+- [ ] `backup_database.py` - Zálohování agent_memory.db (součást `memory_manager.py`)
+- [ ] `optimize_database.py` - VACUUM a optimalizace SQLite (součást `memory_manager.py`)
+
+
+<a name="související"></a>
+## 🔗 Související
+
+- [⚙️ Konfigurace](../configuration/complete-configuration-guide.md)
+- [🆘 Troubleshooting](../troubleshooting.md)
+- [🏗️ Architektura](../architecture.md)
 
 ---
-Poslední aktualizace: 2025-12-04  
-Verze: Alpha  
+Poslední aktualizace: 2025-12-06  
+Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

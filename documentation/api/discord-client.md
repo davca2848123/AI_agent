@@ -46,9 +46,11 @@ Vrátí seznam aktivit ostatních uživatelů na serveru (pro monitoring).
 <a name="související"></a>
 ## 🔗 Související
 - [📖 Discord Client Guide](../core/discord-client.md) - Detailní popis integrace a eventů
+- [🏗️ Architektura](../architecture.md)
+- [📂 Source Code](../agent/)
 
 ---
-Poslední aktualizace: 2025-12-04  
-Verze: Alpha  
+Poslední aktualizace: 2025-12-06  
+Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání
 

@@ -3,7 +3,7 @@
 > **Navigace:** [📂 Dokumentace](README.md) | [📄 Přehled (OVERVIEW)](OVERVIEW.md) | [🔍 Index (INDEX)](INDEX.md) | [📋 API Tasklist (SUMMARY)](SUMMARY.md) | [🏗️ Architektura](architecture.md) | [🆘 Troubleshooting](troubleshooting.md)
 
 > Kompletní průvodce řešením problémů RPI AI Agenta.
-> **Verze:** Alpha
+> **Verze:** Beta - CLOSED
 
 ---
 
@@ -259,6 +259,9 @@ rm qwen2.5-0.5b-instruct-q4_k_m.gguf
 python3 scripts/fix_llm_full.py
 ```
 
+📖 [Více info v Local Models Guide](configuration/models.md)
+```
+
 <a name="solution-5-llama-cpp-python-issue"></a>
 ### Solution 5: llama-cpp-python Issue
 
@@ -328,6 +331,9 @@ scripts\rpi_cleanup_memory.bat
 ```bash
 cd ~/rpi_ai/rpi_ai
 python3 scripts/internal/cleanup_memory.py
+```
+
+📖 [Manuální správa viz Memory Manager](scripts/memory-manager.md)
 ```
 
 <a name="solution-3-fts-index-issues"></a>
@@ -663,6 +669,26 @@ pkill ngrok
 
 ---
 
+<a name="solution-4-api-unreachable"></a>
+### Solution 4: Tunnel API Unreachable
+
+**Symptom:**
+```
+Tunnel: ⚠️ Cannot reach API
+```
+
+**Fix:**
+This means ngrok process is running but unresponsive (check failed at http://127.0.0.1:4040/api/tunnels with 5s timeout).
+```bash
+# Kill all ngrok processes
+pkill -9 ngrok
+
+# Restart agent to respawn clean tunnel
+sudo systemctl restart rpi-agent.service
+```
+
+---
+
 <a name="command-errors"></a>
 ## ⚠️ Command Errors
 
@@ -798,6 +824,10 @@ cd ~/rpi_ai/rpi_ai
 
 # Check integrity
 sqlite3 agent_memory.db "PRAGMA integrity_check;"
+
+# Interactive Manager
+python3 scripts/internal/memory_manager.py
+# 📖 Viz [Memory Manager Guide](scripts/memory-manager.md)
 
 # Count memories
 sqlite3 agent_memory.db "SELECT COUNT(*) FROM memories;"
@@ -939,13 +969,18 @@ sudo journalctl -u rpi-agent.service | grep -i "failed"
 sudo journalctl -u rpi-agent.service | grep -i "warning"
 ```
 
+
+<a name="související"></a>
+## 🔗 Související
+
+- [🏗️ Architektura](architecture.md)
+- [⚙️ Konfigurace](configuration/complete-configuration-guide.md)
+- [📜 Scripts Reference](scripts/batch-scripts-reference.md)
+
 ---
 
-**Last Updated:** 2025-12-03  
-**Version:** 1.1.0  
-**Covers:** All major subsystems and common issues
 
----
-Poslední aktualizace: 2025-12-04  
-Verze: Alpha  
+Poslední aktualizace: 2025-12-06  
+Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání
+

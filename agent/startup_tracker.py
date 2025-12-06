@@ -6,8 +6,9 @@ Tracks consecutive startup failures and enforces waiting period.
 import os
 import time
 import json
+import config_settings
 
-FAILURE_FILE = ".startup_failures"
+FAILURE_FILE = config_settings.STARTUP_FAILURE_FILE
 
 def record_failure():
     """Record a startup failure."""
@@ -37,7 +38,7 @@ def save_failures(data):
     with open(FAILURE_FILE, 'w') as f:
         json.dump(data, f)
 
-def check_should_wait(retry_limit=3, wait_hours=6):
+def check_should_wait(retry_limit=3, wait_hours=3):
     """Check if we should wait before starting.
     
     Returns:

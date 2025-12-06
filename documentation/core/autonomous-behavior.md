@@ -3,7 +3,7 @@
 > **Navigace:** [📂 Dokumentace](../README.md) | [🧠 Core](../README.md#core-jádro) | [Autonomní chování](autonomous-behavior.md)
 
 > Jak agent samostatně rozhoduje a jedná.
-> **Verze:** Alpha
+> **Verze:** Beta - CLOSED
 
 ---
 
@@ -28,8 +28,10 @@ Agent má **boredom score** (0.0 - 1.0), které postupně roste v čase. Když p
 ```python
 # V agent/core.py
 self.boredom_score = 0.0
-self.boredom_threshold = 0.8  # 80%
-self.boredom_decay_rate = 0.02  # Per minute
+self.BOREDOM_THRESHOLD_LOW = 0.2
+self.BOREDOM_THRESHOLD_HIGH = 0.4  # 40% triggers action
+self.BOREDOM_DECAY_RATE = 0.05
+self.BOREDOM_INTERVAL = 300  # 5 minutes
 ```
 
 <a name="boredom-loop"></a>
@@ -39,36 +41,35 @@ self.boredom_decay_rate = 0.02  # Per minute
 async def boredom_loop(self):
     """Simulates the passage of time and intrinsic decay (boredom)."""
     while True:
-        await asyncio.sleep(60)  # Every minute
+        await asyncio.sleep(self.BOREDOM_INTERVAL)  # Every 5 minutes
         
         # Increase boredom
-        self.boredom_score += self.boredom_decay_rate
+        self.boredom_score = min(1.0, self.boredom_score + self.BOREDOM_DECAY_RATE)
         
         # Trigger action if threshold reached
-        if self.boredom_score >= self.boredom_threshold:
+        if self.boredom_score > self.BOREDOM_THRESHOLD_HIGH:
             await self.trigger_autonomous_action()
             
         # Update Discord status
-        await self.discord.update_activity(f"Boredom: {int(self.boredom_score * 100)}%")
+        await self.discord.update_activity(f"Boredom: {self.boredom_score * 100:.0f}%")
 ```
 
 <a name="boredom-reduction"></a>
 ### 📊 Boredom Reduction
 
-Akce redukují boredom na základě "obtížnosti":
+Akce redukují boredom na základě typu interakce:
 
 ```python
 def reduce_boredom(self, amount: float):
-    """Reduces boredom score based on action difficulty."""
+    """Reduces boredom score."""
     self.boredom_score = max(0.0, self.boredom_score - amount)
-    self._save_agent_state()
 ```
 
 **Typické hodnoty:**
-- Jednoduchá akce (read file): -0.1
-- Střední akce (search web): -0.3
-- Komplexní akce (learn new tool): -0.5
-- Interakce s uživatelem: -0.8 (reset téměř na 0)
+
+- Zpracování zprávy (observation): -0.1
+- Vykonání akce (execute_action): -0.3
+
 
 ---
 
@@ -179,38 +180,29 @@ if self.is_learning_mode and self.learning_queue:
 ## Action Execution
 
 <a name="execute-action"></a>
-### 🔧 Execute Action
+### 🔧 Action Handling
+
+Logika vykonávání akcí je rozdělena:
+
+1. **Tool Actions** - Řešeno přímo v `trigger_autonomous_action`:
+
+   - Parsování tool callu
+   - Exekuce nástroje
+   - Uložení výsledku
+
+2. **Text Actions** - Řešeno v `execute_action`:
+   
+   - Pouze pro textové odpovědi (bez nástrojů)
+   - Odeslání reportu adminovi (pokud relevantní)
 
 ```python
 async def execute_action(self, action: str):
-    """Executes a decided action."""
+    """Executes a decided action (text-only)."""
+    logger.info(f"Executing action: {action}")
     
-    # Parse action for tool calls
-    tool_call = self.llm.parse_tool_call(action)
-    
-    if tool_call:
-        tool_name = tool_call['tool']
-        params = tool_call.get('params', {})
-        
-        tool = self.tools.get_tool(tool_name)
-        if tool:
-            result = await tool._execute_with_logging(**params)
-            
-            # Track usage
-            self.tool_usage_count[tool_name] += 1
-            self.tool_last_used[tool_name] = time.time()
-            
-            # Store in memory
-            self.memory.add_memory(
-                content=f"Used {tool_name}: {result[:200]}",
-                metadata={"type": "action", "tool": tool_name}
-            )
-    
-    # Add to history
-    self._add_to_history(action)
-    
-    # Reduce boredom
-    self.reduce_boredom(0.3)
+    # Send report if action implies communication
+    if "status" in action.lower() or "report" in action.lower():
+         await self.send_admin_dm(f"🤖 Autonomous Report:\n{action}")
 ```
 
 ---
@@ -266,6 +258,41 @@ async def _process_activity(self, activity_data: dict):
 
 ---
 
+<a name="service-loops"></a>
+## Service Loops
+
+<a name="backup-loop"></a>
+### 💾 Backup Loop
+Periodicky provádí zálohu databáze (`agent_memory.db`) do adresáře `backup/`.
+
+```python
+async def backup_loop(self):
+    """Periodically backs up the database (2x daily)."""
+    # 1. Check loop health
+    # 2. Check if backup needed (>12h since last)
+    # 3. Create backup (memory.create_backup())
+```
+
+<a name="check-subsystems"></a>
+### 🛠️ Subsystem Check (Self-Healing)
+Automatická kontrola a oprava klíčových komponent každých 30 sekund.
+
+```python
+async def check_subsystems(self):
+    """Checks health of subsystems and restarts if needed."""
+    
+    # 1. Web Server
+    # Auto-restart pokud je down > 10s
+    
+    # 2. SSH Tunnel
+    # Auto-restart pokud chybí ngrok tunel
+    
+    # 3. Loop Health
+    # Kontrola běžících smyček (boredom, observation...)
+```
+
+---
+
 <a name="action-history"></a>
 ## Action History
 
@@ -304,9 +331,10 @@ def _add_to_history(self, action: str):
 
 ```python
 self.goals = [
-    "Learn all available tools",
-    "Help users with their questions",
-    "Monitor system health"
+    "Learn new things using tools",
+    "Try to maintain boredom below 70%",
+    "Use diverse tools",
+    "Build knowledge base"
 ]
 ```
 
@@ -337,20 +365,19 @@ LLM bere cíle v úvahu při výběru akce.
 Agent zobrazuje co dělá jako Discord status:
 
 ```python
-async def _simplify_action(self, action: str) -> str:
-    """Simplifies action string for status display."""
+def _simplify_action(self, action: str) -> str:
+    """Simplifies English action to concise form for Discord status."""
+    # Remove common prefixes and filler words
+    clean = action.replace("ACTION:", "").strip()
+    clean = clean.replace("I will try to", "").strip()
     
-    # Ask LLM to create short status
-    prompt = f"Simplify this action to 2-4 words for status: {action}"
-    simplified = await self.llm.generate_response(prompt, system_prompt="Be very brief.")
-    
-    return simplified[:50]  # Discord limit
+    return clean[:50]  # Simple string manipulation
 ```
 
 **Příklady:**
-- "Learn and test: web_tool" → "Learning web search"
-- "Research: Python tutorial" → "Researching Python"
-- "Check system health" → "Monitoring system"
+
+- "ACTION: Learn and test: web_tool" → "Learn and test: web_tool"
+- "I will try to research Python" → "Research Python"
 
 ---
 
@@ -360,8 +387,10 @@ async def _simplify_action(self, action: str) -> str:
 - [📖 LLM Integration](llm-integration.md) - Jak LLM rozhoduje
 - [📖 Memory System](memory-system.md) - Ukládání zkušeností
 - [📖 Boredom Mechanism](../advanced/boredom.md) - Detailní vysvětlení
+- [🏗️ Architektura](../architecture.md)
+- [🆘 Troubleshooting](../troubleshooting.md)
 
 ---
-Poslední aktualizace: 2025-12-04  
-Verze: Alpha  
+Poslední aktualizace: 2025-12-06  
+Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

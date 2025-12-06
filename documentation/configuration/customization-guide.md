@@ -3,7 +3,7 @@
 > **Navigace:** [📂 Dokumentace](../README.md) | [⚙️ Konfigurace](../README.md#konfigurace) | [Customization Guide](customization-guide.md)
 
 > Detailní popis všech konfiguračních možností v souboru `config_settings.py`.
-> **Verze:** Alpha
+> **Verze:** Beta - CLOSED
 
 ---
 
@@ -167,7 +167,15 @@ Pokud je `True`, všechny IPv4 adresy (např. `192.168.1.20`) budou nahrazeny za
    val = getattr(config_settings, 'MOJE_NOVE_NASTAVENI', default_value)
    ```
 
+
+<a name="související"></a>
+## 🔗 Související
+
+- [🚀 Deployment Guide](../scripts/deployment-guide.md)
+- [🆘 Troubleshooting](../troubleshooting.md)
+- [📜 Scripts](../scripts/batch-scripts-reference.md)
+
 ---
-Poslední aktualizace: 2025-12-04  
-Verze: Alpha  
+Poslední aktualizace: 2025-12-06  
+Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

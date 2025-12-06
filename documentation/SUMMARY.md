@@ -3,7 +3,7 @@
 > **Navigace:** [📂 Dokumentace](README.md) | [📄 Přehled (OVERVIEW)](OVERVIEW.md) | [🔍 Index (INDEX)](INDEX.md) | [📋 API Tasklist (SUMMARY)](SUMMARY.md) | [🏗️ Architektura](architecture.md) | [🆘 Troubleshooting](troubleshooting.md)
 
 > Kompletní checklist implementovaných funkcí, příkazů a API.
-> **Verze:** Alpha
+> **Verze:** Beta - CLOSED
 
 ---
 
@@ -51,51 +51,6 @@
 ## 💬 Commands API
 
 <a name="basic-commands"></a>
-### Basic Commands
-- [x] `!help` - Zobrazení nápovědy
-- [x] `!status` - Diagnostika systému
-- [x] `!stats` - Statistiky agenta
-- [x] `!intelligence` - Metriky inteligence
-- [x] `!documentation` - Interaktivní dokumentace
-
-<a name="tools-learning"></a>
-### Tools & Learning
-- [x] `!tools` - Seznam dostupných nástrojů
-- [x] `!learn [tool]` - Učení se novým nástrojům
-- [x] `!ask [query]` - Dotaz na AI (s kontextem)
-- [x] `!teach [content]` - Přímé vkládání do paměti
-- [x] `!search [query]` - Webové vyhledávání
-
-<a name="data-management"></a>
-### Data Management
-- [x] `!memory [dump]` - Statistiky databáze
-- [x] `!logs [count]` - Zobrazení logů
-- [x] `!live logs` - Real-time stream logů
-- [x] `!export [type]` - Export dat (JSON/CSV)
-
-<a name="interaction"></a>
-### Interaction
-- [x] `!mood` - Zobrazení interního stavu
-- [x] `!goals` - Správa cílů agenta
-- [x] `!config` - Zobrazení konfigurace
-
-<a name="administration"></a>
-### Administration
-- [x] `!restart` - Restart procesu agenta
-- [x] `!monitor` - Sledování zdrojů (CPU/RAM)
-- [x] `!ssh` - Správa SSH tunelu
-- [x] `!cmd` - Vykonání shell příkazu
-- [x] `!debug` - Hloubková diagnostika
-- [x] `!report` - Generování reportů
-- [x] `!topic` - Správa témat
-- [x] `!web` - Web interface management
-- [x] `!upload` - GitHub release upload
-
----
-
-<a name="tools-apiapitools-apimd"></a>
-## 🛠️ [Tools API](api/tools-api.md)
-
 <a name="system-tools"></a>
 ### System Tools
 - [x] `FileTool` - `read_file`, `write_file`, `list_dir`
@@ -171,8 +126,15 @@ class AgentState:
 - [x] `batch-scripts-reference.md` - Batch scripts
 - [x] `fuzzy-matching-algorithm.md` - Search algorithm details
 
+<a name="související"></a>
+## 🔗 Související
+
+- [📄 Přehled (OVERVIEW)](OVERVIEW.md)
+- [🏗️ Architektura](architecture.md)
+- [🌐 Web Interface API](api/api-logs.md)
+
 ---
 
-Poslední aktualizace: 2025-12-04  
-Verze: Alpha  
+Poslední aktualizace: 2025-12-06  
+Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

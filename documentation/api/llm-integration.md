@@ -43,9 +43,11 @@ Upraví parametry modelu (např. context window, threads) podle aktuálního vyt
 <a name="související"></a>
 ## 🔗 Související
 - [📖 LLM Integration Guide](../core/llm-integration.md) - Detailní popis modelu, parametrů a fallbacků
+- [🏗️ Architektura](../architecture.md)
+- [📂 Source Code](../agent/)
 
 ---
-Poslední aktualizace: 2025-12-04  
-Verze: Alpha  
+Poslední aktualizace: 2025-12-06  
+Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání
 

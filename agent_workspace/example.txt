@@ -1,0 +1,5 @@
+This is an example text file for the agent to read and practice with.
+It contains some simple text lines.
+Line 3
+Line 4
+End of file.

@@ -3,7 +3,7 @@
 > **Navigace:** [📂 Dokumentace](../README.md) | [💬 Příkazy](../README.md#commands-příkazy) | [Nástroje a učení](tools-learning.md)
 
 > Příkazy pro práci s nástroji, učení a interakci s AI.
-> **Verze:** Alpha
+> **Verze:** Beta - CLOSED
 
 ---
 
@@ -31,6 +31,7 @@ Zobrazí seznam všech dostupných nástrojů s informacemi o jejich použití.
 ### 💡 Co zobrazuje
 
 Pro každý nástroj:
+
 - **Název nástroje**
 - **Status** - 🆕 New nebo ✅ Learned/Used X times
 - **Poslední použití** - Datum a čas (pokud byl použit)
@@ -101,6 +102,11 @@ Přinutí agenta naučit se používat nástroj(e). Agent vyzkouší nástroj a 
 !learn all
 ```
 
+**Fronta učení:**
+```
+!learn queue
+```
+
 **Zastavit učení:**
 ```
 !learn stop
@@ -114,6 +120,7 @@ Přinutí agenta naučit se používat nástroj(e). Agent vyzkouší nástroj a 
 | *(none)* | Jednorázové učení | `!learn` |
 | `<tool_name>` | Naučit se konkrétní nástroj | `!learn web_tool` |
 | `all` | Naučit se všechny nástroje postupně | `!learn all` |
+| `queue` | Zobrazit aktuální frontu nástrojů k učení | `!learn queue` |
 | `stop` | Zastavit probíhající učení | `!learn stop` |
 
 <a name="jak-to-funguje"></a>
@@ -131,6 +138,11 @@ agent.learning_queue = [tool_name]  # nebo list všech
 agent.is_learning_mode = True
 agent.boredom_score = 1.0
 ```
+
+**Queue Management:**
+
+- `!learn queue` zobrazí seznam nástrojů čekajících na naučení
+- `!learn stop` vyprázdní frontu a vypne learning mode
 
 <a name="příklady"></a>
 ### 📝 Příklady
@@ -177,6 +189,7 @@ Bot: 🛑 **Learning Session Stopped.**
 
 <a name="poznámky"></a>
 ### ⚠️ Poznámky
+
 - Learning mode nastaví `agent.is_learning_mode = True`
 - Během učení agent postupně zpracovává `learning_queue`
 - Partial match funguje (např. `!learn web` najde `web_tool`)
@@ -293,6 +306,7 @@ if any(kw in question.lower() for kw in weather_keywords):
 
 <a name="poznámky"></a>
 ### ⚠️ Poznámky
+
 - LLM musí být dostupný (!status zkontroluje)
 - Pokud je otázka příliš složitá, může selhat
 - Agent si zapamatuje odpověď do memory
@@ -349,7 +363,7 @@ async def cmd_teach(self, channel_id: int, info: str):
     # Store as a high-priority memory
     self.agent.memory.add_memory(
         content=f"User taught me: {info}",
-        metadata={"type": "user_teaching", "importance": "high"}
+        metadata={"type": "user_teaching", "importance": "high", "taught_by_user": True}
     )
     
     self.agent.successful_learnings += 1
@@ -384,6 +398,7 @@ Zatímco normální vzpomínky musí projít [scoring systémem](../core/memory-
 
 <a name="poznámky"></a>
 ### ⚠️ Poznámky
+
 - **Informace se VŽDY uloží** - Není filtrováno scoring systémem
 - Agent může použít tuto informaci později v konverzaci
 - Paměť je prohledávatelná pomocí FTS5
@@ -445,6 +460,7 @@ agent.execute_action(action)
 
 <a name="poznámky"></a>
 ### ⚠️ Poznámky
+
 - Vyžaduje funkční internet
 - používá DuckDuckGo search
 - Výsledky závisí na kvalitě vyhledávače
@@ -465,12 +481,21 @@ agent.execute_action(action)
 | `!tools` | Zobraz nástroje | `!tools` |
 | `!learn` | Nauč se nástroj | `!learn web_tool` |
 | `!learn all` | Nauč se vše | `!learn all` |
+| `!learn queue` | Zobraz frontu | `!learn queue` |
 | `!learn stop` | Zastav učení | `!learn stop` |
 | `!ask` | Zeptej se AI | `!ask počasí praha` |
 | `!teach` | Nauč AI | `!teach Python je jazyk` |
 | `!search` | Vyhledej | `!search AI news` |
 
+
+<a name="související"></a>
+## 🔗 Související
+
+- [📋 Všechny příkazy](../SUMMARY.md#commands-api)
+- [🏗️ Command Architecture](../architecture.md#command-layer)
+- [🆘 Troubleshooting](../troubleshooting.md#command-errors)
+
 ---
-Poslední aktualizace: 2025-12-04  
-Verze: Alpha  
+Poslední aktualizace: 2025-12-06  
+Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

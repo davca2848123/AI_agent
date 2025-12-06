@@ -3,7 +3,7 @@
 > **Navigace:** [📂 Dokumentace](../README.md) | [⚙️ Konfigurace](../README.md#konfigurace) | [Environment Variables](environment_variables.md)
 
 > Možnosti konfigurace pomocí proměnných prostředí (Environment Variables).
-> **Verze:** Alpha
+> **Verze:** Beta - CLOSED
 
 ---
 
@@ -67,7 +67,15 @@ sudo systemctl daemon-reload
 sudo systemctl restart rpi-agent
 ```
 
+
+<a name="související"></a>
+## 🔗 Související
+
+- [🚀 Deployment Guide](../scripts/deployment-guide.md)
+- [🆘 Troubleshooting](../troubleshooting.md)
+- [📜 Scripts](../scripts/batch-scripts-reference.md)
+
 ---
-Poslední aktualizace: 2025-12-04  
-Verze: Alpha  
+Poslední aktualizace: 2025-12-06  
+Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

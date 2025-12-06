@@ -77,6 +77,7 @@ class DiscordClient:
                 "author": message.author.name,
                 "author_id": message.author.id,
                 "channel_id": message.channel.id,
+                "id": message.id,  # ADDED: Message ID
                 "is_dm": isinstance(message.channel, discord.DMChannel),
                 "mentions_bot": self.client.user in message.mentions
             })
@@ -206,6 +207,21 @@ class DiscordClient:
         except Exception as e:
             logger.error(f"Failed to update activity: {e}")
 
+    async def add_reaction(self, message_id: int, channel_id: int, emoji: str):
+        """Adds a reaction to a message."""
+        if not self.token or not self.client or not self.is_ready:
+            return
+
+        try:
+            channel = self.client.get_channel(channel_id)
+            if channel:
+                # We need to fetch the message object to add a reaction
+                # Note: fetch_message is an API call, use sparingly
+                partial_message = channel.get_partial_message(message_id)
+                await partial_message.add_reaction(emoji)
+        except Exception as e:
+            logger.error(f"Failed to add reaction: {e}")
+
     async def get_online_activities(self) -> list:
         """Returns a list of activities with user info currently being performed by online users."""
         if not self.token or not self.client or not self.is_ready:
@@ -213,9 +229,16 @@ class DiscordClient:
             
         activities = []
         try:
+            # Get ignore list from config
+            ignore_users = getattr(config_settings, 'DISCORD_ACTIVITY_IGNORE_USERS', [])
+            
             for guild in self.client.guilds:
                 for member in guild.members:
-                    if not member.bot and member.activities:
+                    # Skip bots and ignored users
+                    if member.bot or member.id in ignore_users:
+                        continue
+                        
+                    if member.activities:
                         for activity in member.activities:
                             # Filter for playing games or custom status
                             if activity.type == discord.ActivityType.playing:

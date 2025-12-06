@@ -3,7 +3,7 @@
 > **Navigace:** [📂 Dokumentace](../README.md) | [⚙️ Konfigurace](../README.md#konfigurace) | [config_settings.py Reference](config_settings_reference.md)
 
 > Detailní popis všech konfiguračních možností v souboru `config_settings.py`.
-> **Verze:** Alpha
+> **Verze:** Beta - CLOSED
 
 ---
 
@@ -111,6 +111,18 @@ TOPICS_FILE = "boredom_topics.json"
 
 ---
 
+<a name="discord-activity-settings"></a>
+## 🎮 Discord Activity Tool Settings
+
+<a name="discord_activity_ignore_users"></a>
+### `DISCORD_ACTIVITY_IGNORE_USERS`
+Seznam ID uživatelů, jejichž aktivity (hry, statusy) má agent ignorovat.
+```python
+DISCORD_ACTIVITY_IGNORE_USERS = []
+```
+
+---
+
 <a name="memory-scoring-system"></a>
 
 <a name="memory-scoring-system-paměť"></a>
@@ -147,7 +159,121 @@ IP_SANITIZATION_ENABLED = True
 ```
 Pokud je `True`, všechny IPv4 adresy (např. `192.168.1.20`) budou nahrazeny za `[IP_REDACTED]`.
 
+<a name="shell-restrictions"></a>
+### `ONLY_ADMIN_RESTRICTED_COMMANDS`
+Seznam shell příkazů, které jsou zakázány pro běžné uživatele (i když by měli přístup k `!cmd`, který je sám o sobě admin-only). Slouží jako extra bezpečnostní vrstva.
+
+Obsahuje nebezpečné operace jako:
+- `rm`, `mkfs`, `dd` (destruktivní)
+- `nano`, `vim` (interaktivní editory)
+- `python`, `bash` (spouštění skriptů)
+- `sudo`, `su` (eskalace práv)
+- `wget`, `curl` (stahování)
+- `git`, `apt`, `systemctl`...
+
+```python
+ONLY_ADMIN_RESTRICTED_COMMANDS = [
+    "rm -rf", "mkfs", "dd", ...
+]
+```
+
 ---
-Poslední aktualizace: 2025-12-04  
-Verze: Alpha  
+
+<a name="web-interface"></a>
+## 🌐 Web Interface
+
+Nastavení webového dashboardu a dokumentace.
+
+```python
+WEB_DASHBOARD_REFRESH_INTERVAL = 10     # Sekundy (refresh rate)
+WEB_SERVER_AUTO_RESTART = True          # Auto-restart při pádu
+WEB_INTERFACE_TIMEOUT = 3600            # 1 hodina (auto-shutdown při neaktivitě)
+WEB_WEBSOCKET_UPDATE_INTERVAL = 2       # Sekundy (realtime update)
+DOCUMENTATION_WEB_URL = "http://localhost:5001/docs"
+```
+
+---
+
+<a name="fuzzy-matching"></a>
+## 🔍 Fuzzy Matching
+
+Tolerance překlepů v příkazech.
+
+```python
+FUZZY_MATCH_DISTANCE_BASE_COMMANDS = 2  # Max chyb pro hlavní příkaz (např. !help)
+FUZZY_MATCH_DISTANCE_SUBCOMMANDS = 4    # Max chyb pro sub-příkazy
+```
+
+---
+
+<a name="github-release"></a>
+## 📦 GitHub Release Management
+
+Účty automatického uploadu verzí.
+
+```python
+GITHUB_UPLOAD_MIN_INTERVAL = 7200       # 2 hodiny (min interval)
+GITHUB_REPO_NAME = "davca2848123/AI_agent"
+```
+
+---
+
+<a name="error-recovery"></a>
+## 🛡️ Error Recovery
+
+Nastavení automatické opravy při startech.
+
+```python
+STARTUP_RETRY_LIMIT = 3                 # Počet pokusů o restart
+STARTUP_FAILURE_WAIT = 21600            # 6 hodin (wait time po selhání)
+```
+
+---
+
+<a name="agent-behavior"></a>
+## 🤖 Agent Behavior
+
+Detailní nastavení chování agenta (doplňuje Boredom System).
+
+```python
+BOREDOM_THRESHOLDS = {
+    "LOW": 0.2,
+    "HIGH": 0.4
+}
+BOREDOM_DECAY_RATE = 0.05               # 5% za interval
+
+DEFAULT_AGENT_GOALS = [
+    "Learn new things using tools",
+    "Try to maintain boredom below 70%",
+    "Use diverse tools",
+    "Build knowledge base"
+]
+```
+
+---
+
+<a name="file-paths"></a>
+## 📁 File Paths
+
+Cesty k důležitým souborům.
+
+```python
+LOG_FILE_MAIN = "agent.log"
+LOG_FILE_TOOLS = "agent_tools.log"
+CRASH_MARKER_FILE = "crash_marker"
+SHUTDOWN_INCOMPLETE_FILE = ".shutdown_incomplete"
+GOALS_FILE = "agent_goals.json"
+```
+
+
+<a name="související"></a>
+## 🔗 Související
+
+- [🚀 Deployment Guide](../scripts/deployment-guide.md)
+- [🆘 Troubleshooting](../troubleshooting.md)
+- [📜 Scripts](../scripts/batch-scripts-reference.md)
+
+---
+Poslední aktualizace: 2025-12-06  
+Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

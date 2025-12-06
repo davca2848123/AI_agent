@@ -3,7 +3,7 @@
 > **Navigace:** [📂 Dokumentace](../README.md) | [🔍 Advanced](../README.md#advanced-pokročilé) | [Fuzzy Matching Algorithm](fuzzy-matching-algorithm.md)
 
 > Inteligentní auto-korekce příkazů pomocí Levenshtein Distance.
-> **Verze:** Alpha
+> **Verze:** Beta - CLOSED
 
 ---
 
@@ -474,6 +474,7 @@ Zohlednit, jak blízko jsou klávesy:
 
 - [📖 Basic Commands](../commands/basic.md) - Použití fuzzy matchingu
 - [📖 Command Queue System](../commands/basic.md#command-queue-system) - Jak příkazy běží
+- [🏗️ Architektura](../architecture.md)
 
 ---
 
@@ -491,6 +492,6 @@ Zohlednit, jak blízko jsou klávesy:
 - Dynamic programming approach for O(n) space complexity
 
 ---
-Poslední aktualizace: 2025-12-04  
-Verze: Alpha  
+Poslední aktualizace: 2025-12-06  
+Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

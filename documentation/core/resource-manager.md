@@ -3,7 +3,7 @@
 > **Navigace:** [📂 Dokumentace](../README.md) | [🧠 Core](../README.md#core-jádro) | [Resource Manager](resource-manager.md)
 
 > 4-tier adaptivní systém pro správu systémových zdrojů.
-> **Verze:** Alpha
+> **Verze:** Beta - CLOSED
 
 ---
 
@@ -144,12 +144,12 @@ def _reduce_llm_resources(self, tier: int):
     
     if tier == 2:
         # Medium reduction
-        new_ctx = 512
-        new_threads = 2
+        new_ctx = 1024
+        new_threads = None # (Auto)
     elif tier == 3:
         # Maximum reduction
-        new_ctx = 256
-        new_threads = 1
+        new_ctx = 1024
+        new_threads = None # (Auto)
     
     # Update LLM
     agent.llm.update_parameters(tier)
@@ -435,8 +435,10 @@ async def handle_resource_tier(self, tier: int, usage):
 - [📖 LLM Integration](llm-integration.md) - Adaptivní LLM parametry
 - [`!monitor`](../commands/admin.md#monitor) - Příkaz pro monitorování
 - [📖 Autonomous Behavior](autonomous-behavior.md) - Reakce na tier changes
+- [📚 API Reference](../api/agent-core.md)
+- [🏗️ Architektura](../architecture.md)
 
 ---
-Poslední aktualizace: 2025-12-04  
-Verze: Alpha  
+Poslední aktualizace: 2025-12-06  
+Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

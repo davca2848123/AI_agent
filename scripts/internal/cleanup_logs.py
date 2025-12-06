@@ -2,7 +2,7 @@ import os
 import re
 from datetime import datetime, timedelta
 
-LOG_FILES = ["agent.log", "agent_tools.log"]
+LOG_FILES = ["agent.log", "agent_tools.log", "discord_messages.log"]
 
 def cleanup_logs():
     # Calculate cutoff date (2 days ago at 00:00)

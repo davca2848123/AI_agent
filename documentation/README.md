@@ -3,7 +3,7 @@
 > **Navigace:** [📂 Dokumentace](README.md) | [📄 Přehled (OVERVIEW)](OVERVIEW.md) | [🔍 Index (INDEX)](INDEX.md) | [📋 API Tasklist (SUMMARY)](SUMMARY.md) | [🏗️ Architektura](architecture.md) | [🆘 Troubleshooting](troubleshooting.md)
 
 > Detailní dokumentace autonomního AI agenta běžícího na Raspberry Pi s Discord integrací.
-> **Verze:** Alpha
+> **Verze:** Beta - CLOSED
 
 ---
 
@@ -18,11 +18,11 @@
 
 <a name="discord-příkazy"></a>
 ### 💬 Discord Příkazy
-- [**Základní Příkazy**](commands/basic.md) - `!help`, `!status`, `!stats`, `!intelligence`, `!documentation`
+- [**Základní Příkazy**](commands/basic.md) - `!help`, `!status`, `!stats`, `!intelligence`, `!documentation`, `!web`
 - [**Nástroje a Učení**](commands/tools-learning.md) - `!learn`, `!tools`, `!ask`, `!teach`, `!search`
 - [**Správa Dat**](commands/data-management.md) - `!memory`, `!logs`, `!live`, `!export`
-- [**Interakce**](commands/interaction.md) - `!mood`, `!goals`, `!config`
-- [**Administrace**](commands/admin.md) - `!restart`, `!monitor`, `!debug`, `!ssh`, `!cmd`, `!web`, `!topic`, `!report`, `!upload`, `!disable`/`!enable`
+- [**Interakce**](commands/interaction.md) - `!mood`, `!config`, `!monitor`
+- [**Administrace**](commands/admin.md) - `!restart`, `!shutdown`, `!debug`, `!ssh`, `!cmd`, `!topic`, `!goals`, `!report`, `!upload`, `!disable`/`!enable`
 
 <a name="nástroje-tools"></a>
 ### 🛠️ Nástroje (Tools)
@@ -101,6 +101,7 @@ Agent používá systém "boredom" (nudy), který postupně roste. Když dosáhn
 <a name="dynamické-nástroje"></a>
 #### 🛠️ Dynamické Nástroje
 Agent může objevovat a učit se používat nástroje. Každý nástroj má:
+
 - Název a popis
 - `execute()` metodu
 - Automatické logování použití
@@ -229,7 +230,15 @@ Pro přidání funkcí nebo opravu chyb:
 
 Tento projekt je pro osobní použití.
 
+
+<a name="související"></a>
+## 🔗 Související
+
+- [📚 Přehled Dokumentace](documentation/OVERVIEW.md)
+- [🏗️ Architektura](documentation/architecture.md)
+- [🚀 Quick Start](documentation/README.md#quick-start)
+
 ---
-Poslední aktualizace: 2025-12-04  
-Verze: Alpha  
+Poslední aktualizace: 2025-12-06  
+Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

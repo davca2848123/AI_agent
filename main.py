@@ -27,7 +27,7 @@ console_handler.setFormatter(SanitizingFormatter(
     f'%(asctime)s - [{platform.system()}/{platform.node()}] - %(name)s - %(levelname)s - %(message)s'
 ))
 
-file_handler = logging.FileHandler("agent.log", encoding='utf-8')
+file_handler = logging.FileHandler(config_settings.LOG_FILE_MAIN, encoding='utf-8')
 file_handler.setFormatter(logging.Formatter(
     f'%(asctime)s - [{platform.system()}/{platform.node()}] - %(name)s - %(levelname)s - %(message)s'
 ))
@@ -39,7 +39,7 @@ logging.basicConfig(
 
 # Configure separate logger for tools (no duplication)
 tools_logger = logging.getLogger('agent.tools')
-tools_handler = logging.FileHandler('agent_tools.log', encoding='utf-8')
+tools_handler = logging.FileHandler(config_settings.LOG_FILE_TOOLS, encoding='utf-8')
 tools_formatter = logging.Formatter(
     f'%(asctime)s - [{platform.system()}/{platform.node()}] - %(name)s - %(levelname)s - %(message)s'
 )
@@ -75,7 +75,7 @@ async def main():
     
     # Check startup failure tracking
     import config_settings
-    from startup_tracker import check_should_wait, record_failure, record_success
+    from agent.startup_tracker import check_should_wait, record_failure, record_success
     
     should_wait, wait_time = check_should_wait(
         retry_limit=config_settings.STARTUP_RETRY_LIMIT,

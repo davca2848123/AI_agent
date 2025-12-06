@@ -3,7 +3,7 @@
 > **Navigace:** [📂 Dokumentace](../README.md) | [💬 Příkazy](../README.md#commands-příkazy) | [Interakční příkazy](interaction.md)
 
 > Příkazy pro interakci s osobností a cíli agenta.
-> **Verze:** Alpha
+> **Verze:** Beta - CLOSED
 
 ---
 
@@ -62,91 +62,14 @@ Agent is slightly restless and may decide to act soon.
 
 ---
 
-<a name="goals"></a>
-## `!goals`
 
-<a name="popis"></a>
-### 📋 Popis
-Správa cílů agenta - zobrazení, přidání, odebrání.
-
-<a name="použití"></a>
-### ⚙️ Použití
-
-**Zobrazit cíle:**
-```
-!goals
-```
-
-**Přidat cíl:**
-```
-!goals add <popis cíle>
-```
-
-**Odebrat cíl:**
-```
-!goals remove <číslo>
-```
-
-**Vymazat všechny:**
-```
-!goals clear
-```
-
-<a name="příklady"></a>
-### 📝 Příklady
-
-**Seznam cílů:**
-```
-User: !goals
-
-Bot: 🎯 **Current Goals:**
-
-1. Learn all available tools
-2. Improve response time
-3. Help users with Python questions
-
-You can add/remove goals with:
-• `!goals add <goal>`
-• `!goals remove <number>`
-```
-
-**Přidat cíl:**
-```
-User: !goals add Monitor system health daily
-
-Bot: ✅ Goal added: "Monitor system health daily"
-     Total goals: 4
-```
-
-**Odebrat cíl:**
-```
-User: !goals remove 2
-
-Bot: ✅ Removed goal: "Improve response time"
-     Remaining goals: 3
-```
-
-**Vymazat vše:**
-```
-User: !goals clear
-
-Bot: 🗑️ All goals cleared.
-```
-
-<a name="poznámky"></a>
-### ⚠️ Poznámky
-- Cíle ovlivňují autonomní rozhodování agenta
-- Jsou uloženy v paměti
-- Agent považuje cíle při choose aktivit
-
----
 
 <a name="config"></a>
 ## `!config`
 
 <a name="popis"></a>
 ### 📋 Popis
-Zobrazí aktuální konfiguraci agenta (v budoucnu i modifikace).
+Zobrazí aktuální konfiguraci agenta (Settings, LLM params, Boredom thresholds).
 
 <a name="použití"></a>
 ### ⚙️ Použití
@@ -156,35 +79,72 @@ Zobrazí aktuální konfiguraci agenta (v budoucnu i modifikace).
 
 <a name="co-zobrazuje"></a>
 ### 💡 Co zobrazuje
-
-- Boredom thresholds
-- LLM settings
-- Discord settings
-- Resource tier limits
+- **Boredom System** (Thresholds, Decay rates)
+- **LLM Settings** (Model path, Context window, Token limits)
+- **Discord Settings** (Activity status, Channels)
+- **Resource Limits** (CPU/RAM tiers)
 
 <a name="příklad"></a>
 ### 📝 Příklad
 ```
 User: !config
 
-Bot: ⚙️ **Agent Configuration:**
-
-**Boredom System:**
-• Base threshold: 0.8
-• Decay rate: 0.02/min
-
-**LLM:**
-• Model: Qwen 2.5-0.5B
-• Context window: 2048
-• Max tokens: 256
-
-🚧 Configuration modification coming soon!
+Bot: ⚙️ **Current Configuration:**
+     • `BOREDOM_THRESHOLD_HIGH`: 0.4
+     • `LLM_MODEL`: qwen-2.5-0.5b
+     • `MAX_TOKENS`: 256
 ```
 
 <a name="poznámky"></a>
 ### ⚠️ Poznámky
-- Aktuálně read-only
-- Modifikace přijde v budoucí verzi
+- Read-only zobrazení `config_settings.py` proměnných
+- Hesla a klíče jsou filtrovány
+
+---
+
+<a name="monitor"></a>
+## `!monitor`
+
+<a name="popis"></a>
+### 📋 Popis
+Monitoruje systémové zdroje (CPU, RAM, Disk, Swap) v reálném čase.
+
+<a name="použití"></a>
+### ⚙️ Použití
+
+**Snapshot (okamžitě):**
+```
+!monitor
+```
+
+**Live monitoring:**
+```
+!monitor <duration>
+```
+
+<a name="formáty-délky"></a>
+### 🔧 Formáty délky
+- `30` - 30 sekund
+- `2m` - 2 minuty
+- `1h` - 1 hodina
+
+<a name="příklady"></a>
+### 📝 Příklady
+
+**Snapshot:**
+```
+User: !monitor
+
+Bot: 📊 **System Resources:**
+CPU: ▓▓▓▓░░░░░░ 45%
+RAM: ▓▓▓▓▓▓▓░░░ 72%
+```
+
+<a name="související"></a>
+### 🔗 Související
+- [`!stats`](basic.md#stats) - Detailní statistiky
+- [`!live logs`](data-management.md#live-logs) - Live logy
+
 
 ---
 
@@ -194,10 +154,18 @@ Bot: ⚙️ **Agent Configuration:**
 | Příkaz | Účel | Příklad |
 |--------|------|---------|
 | `!mood` | Zobraz náladu | `!mood` |
-| `!goals` | Správa cílů | `!goals add Learn Python` |
-| `!config` | Zobraz config | `!config` |
+| `!config` | Zobrazí konfiguraci | `!config` |
+| `!monitor` | Resource monitor | `!monitor 30` |
+
+
+<a name="související"></a>
+## 🔗 Související
+
+- [📋 Všechny příkazy](../SUMMARY.md#commands-api)
+- [🏗️ Command Architecture](../architecture.md#command-layer)
+- [🆘 Troubleshooting](../troubleshooting.md#command-errors)
 
 ---
-Poslední aktualizace: 2025-12-04  
-Verze: Alpha  
+Poslední aktualizace: 2025-12-06  
+Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání
