@@ -24,8 +24,8 @@ Resource Manager sleduje využití CPU, RAM, Disk a Swap a automaticky reaguje p
 |------|-----------|------|--------|
 | **0** | < 85% | Normální | Žádná |
 | **1** | 85-89% | Varování | Cleanup, GC |
-| **2** | 90-94% | Mitigace | Redukce LLM, SWAP expansion |
-| **3** | 95%+ | Nouzový | Min. LLM, Kill processes |
+| **2** | 90-94% | Mitigace | Redukce LLM (1024), SWAP expansion |
+| **3** | 95%+ | Nouzový | Redukce LLM (1024), Kill processes |
 
 <a name="hystereze"></a>
 ### 🔧 Hystereze
@@ -149,7 +149,7 @@ def _reduce_llm_resources(self, tier: int):
     elif tier == 3:
         # Maximum reduction
         new_ctx = 1024
-        new_threads = None # (Auto)
+        new_threads = 1 # Force single thread for stability
     
     # Update LLM
     agent.llm.update_parameters(tier)

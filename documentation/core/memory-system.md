@@ -525,6 +525,30 @@ def _initialize_db(self):
 3. Inicializuj schema
 4. Loguj warning pro admina
 
+
+<a name="debug-logging"></a>
+### 🐛 Debug Logging
+
+Všechny pokusy o zápis do paměti jsou detailně logovány do souboru `memory.log` s důrazem na důvod přijetí či zamítnutí.
+
+- **Účel:** Debugging scoring algoritmu a kontrola filtrování.
+- **Formát:**
+  - **Řádek 1 (INPUT):** Timestamp, Raw content, Metadata
+  - **Řádek 2 (STATUS):** Výsledek operace (SAVED/REJECTED) a konkrétní důvod.
+
+**Příklady výstupu:**
+
+```text
+[2025-12-08 22:45:01] INPUT: Python code example... | META: {'type': 'learning'}
+           STATUS: SAVED (ID: 158, Score: 85)
+
+[2025-12-08 22:45:05] INPUT: Boredom: checking... | META: {}
+           STATUS: REJECTED (Boredom loop spam)
+
+[2025-12-08 22:45:10] INPUT: Hello world | META: {}
+           STATUS: REJECTED (Low Score: 20/70)
+```
+
 ---
 
 <a name="integration-with-agent"></a>
@@ -575,6 +599,6 @@ context = "\n".join([m['content'] for m in memories])
 
 
 ---
-Poslední aktualizace: 2025-12-06  
+Poslední aktualizace: 2025-12-08  
 Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

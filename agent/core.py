@@ -8,6 +8,7 @@ import os
 import json
 import discord
 import psutil
+from .reports import DailyStats
 
 logger = logging.getLogger(__name__)
 
@@ -97,6 +98,7 @@ class AutonomousAgent:
         self.network_monitor = NetworkMonitor(self)  # Add network monitor
         self.error_tracker = get_error_tracker()  # Add error tracker
         self.web_server = WebServer(self) # Add web interface
+        self.daily_stats = DailyStats() # Add daily stats tracking
         
         # Tools
         self.agent_workspace = os.path.abspath("agent_workspace")
@@ -523,6 +525,8 @@ class AutonomousAgent:
     async def report_error(self, error: Exception):
         """Reports a critical error to the admin via Discord."""
         logger.error(f"Critical error reported: {error}")
+        if hasattr(self, 'daily_stats'):
+            self.daily_stats.record_error()
         
         try:
             # Read last 100 lines of log
@@ -571,8 +575,19 @@ class AutonomousAgent:
                 
             await asyncio.sleep(self.BOREDOM_INTERVAL)
             
-            # Update status periodically
-            await self.discord.update_activity(f"Boredom: {self.boredom_score*100:.0f}%")
+            # Update status periodically but reduce noise
+            # Only update if boredom changed significantly (>5%) or 15 mins passed
+            if not hasattr(self, '_last_boredom_log_score'):
+                self._last_boredom_log_score = -1.0
+                self._last_boredom_log_time = 0
+            
+            should_update = (abs(self.boredom_score - self._last_boredom_log_score) > 0.05) or \
+                            (time.time() - self._last_boredom_log_time > 900)
+            
+            if should_update:
+                await self.discord.update_activity(f"Boredom: {self.boredom_score*100:.0f}%")
+                self._last_boredom_log_score = self.boredom_score
+                self._last_boredom_log_time = time.time()
             
             # Check hardware health
             if not self.hardware.is_safe_to_run():
@@ -700,6 +715,7 @@ class AutonomousAgent:
                     for msg in messages:
                         # Track message stats
                         self.messages_processed += 1
+                        self.daily_stats.increment_message()
                         self.last_message_time = time.time()
                         self.last_message_content = msg['content']
                         if msg.get('is_dm'):
@@ -811,6 +827,10 @@ class AutonomousAgent:
                             'original_user': user_name
                         }
                     )
+
+                    # Record knowledge in daily stats
+                    if hasattr(self, 'daily_stats'):
+                        self.daily_stats.record_knowledge(f"{activity_name} (Activity)")
                 
                 # Track usage
                 self.tool_usage_count['web_tool'] = self.tool_usage_count.get('web_tool', 0) + 1
@@ -1008,6 +1028,7 @@ class AutonomousAgent:
                             # Track usage
                             self.tool_usage_count[target_tool_name] = self.tool_usage_count.get(target_tool_name, 0) + 1
                             self._save_tool_stats()
+                            self.daily_stats.record_tool_usage(target_tool_name)
                             
                             # Store result
                             self.memory.add_memory(
@@ -1189,6 +1210,10 @@ class AutonomousAgent:
             tool_name = tool_call['tool']
             args = tool_call['args']
             logger.info(f"Agent wants to use tool: {tool_name} with args {args}")
+            
+            # Track for daily stats
+            if hasattr(self, 'daily_stats'):
+                self.daily_stats.record_tool_usage(tool_name)
             
             tool = self.tools.get_tool(tool_name)
             if tool:

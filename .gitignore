@@ -90,7 +90,5 @@ dist/
 *.tar.gz
 release_*.txt
 
-
-changelog.md
 __pycache__
 venv

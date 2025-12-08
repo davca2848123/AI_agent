@@ -82,7 +82,7 @@ class VectorStore:
         cursor = self.conn.cursor()
         cursor.execute("PRAGMA journal_mode=WAL;")
 
-    def is_relevant_memory(self, content: str, metadata: Dict[str, Any] = None) -> bool:
+    def is_relevant_memory(self, content: str, metadata: Dict[str, Any] = None) -> (bool, str):
         """Check if memory content is relevant and worth storing.
         
         Args:
@@ -90,10 +90,10 @@ class VectorStore:
             metadata: Memory metadata
             
         Returns:
-            True if memory should be stored, False otherwise
+            Tuple (is_relevant, reason)
         """
         if not content or len(content.strip()) < 10:
-            return False
+            return False, "Too short (<10 chars)"
         
         content_lower = content.lower()
         
@@ -108,7 +108,7 @@ class VectorStore:
             'discord.client'
         ]
         if any(spam in content_lower for spam in discord_spam):
-            return False
+            return False, "Discord debug spam"
         
         # Filter error messages and LLM failures
         error_patterns = [
@@ -122,16 +122,16 @@ class VectorStore:
             'exceed context window'
         ]
         if any(pattern and pattern in content_lower for pattern in error_patterns):
-            return False
+            return False, "Error message pattern"
         
         # Filter boredom spam
         if 'boredom:' in content_lower and 'context:' in content_lower:
-            return False
+            return False, "Boredom loop spam"
         
         # Filter repetitive tool execution logs (keep only if has meaningful result)
         if content_lower.startswith('tool') and 'executed' in content_lower:
             if 'result:' not in content_lower or len(content) < 50:
-                return False
+                return False, "Tool execution without result"
         
         # Always allow user teachings and high-importance memories
         if metadata:
@@ -140,36 +140,36 @@ class VectorStore:
             
             # 1. Explicitly ignore internal decision processes
             if mem_type == 'autonomous_decision':
-                return False
+                return False, "Autonomous decision (internal)"
             
             # 2. Ignore routine tool executions unless high importance
             if mem_type == 'tool_execution' and importance != 'high':
-                return False
+                return False, "Routine tool execution"
             
             # 3. Allow specific useful types
             allowed_types = ['learning', 'user_teaching', 'important_fact', 'qa_result', 'activity_knowledge']
             
             if mem_type in allowed_types or importance == 'high':
-                return True
+                return True, "Allowed type/importance"
             
-            # If metadata is present but not in allowed types/high importance, 
-            # we might want to be strict, but let's be careful not to lose other things.
-            # For now, if it passed the spam filters above, we'll let it through 
-            # UNLESS it was one of the explicitly excluded types above.
+            # Fallthrough for unknown metadata types - lenient but noted
             
-        return True
+        return True, "Passed basic filters"
     
     def add_memory(self, content: str, metadata: Dict[str, Any] = None, embedding: List[float] = None):
-        """Adds a new memory to the store with advanced relevance filtering and scoring.
+        """Adds a new memory to the store with advanced relevance filtering and scoring."""
         
-        Scoring system:
-        1. Blacklist check (immediate reject)
-        2. Error detection (-20 points)
-        3. Keyword matching (+10 points each)
-        4. Uniqueness check (+30 points if unique)
-        5. Final decision (save if score >= 70)
-        """
-        
+        # Helper for memory.log
+        def log_to_file(status: str, reason: str):
+            try:
+                with open("memory.log", "a", encoding="utf-8") as f:
+                    import datetime
+                    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    f.write(f"[{timestamp}] INPUT: {content} | META: {metadata}\n")
+                    f.write(f"           STATUS: {status} ({reason})\n")
+            except Exception as e:
+                logger.error(f"Failed to write to memory.log: {e}")
+
         # Import config
         import config_settings
         config = getattr(config_settings, 'MEMORY_CONFIG', {})
@@ -184,8 +184,10 @@ class VectorStore:
         UNIQUENESS_THRESHOLD = config.get('UNIQUENESS_THRESHOLD', 0.90)
         
         # Basic relevance check (keep existing logic)
-        if not self.is_relevant_memory(content, metadata):
+        is_relevant, relevance_reason = self.is_relevant_memory(content, metadata)
+        if not is_relevant:
             logger.debug(f"Skipped irrelevant memory: {content[:50]}...")
+            log_to_file("REJECTED", f"{relevance_reason}")
             return None
         
         # === ADVANCED SCORING SYSTEM ===
@@ -196,6 +198,7 @@ class VectorStore:
         for blacklisted in BLACKLIST:
             if blacklisted.lower() in content_lower:
                 logger.debug(f"Memory rejected (blacklist): contains '{blacklisted}' - {content[:50]}...")
+                log_to_file("REJECTED", f"Blacklist match: {blacklisted}")
                 return None
         
         # 2. ERROR DETECTION
@@ -260,6 +263,7 @@ class VectorStore:
         
         if score < MIN_SCORE:
             logger.info(f"Memory rejected (low score {score} < {MIN_SCORE}): {content[:50]}...")
+            log_to_file("REJECTED", f"Low Score: {score}/{MIN_SCORE}")
             return None
         
         # Score is sufficient, proceed with saving
@@ -287,9 +291,11 @@ class VectorStore:
             
             self.conn.commit()
             logger.info(f"Added memory ID {memory_id} (score: {score}): {content[:50]}...")
+            log_to_file("SAVED", f"ID: {memory_id}, Score: {score}")
             return memory_id
         except Exception as e:
             logger.error(f"Failed to add memory: {e}")
+            log_to_file("ERROR", f"DB Exception: {e}")
             return None
 
     def create_backup(self) -> bool:

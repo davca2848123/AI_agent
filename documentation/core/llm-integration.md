@@ -96,9 +96,9 @@ def update_parameters(self, resource_tier: int):
     elif resource_tier == 1:  # Tier 1 (85%)
         n_ctx, n_threads = 1024, 3
     elif resource_tier == 2:  # Tier 2 (90%)
-        n_ctx, n_threads = 512, 2
+        n_ctx, n_threads = 1024, 2 # Výraznější redukce CPU
     else:  # Tier 3 (95%)
-        n_ctx, n_threads = 256, 1
+        n_ctx, n_threads = 1024, 1 # Zachování stability systému
     
     # Reload model with new params
     self._load_model(n_ctx, n_threads)
@@ -332,12 +332,12 @@ Pokud LLM selže:
 **CPU Threads:**
 - Více threads = rychlejší, ale více CPU
 - Default: 4 threads
-- Tier 3: 1 thread (úsporný režim)
+- Tier 3: 1 thread (maximální stabilita)
 
 **Context Window:**
 - Větší window = více paměti
 - Default: 2048 tokens
-- Tier 3: 256 tokens (minimum)
+- Tier 3: 1024 tokens (zachován kontext)
 
 ---
 

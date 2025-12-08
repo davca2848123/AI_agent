@@ -231,6 +231,12 @@ class CoreView(discord.ui.View):
             return
         await send_clean_md_file(interaction, "documentation/core/discord-client.md")
 
+    @discord.ui.button(label="📊 Reporting", style=discord.ButtonStyle.secondary)
+    async def reporting(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if not await check_interaction_allowed(interaction, self):
+            return
+        await send_clean_md_file(interaction, "documentation/core/reporting.md")
+
 class AdvancedView(discord.ui.View):
     def __init__(self, parent_view):
         super().__init__(timeout=300)
@@ -423,7 +429,7 @@ class DocumentationView(discord.ui.View):
         if not await check_interaction_allowed(interaction, self):
             return
         await interaction.response.defer(ephemeral=True)
-        await self.command_handler.cmd_web(interaction.channel_id, [])
+        await self.command_handler.cmd_web(interaction.channel_id, [], interaction.user.id)
 
 class StatusView(discord.ui.View):
     def __init__(self, agent):
@@ -1035,7 +1041,7 @@ class CommandHandler:
             
             async def restart_callback(interaction):
                 await interaction.response.defer()
-                await self.cmd_web(interaction.channel_id, ["restart"])
+                await self.cmd_web(interaction.channel_id, ["restart"], interaction.user.id)
                 
             restart_button.callback = restart_callback
             view.add_item(restart_button)
@@ -2361,14 +2367,18 @@ _{desc}_"""
                     return
 
             # If AI can answer directly, return it
-            if "NEED_SEARCH:" not in initial_response:
+            # Check for NEED_SEARCH intent (case-insensitive)
+            import re
+            search_match = re.search(r"need_search:\s*(.*)", initial_response, re.IGNORECASE)
+            
+            if not search_match:
                 logger.debug("cmd_ask: Sending direct answer")
                 await self.agent.discord.send_message(channel_id, f"💬 **Answer:**\n{initial_response}")
                 return
                 
             # Step 3: Handle Web Search
-            if "NEED_SEARCH:" in initial_response:
-                search_query = initial_response.split("NEED_SEARCH:", 1)[1].strip()
+            if search_match:
+                search_query = search_match.group(1).strip()
                 logger.debug(f"cmd_ask: Performing web search for: {search_query}")
                 await self.agent.discord.send_message(channel_id, f"🩺 Searching the web for: `{search_query}`...")
 

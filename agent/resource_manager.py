@@ -410,11 +410,14 @@ class ResourceManager:
             return "Emergency mode: LLM unavailable"
         
         old_ctx = getattr(config_settings, 'LLM_CONTEXT_TIER2', 1024)
-        new_ctx = getattr(config_settings, 'LLM_CONTEXT_TIER3', 512)
+        new_ctx = getattr(config_settings, 'LLM_CONTEXT_TIER3', 1024)
         
+        old_tokens = old_ctx // 8
+        new_tokens = new_ctx // 8
+
         details = f"""🚨 **Tier 3 EMERGENCY MODE:**
-• LLM context: {old_ctx} → {new_ctx} tokens (MINIMAL)
-• Max tokens: 128 → 64
+• LLM context: {old_ctx} → {new_ctx} tokens
+• Max tokens: {old_tokens} → {new_tokens}
 • Action history trimmed to 10 entries
 • {terminated_count} non-essential processes terminated
 • SWAP expanded to maximum

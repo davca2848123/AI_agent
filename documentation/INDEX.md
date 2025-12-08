@@ -71,6 +71,7 @@
 | **LLM Integration** | Qwen 2.5, generování | [📖 Zobrazit dokumentaci](core/llm-integration.md) |
 | **Memory System** | VectorStore, FTS5 | [📖 Zobrazit dokumentaci](core/memory-system.md) |
 | **Resource Manager** | 4-tier system, SWAP | [📖 Zobrazit dokumentaci](core/resource-manager.md) |
+| **Reporting** | Daily stats & logs | [📖 Zobrazit dokumentaci](core/reporting.md) |
 
 <a name="api-reference"></a>
 ## 📚 API Reference

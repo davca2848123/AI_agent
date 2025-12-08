@@ -51,8 +51,11 @@ async def boredom_loop(self):
             await self.trigger_autonomous_action()
             
         # Update Discord status
+        # Note: Status updates are limited to prevent rate limits/spam (Logic in DiscordClient)
         await self.discord.update_activity(f"Boredom: {self.boredom_score * 100:.0f}%")
 ```
+
+**Poznámka:** Frekvence aktualizací statusu ("Boredom: X%") na Discordu byla snížena, aby nedocházelo k zamítnutí ze strany Discord API (rate-limiting) a spamování kanálu.
 
 <a name="boredom-reduction"></a>
 ### 📊 Boredom Reduction
@@ -391,6 +394,6 @@ def _simplify_action(self, action: str) -> str:
 - [🆘 Troubleshooting](../troubleshooting.md)
 
 ---
-Poslední aktualizace: 2025-12-06  
+Poslední aktualizace: 2025-12-08  
 Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

@@ -145,6 +145,37 @@ def sanitize_log_line(line: str) -> str:
 # Discord-themed CSS for the documentation
 DOCS_CSS = """
     /* Base styles with Discord color scheme */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(1.1); }
+        100% { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes modalAppear {
+        from { opacity: 0; transform: scale(0.95) translateY(-20px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    @keyframes modalDisappear {
+        from { opacity: 1; transform: scale(1) translateY(0); }
+        to { opacity: 0; transform: scale(0.95) translateY(-20px); }
+    }
+
+    @keyframes flashRed {
+        0% { opacity: 1; text-shadow: 0 0 5px rgba(240, 71, 71, 0.5); }
+        50% { opacity: 0.4; text-shadow: none; }
+        100% { opacity: 1; text-shadow: 0 0 5px rgba(240, 71, 71, 0.5); }
+    }
+
+    .modal.closing .modal-content {
+        animation: modalDisappear 0.3s ease-in forwards;
+    }
+
     * {
         margin: 0;
         padding: 0;
@@ -180,12 +211,14 @@ DOCS_CSS = """
         border-radius: 4px;
         transition: all 0.2s;
         display: inline-block;
+        background-image: none;
     }
     
     .nav a:hover {
-        background: #5865F2;
+        background: #5865F2; /* Overrides background-image if it was set, but being explicit is good */
         color: white;
         text-decoration: none;
+        transform: scale(1.05);
     }
     
     /* Headers */
@@ -219,12 +252,16 @@ DOCS_CSS = """
     a { 
         color: #00aff4; 
         text-decoration: none; 
-        transition: color 0.2s;
+        transition: color 0.2s, background-size 0.3s;
+        background-image: linear-gradient(#5865F2, #5865F2);
+        background-position: 0% 100%;
+        background-repeat: no-repeat;
+        background-size: 0% 2px;
     }
     
     a:hover { 
         color: #5865F2;
-        text-decoration: underline; 
+        background-size: 100% 2px;
     }
     
     /* Code blocks */
@@ -235,6 +272,12 @@ DOCS_CSS = """
         overflow-x: auto;
         border-left: 4px solid #5865F2;
         margin: 16px 0;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    pre:hover {
+        transform: scale(1.01);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
     
     code { 
@@ -277,6 +320,13 @@ DOCS_CSS = """
         margin-bottom: 24px; 
         border: 1px solid #40444b;
         box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        animation: fadeIn 0.6s ease-out forwards;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .status-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.5);
     }
     
     .status-item { 
@@ -344,6 +394,7 @@ DOCS_CSS = """
         padding: 12px;
         text-align: left;
         border-bottom: 1px solid #40444b;
+        transition: background-color 0.1s;
     }
     
     th {
@@ -369,6 +420,14 @@ DOCS_CSS = """
         margin: 16px 0;
         color: #b9bbbe;
         font-style: italic;
+        transition: border-left-color 0.3s, background 0.3s;
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
+
+    blockquote:hover {
+        border-left-color: #00aff4;
+        background: rgba(88, 101, 242, 0.05); /* Very subtle tint */
     }
     
     /* Horizontal rules */
@@ -420,6 +479,7 @@ DOCS_CSS = """
         color: #dcddde;
         max-height: 90vh; /* Prevent overflow on small screens */
         overflow-y: auto; /* Scrollable content */
+        animation: modalAppear 0.3s ease-out forwards;
     }
     .proc-table { width: 100%; border-collapse: collapse; font-size: 0.8em; margin-bottom: 20px; table-layout: fixed; }
     .proc-table th { text-align: left; border-bottom: 1px solid #40444b; padding: 8px 4px; color: #b9bbbe; }
@@ -452,8 +512,12 @@ DOCS_CSS = """
         font-size: 14px;
         border-radius: 4px;
         cursor: pointer;
+        transition: transform 0.2s, background-color 0.2s;
     }
-    .detail-btn:hover { background-color: #4752c4; }
+    .detail-btn:hover { 
+        background-color: #4752c4; 
+        transform: scale(1.05);
+    }
     .proc-table { width: 100%; font-size: 0.9em; margin-bottom: 20px; }
     .proc-table th { text-align: left; border-bottom: 1px solid #40444b; padding: 5px; color: #b9bbbe; }
     .proc-table td { border-bottom: 1px solid #2f3136; padding: 5px; }
@@ -472,10 +536,27 @@ DOCS_CSS = """
         font-weight: 600;
         color: #5865F2;
     }
+    .status-wrapper {
+        text-align: right;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
     .connection-status {
         font-weight: bold;
         font-size: 1.1em;
         color: #faa61a;
+        animation: pulse 2s infinite;
+        transform-origin: right center;
+    }
+    .connection-status.disconnected {
+        color: #f04747;
+        animation: flashRed 1.5s infinite;
+    }
+    .stats-info {
+        font-size: 0.8em; 
+        color: #72767d; 
+        margin-top: 5px;
     }
 
     .resources-header {
@@ -490,6 +571,9 @@ DOCS_CSS = """
 
     /* Mobile Responsive Styles */
     @media (max-width: 768px) {
+        .stats-info {
+            display: none;
+        }
         .status-label {
              min-width: 80px;
         }
@@ -562,6 +646,20 @@ DOCS_CSS = """
             white-space: nowrap;
         }
     }
+
+    /* Staggered animation for content elements */
+    #content > h1, #content > h2, #content > h3, 
+    #content > p, #content > ul, #content > ol, 
+    #content > pre, #content > table, #content > blockquote {
+        animation: fadeIn 0.5s ease-out forwards;
+        opacity: 0;
+    }
+
+    #content > *:nth-child(1) { animation-delay: 0.1s; }
+    #content > *:nth-child(2) { animation-delay: 0.15s; }
+    #content > *:nth-child(3) { animation-delay: 0.2s; }
+    #content > *:nth-child(4) { animation-delay: 0.25s; }
+    #content > *:nth-child(n+5) { animation-delay: 0.3s; }
 """
 
 TEMPLATE_BASE = """
@@ -601,6 +699,7 @@ TEMPLATE_BASE = """
             overflow-y: auto;
             white-space: pre-wrap;
             border: 1px solid #40444b;
+            animation: fadeIn 0.8s ease-out forwards;
         }
         @media (max-width: 768px) {
             .nav {
@@ -638,12 +737,17 @@ TEMPLATE_BASE = """
             fetchProcesses();
         }
         function closeProcessModal() {
-            document.getElementById('processModal').style.display = 'none';
+            var modal = document.getElementById('processModal');
+            modal.classList.add('closing');
+            setTimeout(function() {
+                modal.style.display = 'none';
+                modal.classList.remove('closing');
+            }, 280); 
         }
         window.onclick = function(event) {
             var modal = document.getElementById('processModal');
             if (event.target == modal) {
-                modal.style.display = "none";
+                closeProcessModal();
             }
         }
         
@@ -727,6 +831,7 @@ TEMPLATE_BASE = """
             var el = document.getElementById('connection-status');
             if(el) {
                 el.innerText = '● Live';
+                el.classList.remove('disconnected');
                 el.style.color = '#43b581';
             }
         });
@@ -736,7 +841,8 @@ TEMPLATE_BASE = """
             var el = document.getElementById('connection-status');
             if(el) {
                 el.innerText = '● Disconnected';
-                el.style.color = '#f04747';
+                el.classList.add('disconnected');
+                el.style.color = ''; // Let CSS class handle color
             }
         });
         
@@ -746,6 +852,13 @@ TEMPLATE_BASE = """
             document.getElementById('status-boredom').innerText = (data.boredom_score * 100).toFixed(1) + '%';
             document.getElementById('status-uptime').innerText = data.uptime;
             document.getElementById('status-tools').innerText = data.tools_used + ' / ' + data.tools_total;
+            
+            // Update Connection Stats
+            var now = new Date();
+            var timeString = now.toLocaleTimeString();
+            var interval = {{ update_interval }};
+            var clients = data.connected_clients !== undefined ? data.connected_clients : '?';
+            document.getElementById('stats-info').innerText = 'Last update: ' + timeString + ' (Interval: ' + interval + 's) | Clients: ' + clients;
             
             // Update Loops
             if (data.loop_status) {
@@ -964,7 +1077,10 @@ class WebServer:
         status_html = f"""
         <div class="dashboard-header">
             <div class="dashboard-title">🤖 Agent Dashboard</div>
-            <div id="connection-status" class="connection-status">● Connecting...</div>
+            <div class="status-wrapper">
+                <div id="connection-status" class="connection-status">● Connecting...</div>
+                <div id="stats-info" class="stats-info"></div>
+            </div>
         </div>
         
         <div class="status-card">
@@ -1060,6 +1176,7 @@ class WebServer:
         return render_template_string(
             TEMPLATE_BASE, 
             title="Dashboard", 
+            update_interval=config_settings.WEB_WEBSOCKET_UPDATE_INTERVAL,
             content=status_html, 
             css=DOCS_CSS + """
             .log-wrapper { position: relative; }
@@ -1075,9 +1192,11 @@ class WebServer:
                 border-radius: 4px; 
                 cursor: pointer; 
                 z-index: 10;
+                transition: transform 0.2s, background-color 0.2s;
             }
             #scroll-btn:hover {
                 background: rgba(88, 101, 242, 1.0);
+                transform: scale(1.05);
             }
             @media (max-width: 768px) {
                 #scroll-btn { 
@@ -1089,25 +1208,169 @@ class WebServer:
         )
 
     def docs_list(self):
-        """List available documentation."""
+        """List available documentation organized by category and subcategory."""
         if not os.path.exists(self.docs_dir):
             return render_template_string(TEMPLATE_BASE, title="Docs", css=DOCS_CSS, content="<p>No documentation directory found.</p>")
             
-        files = []
+        # Define categories structure
+        # Key: Category Title
+        # Value: Dict with 'paths' (list of folders/files) and optional 'subgroups' (dict of Subgroup Title -> list of filenames)
+        structure = {
+            "🏁 Start Here (Hlavní)": {
+                "paths": ["", "README.md", "INDEX.md", "OVERVIEW.md", "SUMMARY.md", "architecture.md", "troubleshooting.md"],
+                "priority_files": ["README.md", "INDEX.md", "OVERVIEW.md"] # Sort order
+            },
+            "💬 Discord Příkazy": {
+                "paths": ["commands"],
+                # Just flat list is fine for commands, but we could map filenames to nice names if we wanted
+            },
+            "🧠 Core Systémy": {
+                "paths": ["core"],
+                "subgroups": {
+                    "Intelligence & Chování": ["autonomous-behavior.md", "llm-integration.md"],
+                    "Paměť a Data": ["memory-system.md", "reporting.md"],
+                    "Infrastruktura": ["resource-manager.md", "discord-client.md", "web-interface.md"]
+                }
+            },
+            "🛠️ Nástroje": {
+                "paths": ["tools"]
+            },
+            "⚙️ Konfigurace": {
+                "paths": ["configuration"]
+            },
+            "💻 Developer API": {
+                "paths": ["api"],
+                "subgroups": {
+                    "Core Components": ["agent-core.md", "memory-system.md", "tools-api.md"],
+                    "Integrations": ["discord-client.md", "llm-integration.md"],
+                    "System & Utils": ["error-tracker.md", "hardware-monitor.md", "utils-sanitizer.md", "utils-startup.md", "api-logs.md", "entry-point.md"]
+                }
+            },
+            "📝 Skripty a Utility": {
+                "paths": ["scripts"]
+            },
+            "🔍 Pokročilé": {
+                "paths": ["advanced"]
+            }
+        }
+        
+        # Collect all files first
+        all_files = []
         for root, dirs, filenames in os.walk(self.docs_dir):
             for f in filenames:
                 if f.endswith('.md'):
-                    rel_path = os.path.relpath(os.path.join(root, f), self.docs_dir)
-                    # Replace backslashes with forward slashes for URLs
-                    rel_path = rel_path.replace('\\', '/')
-                    files.append(rel_path)
+                    rel_path = os.path.relpath(os.path.join(root, f), self.docs_dir).replace('\\', '/')
+                    all_files.append(rel_path)
         
-        list_html = "<h1>📚 Documentation</h1><h3>Všechny soubory</h3><ul>"
-        for f in sorted(files):
-            list_html += f'<li><a href="/docs/{f}">{f}</a></li>'
-        list_html += "</ul>"
+        categorized_files = set()
+        html_content = "<h1>📚 Dokumentace</h1>"
+        html_content += "<p>Procházejte dokumentaci podle kategorií.</p>"
         
-        return render_template_string(TEMPLATE_BASE, title="Documentation", css=DOCS_CSS, content=list_html)
+        for category, config in structure.items():
+            cat_paths = config.get("paths", [])
+            subgroups = config.get("subgroups", {})
+            priority = config.get("priority_files", [])
+            
+            # Find files belonging to this category
+            files_in_cat = []
+            if "" in cat_paths: # Root files
+                for f in all_files:
+                     if "/" not in f and f in cat_paths:
+                         files_in_cat.append(f)
+            else: # Folder based
+                for folder in cat_paths:
+                    for f in all_files:
+                        if f.startswith(f"{folder}/"):
+                            files_in_cat.append(f)
+            
+            if not files_in_cat:
+                continue
+
+            inner_html = ""
+            
+            # If subgroups are defined, group files
+            if subgroups:
+                # Track which files are in subgroups
+                grouped_files = set()
+                
+                for group_name, filenames in subgroups.items():
+                    group_files_found = []
+                    for f in files_in_cat:
+                        fname = os.path.basename(f)
+                        if fname in filenames:
+                            group_files_found.append(f)
+                            grouped_files.add(f)
+                            categorized_files.add(f)
+                    
+                    if group_files_found:
+                        # Sort by defined order in subgroups
+                        group_files_found.sort(key=lambda x: filenames.index(os.path.basename(x)))
+                        
+                        group_list = ""
+                        for f in group_files_found:
+                            display_name = os.path.basename(f)
+                            group_list += f'<li><a href="/docs/{f}">{display_name}</a></li>'
+                        
+                        inner_html += f'<h4 style="margin-top: 10px; margin-bottom: 5px; color: #b9bbbe; border-bottom: 1px solid #40444b; padding-bottom: 2px;">{group_name}</h4>'
+                        inner_html += f'<ul style="margin-top: 5px;">{group_list}</ul>'
+                
+                # Handle leftovers in this category that weren't in a subgroup
+                leftovers = [f for f in files_in_cat if f not in grouped_files]
+                if leftovers:
+                    leftovers.sort()
+                    leftover_list = ""
+                    for f in leftovers:
+                         display_name = os.path.basename(f)
+                         leftover_list += f'<li><a href="/docs/{f}">{display_name}</a></li>'
+                         categorized_files.add(f)
+                    
+                    if inner_html: # If we had groups, label the others
+                        inner_html += f'<h4 style="margin-top: 10px; margin-bottom: 5px; color: #b9bbbe; border-bottom: 1px solid #40444b; padding-bottom: 2px;">Ostatní</h4>'
+                    inner_html += f'<ul style="margin-top: 5px;">{leftover_list}</ul>'
+
+            else:
+                # No subcategories, just list them
+                # Sort logic
+                if priority:
+                    files_in_cat.sort(key=lambda x: priority.index(x) if x in priority else 999)
+                else:
+                    files_in_cat.sort()
+                    
+                list_html = ""
+                for f in files_in_cat:
+                    display_name = os.path.basename(f)
+                    if display_name == f: # It's a root file or full path view
+                        display_name = f
+                    else:
+                        display_name = display_name # Show just filename for cleanness
+                        
+                    list_html += f'<li><a href="/docs/{f}">{display_name}</a></li>'
+                    categorized_files.add(f)
+                inner_html = f'<ul>{list_html}</ul>'
+            
+            html_content += f'''
+            <div class="status-card" style="margin-bottom: 20px;">
+                <h3>{category}</h3>
+                {inner_html}
+            </div>
+            '''
+
+        # Catch-all for uncategorized
+        uncategorized = [f for f in all_files if f not in categorized_files]
+        if uncategorized:
+             uncategorized.sort()
+             other_html = ""
+             for f in uncategorized:
+                 other_html += f'<li><a href="/docs/{f}">{f}</a></li>'
+             
+             html_content += f'''
+                <div class="status-card" style="margin-bottom: 20px;">
+                    <h3>📂 Ostatní soubory</h3>
+                    <ul>{other_html}</ul>
+                </div>
+                '''
+        
+        return render_template_string(TEMPLATE_BASE, title="Documentation", css=DOCS_CSS, content=html_content)
 
     def docs_view(self, filename):
         """Render a markdown file."""
@@ -1559,6 +1822,7 @@ class WebServer:
                     'disk_total': to_gb(disk.total),
                     'action_history': self.agent.action_history[-20:] if self.agent.action_history else [],
                     'log_tail': self._get_log_tail(),
+                    'connected_clients': self.connected_clients,
                     'info': {
                         'os': self._get_os_info(),
                         'python': platform.python_version(),

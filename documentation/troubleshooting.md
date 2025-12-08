@@ -488,18 +488,37 @@ top -u davca
 # - Check logs for repeating errors
 ```
 
+<a name="symptom-cant-keep-up"></a>
+### Symptom: "Can't keep up" / Heartbeat Blocked
+
+**Logs:**
+```
+discord.gateway: Can't keep up, shard ID None websocket is 60.4s behind.
+shard ID None heartbeat blocked for more than 10 seconds.
+```
+
+**Cause:**
+System je přetížen (CPU 100%), obvykle kvůli příliš agresivnímu nastavení LLM Threads. Discord klient nedostává CPU čas na udržení spojení.
+
+**Fix:**
+Snížit počet vláken pro LLM v `config_settings.py`:
+```python
+LLM_THREADS_TIER2 = 2
+LLM_THREADS_TIER3 = 1  # Critical for stability
+```
+
 <a name="solution-2-resource-tier"></a>
 ### Solution 2: Resource Tier
 
 **Agent should auto-adjust:**
 ```
-[WARNING] Resource tier 2: Context 1024 -> 512
+[WARNING] Resource tier 3: Context 2048 -> 1024, Threads 4 -> 1
 ```
 
 **Force lower tier:**
 ```python
 # In config_settings.py
-LLM_CONTEXT_NORMAL = 512  # Lower context = less CPU
+LLM_CONTEXT_NORMAL = 1024  # Lower context = less CPU
 ```
 
 <a name="symptom-high-ram-usage"></a>
@@ -798,6 +817,19 @@ sudo journalctl -u rpi-agent.service -f
 # Resources
 free -h          # RAM
 df -h            # Disk
+
+<a name="logging-configuration"></a>
+### 📝 Logging Configuration
+
+V rámci optimalizace ("Log Noise Reduction") jsou defaultní úrovně logování pro některé externí knihovny nastaveny na `WARNING`, aby nezahlcovaly `agent.log`.
+
+**Omezené moduly:**
+- `discord.gateway`
+- `pyngrok`
+- `httpcore`
+- `httpx`
+
+Pokud potřebujete debugovat tyto moduly, je nutné dočasně změnit úroveň logování v kódu (`agent/core.py` nebo `main.py`).
 top              # CPU
 vcgencmd measure_temp  # Temperature (RPI only)
 ```
@@ -980,7 +1012,7 @@ sudo journalctl -u rpi-agent.service | grep -i "warning"
 ---
 
 
-Poslední aktualizace: 2025-12-06  
+Poslední aktualizace: 2025-12-08  
 Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání
 

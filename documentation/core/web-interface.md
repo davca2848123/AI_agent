@@ -67,6 +67,22 @@ Server používá `Flask-SocketIO` pro real-time aktualizace dashboardu bez nutn
 - **Interval:** 2 sekundy (konfigurovatelné).
 - **Event:** `status_update`
 
+<a name="ui-ux"></a>
+### 🎨 UI/UX Vylepšení
+Webové rozhraní obsahuje řadu moderních vizuálních prvků:
+- **Animace:**
+  - Hover scaling efekty na navigačních odkazech a tlačítkách.
+  - Smooth entry/exit animace pro modální okna.
+  - Staggered content loading (postupné načítání) pro dokumentaci.
+  - Sliding underline animace pro textové odkazy.
+- **Interaktivita:**
+  - Hover efekty pro code blocky, citace a tabulky.
+  - "Live" status indikátor s pulzující animací (ukotven vpravo).
+  - Flashing red animace pro stav "Disconnected".
+- **Header:**
+  - Sdružený kontejner pro status připojení a čas poslední aktualizace.
+  - Zobrazení intervalu obnovení a počtu připojených klientů (na desktopu).
+
 <a name="automatické-vypnutí"></a>
 ### Auto-Shutdown
 Web server obsahuje bezpečnostní pojistku:
@@ -98,6 +114,6 @@ WEB_ENABLED = True                 # Povolení/Zákaz webu
 - [🏗️ Architektura](../architecture.md)
 
 ---
-Poslední aktualizace: 2025-12-06
+Poslední aktualizace: 2025-12-08
 Verze: Beta - CLOSED
 Tip: Použij Ctrl+F pro vyhledávání

@@ -23,6 +23,7 @@ class LLMClient:
         
         # Dynamic parameters based on resources
         self.current_n_ctx = getattr(config_settings, 'LLM_CONTEXT_NORMAL', 1024)
+        self.current_n_threads = getattr(config_settings, 'LLM_THREADS_NORMAL', 4)
         self.current_max_tokens = 128
         self.resource_tier = 0
         
@@ -69,9 +70,11 @@ class LLMClient:
         if n_ctx is None:
             n_ctx = self.current_n_ctx
         
-        # Auto-detect threads based on CPU cores
+        # Auto-detect threads based on CPU cores if not provided and not set in config
         if n_threads is None:
-            n_threads = max(2, psutil.cpu_count(logical=False) // 2)
+            n_threads = self.current_n_threads
+            if n_threads is None:
+                 n_threads = max(2, psutil.cpu_count(logical=False) // 2)
 
         try:
             logger.info(f"Loading model {self.model_repo}/{self.model_filename} (ctx={n_ctx}, threads={n_threads})...")
@@ -107,12 +110,21 @@ class LLMClient:
             3: getattr(config_settings, 'LLM_CONTEXT_TIER3', 256)
         }
         
+        thread_map = {
+            0: getattr(config_settings, 'LLM_THREADS_NORMAL', 4),
+            1: getattr(config_settings, 'LLM_THREADS_TIER1', 3),
+            2: getattr(config_settings, 'LLM_THREADS_TIER2', 3),
+            3: getattr(config_settings, 'LLM_THREADS_TIER3', 3)
+        }
+        
         new_ctx = context_map.get(resource_tier, 1024)
+        new_threads = thread_map.get(resource_tier, 3)
         new_max_tokens = new_ctx // 8  # Proportional to context
         
-        if new_ctx != self.current_n_ctx:
-            logger.warning(f"Resource tier {resource_tier}: Context {self.current_n_ctx} -> {new_ctx}, max_tokens {self.current_max_tokens} -> {new_max_tokens}")
+        if new_ctx != self.current_n_ctx or new_threads != self.current_n_threads:
+            logger.warning(f"Resource tier {resource_tier}: Context {self.current_n_ctx} -> {new_ctx}, Threads {self.current_n_threads} -> {new_threads}")
             self.current_n_ctx = new_ctx
+            self.current_n_threads = new_threads
             self.current_max_tokens = new_max_tokens
             self.resource_tier = resource_tier
             # Note: Actual context change requires model reload

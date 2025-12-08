@@ -19,12 +19,17 @@ SWAP_MAX_SIZE_GB = 8
 
 # LLM Resource Adaptation
 LLM_CONTEXT_NORMAL = 2048
-LLM_CONTEXT_TIER1 = 2048
+LLM_CONTEXT_TIER1 = 1024
 LLM_CONTEXT_TIER2 = 1024
 LLM_CONTEXT_TIER3 = 1024
 
+LLM_THREADS_NORMAL = 4
+LLM_THREADS_TIER1 = 3
+LLM_THREADS_TIER2 = 2
+LLM_THREADS_TIER3 = 1
+
 # Boredom System
-BOREDOM_INTERVAL = 300  # Time in seconds between boredom checks (5 minutes)
+BOREDOM_INTERVAL = 600  # Time in seconds between boredom checks (10 minutes)
 TOPICS_FILE = "boredom_topics.json"  # Path to topics JSON file
 
 # Memory Scoring System

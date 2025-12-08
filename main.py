@@ -37,6 +37,14 @@ logging.basicConfig(
     handlers=[console_handler, file_handler]
 )
 
+# Silence noisy libraries
+logging.getLogger("discord.gateway").setLevel(logging.WARNING)
+logging.getLogger("discord.client").setLevel(logging.WARNING)
+logging.getLogger("discord.http").setLevel(logging.WARNING)
+logging.getLogger("pyngrok").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+
 # Configure separate logger for tools (no duplication)
 tools_logger = logging.getLogger('agent.tools')
 tools_handler = logging.FileHandler(config_settings.LOG_FILE_TOOLS, encoding='utf-8')
