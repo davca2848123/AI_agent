@@ -174,8 +174,7 @@ Pokud je `True`, všechny IPv4 adresy (např. `192.168.1.20`) budou nahrazeny za
 - [🚀 Deployment Guide](../scripts/deployment-guide.md)
 - [🆘 Troubleshooting](../troubleshooting.md)
 - [📜 Scripts](../scripts/batch-scripts-reference.md)
-
 ---
-Poslední aktualizace: 2025-12-06  
+Poslední aktualizace: 2025-12-09  
 Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

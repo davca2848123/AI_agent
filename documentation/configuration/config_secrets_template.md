@@ -87,8 +87,7 @@ agent.log
 - [🚀 Deployment Guide](../scripts/deployment-guide.md)
 - [🆘 Troubleshooting](../troubleshooting.md)
 - [📜 Scripts](../scripts/batch-scripts-reference.md)
-
 ---
-Poslední aktualizace: 2025-12-06  
+Poslední aktualizace: 2025-12-09  
 Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

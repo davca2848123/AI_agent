@@ -22,7 +22,7 @@ class DailyStats:
             "last_save": time.time()
         }
         self.load()
-        self.check_date()
+        # self.check_date() - Removed to prevent auto-reset before reporting
 
     def load(self):
         """Loads stats from file if it exists."""
@@ -138,3 +138,20 @@ class DailyStats:
     def mark_report_sent(self):
         self.stats["report_sent"] = True
         self.save()
+
+
+class DailyStatsLoggingHandler(logging.Handler):
+    """
+    Custom logging handler that tracks errors in DailyStats.
+    """
+    def __init__(self, daily_stats: DailyStats):
+        super().__init__()
+        self.daily_stats = daily_stats
+
+    def emit(self, record):
+        if record.levelno >= logging.ERROR:
+            # Avoid recursion if saving stats causes an error
+            try:
+                self.daily_stats.record_error()
+            except Exception:
+                pass

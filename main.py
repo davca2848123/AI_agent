@@ -141,11 +141,23 @@ async def main():
     
     logger.info("GitHub auto-release disabled. Use !upload command for manual releases.")
 
+    # Initialize global stats early for error tracking
+    daily_stats = None
+    try:
+        from agent.reports import DailyStats, DailyStatsLoggingHandler
+        daily_stats = DailyStats()
+        stats_handler = DailyStatsLoggingHandler(daily_stats)
+        stats_handler.setLevel(logging.ERROR)
+        logging.getLogger().addHandler(stats_handler)
+        logger.info("Daily statistics tracking initialized early")
+    except ImportError as e:
+        logger.warning(f"Could not initialize daily stats early: {e}")
+
     # Initialize Agent with comprehensive error handling
     try:
         from agent.core import AutonomousAgent
         logger.info("Importing AutonomousAgent...")
-        agent_instance = AutonomousAgent(discord_token=discord_token)
+        agent_instance = AutonomousAgent(discord_token=discord_token, daily_stats=daily_stats)
         logger.info("Agent instance created successfully")
     except ImportError as e:
         logger.critical(f"FATAL: Failed to import agent.core: {e}", exc_info=True)

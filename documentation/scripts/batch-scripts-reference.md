@@ -541,8 +541,7 @@ pause
 - [Windows SSH Permissions](../scripts/Windows_SSH_Permissions_Fix.md) - SSH troubleshooting
 - [RPI Sudoers Guide](../scripts/RPI_Sudoers_NOPASSWD_Guide.md) - Detailed sudo setup
 - [🏗️ Architektura](../architecture.md)
-
 ---
-Poslední aktualizace: 2025-12-06  
+Poslední aktualizace: 2025-12-09  
 Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

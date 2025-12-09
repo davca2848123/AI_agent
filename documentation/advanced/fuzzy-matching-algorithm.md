@@ -490,8 +490,7 @@ Zohlednit, jak blízko jsou klávesy:
 **Implementation:**
 - [`agent/commands.py`](../../agent/commands.py) - `levenshtein_distance()` function
 - Dynamic programming approach for O(n) space complexity
-
 ---
-Poslední aktualizace: 2025-12-06  
+Poslední aktualizace: 2025-12-09  
 Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

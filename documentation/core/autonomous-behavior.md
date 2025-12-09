@@ -392,8 +392,7 @@ def _simplify_action(self, action: str) -> str:
 - [📖 Boredom Mechanism](../advanced/boredom.md) - Detailní vysvětlení
 - [🏗️ Architektura](../architecture.md)
 - [🆘 Troubleshooting](../troubleshooting.md)
-
 ---
-Poslední aktualizace: 2025-12-08  
+Poslední aktualizace: 2025-12-09  
 Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

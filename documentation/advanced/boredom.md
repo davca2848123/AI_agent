@@ -118,7 +118,7 @@ Aby se předešlo smyčce "mluvení naprázdno", agent má počítadlo `actions_
 - [📖 Config Settings](../configuration/config_settings_reference.md) - Detail konfigurace
 - [💬 Příkaz !mood](../commands/interaction.md#mood) - Zobrazení aktuálního stavu
 - [🏗️ Architektura](../architecture.md)
-
 ---
-Poslední aktualizace: 2025-12-06
-Verze: Beta - CLOSED
+Poslední aktualizace: 2025-12-09  
+Verze: Beta - CLOSED  
+Tip: Použij Ctrl+F pro vyhledávání

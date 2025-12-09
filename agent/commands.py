@@ -237,6 +237,12 @@ class CoreView(discord.ui.View):
             return
         await send_clean_md_file(interaction, "documentation/core/reporting.md")
 
+    @discord.ui.button(label="🌐 Web Interface", style=discord.ButtonStyle.secondary)
+    async def web_interface(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if not await check_interaction_allowed(interaction, self):
+            return
+        await send_clean_md_file(interaction, "documentation/core/web-interface.md")
+
 class AdvancedView(discord.ui.View):
     def __init__(self, parent_view):
         super().__init__(timeout=300)
@@ -591,6 +597,8 @@ class CommandHandler:
                 return
 
         logger.info(f"Executing command from {author} ({author_id}): {content}")
+        
+
         
         # Track command for reporting (unless it's !report itself)
         if not content.lower().startswith("!report"):
@@ -2211,6 +2219,7 @@ _{desc}_"""
                         # Track usage
                         self.agent.tool_usage_count[tool_selected] = self.agent.tool_usage_count.get(tool_selected, 0) + 1
                         self.agent._save_tool_stats()
+                        self.agent._add_to_history(f"Tool: {tool_selected} {tool_params}")
                         
                         # Check if tool result is an error
                         if tool_result.startswith("Error:"):
@@ -2657,6 +2666,7 @@ _{desc}_"""
                                         'ForceShutdownView',
                                         # Special variables
                                         '__file__',
+                                        'DailyStatsLoggingHandler',
                                     ]
                                     
                                     if child.id in common_names: 
@@ -3910,8 +3920,8 @@ _{description}_
                  # Shorten simpler message
                 startup_msg = (
                     f"✅ **SSH Ready** (`{host}:{port}`)\n\n"
-                    f"**Terminal:**\n`{ssh_command}`\n\n"
-                    f"**Mount:**\n`{net_use_command}`"
+                    f"**Terminal:**\n```{ssh_command}```\n\n"
+                    f"**Mount:**\n```{net_use_command}```"
                 )
                 await self.agent.send_admin_dm(startup_msg, category="ssh")
             except Exception as e:

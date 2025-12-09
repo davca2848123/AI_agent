@@ -8,12 +8,13 @@ import os
 import json
 import discord
 import psutil
+import datetime
 from .reports import DailyStats
 
 logger = logging.getLogger(__name__)
 
 class AutonomousAgent:
-    def __init__(self, discord_token: str = None):
+    def __init__(self, discord_token: str = None, daily_stats=None):
         self.os_type = sys.platform
         self.is_linux = self.os_type.startswith('linux')
         logger.info(f"Initializing Agent on {platform.system()} ({platform.release()})")
@@ -98,7 +99,18 @@ class AutonomousAgent:
         self.network_monitor = NetworkMonitor(self)  # Add network monitor
         self.error_tracker = get_error_tracker()  # Add error tracker
         self.web_server = WebServer(self) # Add web interface
-        self.daily_stats = DailyStats() # Add daily stats tracking
+        
+        # Use provided stats or create new
+        if daily_stats:
+            self.daily_stats = daily_stats
+            # Assume handler is already attached if stats passed from main
+        else:
+            self.daily_stats = DailyStats() # Add daily stats tracking
+            # Register Error Counting Handler locally if not passed
+            from .reports import DailyStatsLoggingHandler
+            stats_handler = DailyStatsLoggingHandler(self.daily_stats)
+            stats_handler.setLevel(logging.ERROR)
+            logging.getLogger().addHandler(stats_handler)
         
         # Tools
         self.agent_workspace = os.path.abspath("agent_workspace")
@@ -171,6 +183,14 @@ class AutonomousAgent:
                 self._save_tool_timestamps()
             except Exception as e:
                 logger.error(f"Failed to save tool stats: {e}")
+            
+            # 3.5 Save Daily Stats
+            logger.info("Saving daily stats...")
+            try:
+                if hasattr(self, 'daily_stats'):
+                    self.daily_stats.save()
+            except Exception as e:
+                logger.error(f"Failed to save daily stats: {e}")
             
             # 4. Commit and close database
             logger.info("Closing database...")
@@ -565,6 +585,53 @@ class AutonomousAgent:
             logger.critical(f"Failed to report error: {e}")
 
 
+    async def check_daily_report(self):
+        """Checks if it's time to send daily report or if day changed."""
+        if not hasattr(self, 'daily_stats'):
+            return
+
+        current_date_str = datetime.date.today().isoformat()
+        stats_date = self.daily_stats.stats["date"]
+        
+        # Case 1: Day changed (Past Midnight) - Send report for PREVIOUS day
+        if current_date_str != stats_date:
+            logger.info(f"Date change detected: {stats_date} -> {current_date_str}")
+            
+            # Send report for the OLD date if not sent yet
+            if not self.daily_stats.report_sent_today: # This checks the flag in the OLD stats
+                logger.info(f"Sending missed daily report for {stats_date}")
+                try:
+                    embed = self.daily_stats.generate_report_embed()
+                    # Override title to indicate it's a missed report
+                    embed.title = f"📅 Daily Report (Missed): {stats_date}"
+                    await self.send_admin_dm("📊 **Daily Report (Missed)**", category="report", embed=embed)
+                    self.daily_stats.mark_report_sent()
+                except Exception as e:
+                    logger.error(f"Failed to send missed daily report: {e}")
+            
+            # Reset for new day
+            self.daily_stats._reset_stats(current_date_str)
+            logger.info(f"Daily stats reset for new day: {current_date_str}")
+            
+        # Case 2: Same day, check time for scheduled report (23:59)
+        elif not self.daily_stats.report_sent_today:
+             now = datetime.datetime.now()
+             # Trigger at 23:59
+             if now.hour == 23 and now.minute == 59:
+                 logger.info("Triggering scheduled daily report")
+                 try:
+                     embed = self.daily_stats.generate_report_embed()
+                     await self.send_admin_dm("📊 **Daily Report**", category="report", embed=embed)
+                     self.daily_stats.mark_report_sent()
+                 except Exception as e:
+                     logger.error(f"Failed to send scheduled daily report: {e}")
+        
+        # Periodic Save (to capture uptime)
+        try:
+             self.daily_stats.save()
+        except Exception as e:
+             logger.error(f"Failed to save daily stats: {e}")
+
     async def boredom_loop(self):
         """Simulates the passage of time and intrinsic decay (boredom)."""
         logger.debug("Boredom loop started.")
@@ -703,6 +770,7 @@ class AutonomousAgent:
         logger.debug("Observation loop started.")
         last_resource_check = 0
         last_subsystem_check = 0
+        last_uptime_check = time.time()
         
         while self.is_running:
             try:
@@ -758,6 +826,14 @@ class AutonomousAgent:
                     await self.check_subsystems()
                     last_subsystem_check = current_time
                 
+                # Daily Report Check (every 60 seconds)
+                if not hasattr(self, 'last_report_check'):
+                    self.last_report_check = 0
+                
+                if current_time - self.last_report_check >= 60:
+                    await self.check_daily_report()
+                    self.last_report_check = current_time
+                
                 # Network monitoring (every 60 seconds)
                 if self.network_monitor.last_check is None:
                      self.network_monitor.last_check = 0
@@ -785,6 +861,14 @@ class AutonomousAgent:
                 # Wait a bit before retrying to avoid log spam if error persists
                 await asyncio.sleep(5)
             
+            # Update uptime stats
+            uptime_now = time.time()
+            if hasattr(self, 'last_uptime_check'):
+                delta = uptime_now - self.last_uptime_check
+                if delta > 0 and hasattr(self, 'daily_stats'):
+                    self.daily_stats.add_uptime(delta)
+            self.last_uptime_check = uptime_now
+
             await asyncio.sleep(1)
 
     async def _process_activity(self, activity_data: dict):
@@ -1270,7 +1354,7 @@ class AutonomousAgent:
                 self.successful_learnings += 1
                 
                 # Add to action history
-                self._add_to_history(f"Used tool: {tool_name}")
+                self._add_to_history(f"Tool: {tool_name} {args}")
 
                 # Reduce boredom significantly for successful tool use
 
@@ -1579,7 +1663,7 @@ class AutonomousAgent:
         except Exception as e:
             logger.error(f"Failed to save agent state: {e}")
 
-    async def send_admin_dm(self, message: str, category: str = "default"):
+    async def send_admin_dm(self, message: str, category: str = "default", embed: discord.Embed = None):
         """
         Send DM to admin user. Behavior depends on category:
         - 'error', 'network': Always send new message
@@ -1649,7 +1733,7 @@ class AutonomousAgent:
                 
                 if not edited:
                     # Send new message
-                    msg_obj = await user.send(message)
+                    msg_obj = await user.send(message, embed=embed)
                     logger.info(f"Admin DM sent ({category}): {message[:50]}...")
                     
                     # Update state

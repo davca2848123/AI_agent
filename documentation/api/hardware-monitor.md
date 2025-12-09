@@ -61,8 +61,7 @@ led.set_state("BUSY")
 - [🏗️ Architektura](../architecture.md)
 - [⚙️ Setup LED Script](../scripts/batch-scripts-reference.md#rpi_setup_ledbat)
 - [📂 Source Code](../agent/)
-
 ---
-Poslední aktualizace: 2025-12-06  
+Poslední aktualizace: 2025-12-09  
 Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

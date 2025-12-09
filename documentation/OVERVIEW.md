@@ -187,8 +187,7 @@ Po každé změně v kódu nezapomeň aktualizovat příslušnou dokumentaci!
 - [🏗️ Architektura](architecture.md)
 - [🚀 Deployment Guide](scripts/deployment-guide.md)
 - [📋 Týdenní Tasklist](SUMMARY.md)
-
 ---
-Poslední aktualizace: 2025-12-06  
+Poslední aktualizace: 2025-12-09  
 Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

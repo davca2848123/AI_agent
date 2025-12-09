@@ -132,9 +132,7 @@ class AgentState:
 - [📄 Přehled (OVERVIEW)](OVERVIEW.md)
 - [🏗️ Architektura](architecture.md)
 - [🌐 Web Interface API](api/api-logs.md)
-
 ---
-
-Poslední aktualizace: 2025-12-06  
+Poslední aktualizace: 2025-12-09  
 Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

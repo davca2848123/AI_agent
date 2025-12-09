@@ -50,9 +50,7 @@ Smaže dočasné vzpomínky vzniklé z nudy (cleanup).
 - [📖 Memory Architecture Guide](../core/memory-system.md) - Detailní popis fungování, scoringu a FTS5
 - [🏗️ Architektura](../architecture.md)
 - [📂 Source Code](../agent/)
-
 ---
-Poslední aktualizace: 2025-12-06  
+Poslední aktualizace: 2025-12-09  
 Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání
-

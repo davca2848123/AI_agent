@@ -441,9 +441,7 @@ if author_id not in config_settings.ADMIN_USER_IDS:
 - [📂 All Commands](commands/)
 - [🆘 Troubleshooting](troubleshooting.md)
 - [🚀 Deployment](scripts/deployment-guide.md)
-
 ---
-Poslední aktualizace: 2025-12-06  
+Poslední aktualizace: 2025-12-09  
 Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání
-

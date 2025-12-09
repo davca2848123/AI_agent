@@ -339,8 +339,7 @@ while True:
 - [📖 Autonomous Behavior](autonomous-behavior.md) - Reakce na tier changes
 - [📚 API Reference](../api/discord-client.md)
 - [🏗️ Architektura](../architecture.md)
-
 ---
-Poslední aktualizace: 2025-12-06  
+Poslední aktualizace: 2025-12-09  
 Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

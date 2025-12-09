@@ -237,8 +237,7 @@ Tento projekt je pro osobní použití.
 - [📚 Přehled Dokumentace](documentation/OVERVIEW.md)
 - [🏗️ Architektura](documentation/architecture.md)
 - [🚀 Quick Start](documentation/README.md#quick-start)
-
 ---
-Poslední aktualizace: 2025-12-06  
+Poslední aktualizace: 2025-12-09  
 Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

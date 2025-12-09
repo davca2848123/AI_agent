@@ -894,8 +894,7 @@ Seznam je definován v `config_settings.py` jako `ONLY_ADMIN_RESTRICTED_COMMANDS
 - [📋 Všechny příkazy](../SUMMARY.md#commands-api)
 - [🏗️ Command Architecture](../architecture.md#command-layer)
 - [🆘 Troubleshooting](../troubleshooting.md#command-errors)
-
 ---
-Poslední aktualizace: 2025-12-05  
+Poslední aktualizace: 2025-12-09  
 Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

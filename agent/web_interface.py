@@ -884,9 +884,19 @@ TEMPLATE_BASE = """
             var activityList = document.getElementById('activity-list');
             activityList.innerHTML = '';
             if (data.action_history.length > 0) {
-                data.action_history.forEach(function(action) {
+                // Reverse to show newest first
+                var reversedHistory = [...data.action_history].reverse();
+                reversedHistory.forEach(function(action) {
                     var li = document.createElement('li');
-                    li.innerText = action;
+                    
+                    if (typeof action === 'object' && action !== null && action.timestamp) {
+                         var date = new Date(action.timestamp * 1000);
+                         var timeStr = date.toLocaleTimeString([], { hour12: false });
+                         li.innerHTML = '<span style="color: #72767d; font-size: 0.9em;">[' + timeStr + ']</span> ' + (action.action || 'Unknown');
+                    } else {
+                         li.innerText = action;
+                    }
+                    
                     activityList.appendChild(li);
                 });
             } else {
@@ -1074,6 +1084,21 @@ class WebServer:
         disk_used = to_gb(disk.used)
         disk_total = to_gb(disk.total)
 
+        # Prepare Activity List HTML
+        import datetime
+        activity_items = []
+        if self.agent.action_history:
+            for item in reversed(self.agent.action_history[-5:]):
+                if isinstance(item, dict):
+                    ts = datetime.datetime.fromtimestamp(item.get('timestamp', 0)).strftime('%H:%M:%S')
+                    act = item.get('action', 'Unknown')
+                    activity_items.append(f'<li><span style="color: #72767d; font-size: 0.9em;">[{ts}]</span> {act}</li>')
+                else:
+                    activity_items.append(f'<li>{item}</li>')
+            activity_list_html = "".join(activity_items)
+        else:
+            activity_list_html = '<li>No recent activity</li>'
+
         status_html = f"""
         <div class="dashboard-header">
             <div class="dashboard-title">🤖 Agent Dashboard</div>
@@ -1140,8 +1165,9 @@ class WebServer:
         </div>
         
         <h3>Recent Activity</h3>
+
         <ul id="activity-list">
-        {''.join([f'<li>{a}</li>' for a in self.agent.action_history[-5:]]) if self.agent.action_history else '<li>No recent activity</li>'}
+        {activity_list_html}
         </ul>
         
         <h3>📜 Log Viewer</h3>

@@ -33,7 +33,7 @@ Hlavní stránka zobrazuje klíčové metriky:
 - **Status Agenta:** (Running/Stopped, Boredom Score, Uptime)
 - **Loops Status:** Stav jednotlivých smyček (Observation, Action, etc.)
 - **System Resources:** CPU, RAM, Disk usage.
-- **Recent Activity:** Posledních 5 akcí agenta.
+- **Recent Activity:** Real-time log posledních 5 akcí (zaměřeno na použití nástrojů a autonomní akce).
 - **Log Viewer:** Real-time stream logů (posledních 100 řádků).
 
 <a name="dokumentace"></a>
@@ -112,8 +112,7 @@ WEB_ENABLED = True                 # Povolení/Zákaz webu
 - [`!web`](../commands/admin.md#web) - Příkaz pro správu webu (start/stop)
 - [📚 API Reference](../api/api-logs.md)
 - [🏗️ Architektura](../architecture.md)
-
 ---
-Poslední aktualizace: 2025-12-08
-Verze: Beta - CLOSED
+Poslední aktualizace: 2025-12-09  
+Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

@@ -60,8 +60,7 @@ Doporučuje se po testování spustit cleanup skripty (viz [Maintenance](mainten
 - [⚙️ Konfigurace](../configuration/complete-configuration-guide.md)
 - [🆘 Troubleshooting](../troubleshooting.md)
 - [🏗️ Architektura](../architecture.md)
-
 ---
-Poslední aktualizace: 2025-12-06  
+Poslední aktualizace: 2025-12-09  
 Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

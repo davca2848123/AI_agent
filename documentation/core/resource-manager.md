@@ -23,9 +23,9 @@ Resource Manager sleduje využití CPU, RAM, Disk a Swap a automaticky reaguje p
 | Tier | Threshold | Stav | Reakce |
 |------|-----------|------|--------|
 | **0** | < 85% | Normální | Žádná |
-| **1** | 85-89% | Varování | Cleanup, GC |
-| **2** | 90-94% | Mitigace | Redukce LLM (1024), SWAP expansion |
-| **3** | 95%+ | Nouzový | Redukce LLM (1024), Kill processes |
+| **1** | 85-89% | Varování | Cleanup, GC (3 threads) |
+| **2** | 90-94% | Mitigace | Redukce LLM (1024 ctx, 2 threads), SWAP expansion |
+| **3** | 95%+ | Nouzový | Redukce LLM (1024 ctx, 1 thread), Kill processes |
 
 <a name="hystereze"></a>
 ### 🔧 Hystereze
@@ -139,20 +139,31 @@ async def execute_tier2(self):
 ### 🔧 LLM Reduction
 
 ```python
-def _reduce_llm_resources(self, tier: int):
-    """Reduce LLM resource usage."""
+def update_parameters(self, resource_tier: int):
+    """Update LLM parameters based on resource tier."""
     
-    if tier == 2:
-        # Medium reduction
-        new_ctx = 1024
-        new_threads = None # (Auto)
-    elif tier == 3:
-        # Maximum reduction
-        new_ctx = 1024
-        new_threads = 1 # Force single thread for stability
+    # Context Limits
+    context_map = {
+        0: 2048, # Normal
+        1: 1024, # Tier 1
+        2: 1024, # Tier 2
+        3: 1024  # Tier 3
+    }
+    
+    # Thread Limits
+    thread_map = {
+        0: 4, # Normal
+        1: 3, # Tier 1
+        2: 2, # Tier 2 (Stability fix)
+        3: 1  # Tier 3 (Max stability)
+    }
+    
+    new_ctx = context_map.get(resource_tier, 1024)
+    new_threads = thread_map.get(resource_tier, 3)
     
     # Update LLM
-    agent.llm.update_parameters(tier)
+    self.current_n_ctx = new_ctx
+    self.current_n_threads = new_threads
 ```
 
 <a name="swap-expansion"></a>
@@ -437,8 +448,7 @@ async def handle_resource_tier(self, tier: int, usage):
 - [📖 Autonomous Behavior](autonomous-behavior.md) - Reakce na tier changes
 - [📚 API Reference](../api/agent-core.md)
 - [🏗️ Architektura](../architecture.md)
-
 ---
-Poslední aktualizace: 2025-12-06  
+Poslední aktualizace: 2025-12-09  
 Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání
