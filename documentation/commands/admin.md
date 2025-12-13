@@ -415,7 +415,7 @@ Pokročilá diagnostika systému s detailními kontrolami integrity a dostupnost
 
 | Mode | Co kontroluje |
 |------|---------------|
-| `quick` | LLM, Discord, Database, Tools (Health Check) |
+| `quick` | LLM, Discord, Database, Resources, Filesystem, Loops, Tools |
 | `deep` | Vše z `quick` + Filesystem, Network, Resources |
 | `tools` | Validace registrace a funkčnosti všech 14 nástrojů |
 | `compile` | Kontrola syntaxe Python souborů (Syntax Check) |
@@ -430,6 +430,7 @@ User: !debug quick
 Bot: 🔍 **Debug Report - QUICK**
 
      ✅ **LLM**: Online (250ms)
+     ✅ **Gemini**: Library & Key configured
      ✅ **Discord**: Connected (AI Agent)
      ✅ **Database**: Accessible (234+ memories)
      ✅ **Tools**: 14 registered

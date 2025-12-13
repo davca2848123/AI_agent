@@ -12,6 +12,37 @@
 
 Tyto příkazy umožňují sledovat náladu agenta, spravovat jeho cíle a prohlížet konfiguraci.
 
+> Příkazy pro interakci s osobností a cíli agenta.
+> **Verze:** Beta - CLOSED (Updated 2025-12-11)
+
+---
+
+<a name="ask"></a>
+## `!ask`
+
+<a name="popis"></a>
+### 📋 Popis
+Hlavní příkaz pro dotazy na AI. Používá **Smart Routing** pro výběr nejvhodnějšího modelu.
+
+<a name="logic"></a>
+### 🧠 Smart Routing
+Agent automaticky rozhoduje, který model použije:
+
+1.  **Gemini (Cloud)** - Použije se pro:
+    - Složité dotazy (> 50 znaků)
+    - Klíčová slova (`code`, `analyze`, `navrhni`, ...)
+    - Zpracování obrázků
+    - Pokud lokální model není dostupný (fallback)
+    
+2.  **Local LLM (Offline)** - Použije se pro:
+    - Jednoduché, krátké dotazy
+    - Chatování když není potřeba hluboká analýza
+
+<a name="funkce"></a>
+### ✨ Funkce
+- **File Export**: Pokud je odpověď příliš dlouhá (> 1900 znaků), agent ji automaticky uloží do souboru (`.txt` nebo `.md`) a pošle jako přílohu.
+- **Vision**: Podporuje obrázky jako přílohy k dotazu.
+
 ---
 
 <a name="mood"></a>

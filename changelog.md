@@ -1,5 +1,55 @@
 # Changelog
 
+## [Beta - Ongoing] - 2025-12-13
+
+### Changed
+- **Gitignore Update**: Added `daily_stats.json` and `*.tmp` files to `.gitignore` to prevent committing runtime statistics and temporary files.
+
+## [Beta - CLOSED] - 2025-12-13
+
+### Fixed
+- **WebTool Crash**: Fixed a critical `TypeError` where `WebTool.execute()` failed when the `action` argument was missing. Modified the tool to be robust: it now automatically infers the action (`read` if URL is present, otherwise `search`) if not explicitly provided, resolving failures during autonomous operation.
+- **Restart Notification**: Fixed race condition where post-restart notification failed because Discord channel cache wasn't ready. Added retry mechanism and API fetch fallback.
+
+### Added
+- **Crash Notification**: Implemented "Runtime Lock" crash detection. The agent now creates a lock file at startup and removes it only on graceful shutdown. This allows detection of ALL types of crashes, including power loss or kill commands, and notifies the admin via DM upon the next successful restart.
+
+## [Beta - CLOSED] - 2025-12-11
+
+### Added
+- **Gemini API Integration**: Integrated Google Gemini models (`gemini-1.5-flash`, `gemini-1.5-pro`) for handling complex queries and image processing.
+- **Autonomous Fallback**: Implemented Gemini fallback for autonomous actions (boredom system) when local LLM is unavailable. Agent can now "think" and act on its own using the cloud model if the local brain is missing.
+- **Smart Routing**: Added `!ask` routing logic. Complex query (>50 chars, keywords, images) -> Gemini (High/Fast). Simple query -> Local LLM.
+- **Auto Fallback**: If Local LLM is unavailable (e.g., on RPi without binaries), `!ask` automatically falls back to Gemini Fast model.
+- **Gemini Integration**:
+    - **Models**: Configured to use `gemini-flash-latest` and `gemini-pro-latest` aliases for maximum compatibility.
+    - **Long Responses**: Responses >1900 chars are automatically saved to a file (`.txt` or `.md`) and sent as an attachment to keep chat clean.
+    - **Logging**: Added logging of the specific Gemini model used for each request.
+- **Diagnostics**:
+    - **!debug**: Added Gemini library and API key status checks.
+    - **Service**: Fixed `rpi_ai.service` to correctly use virtual environment (`venv`) instead of system Python.
+- **Image Processing**: `!ask` now supports image attachments using Gemini Vision.
+- **Typing Animation**: Added dynamic "Thinking..." animation (editing message) while the agent processes long requests.
+- **Configuration**: Added `config_settings.py` support for Gemini model selection and difficulty thresholds.
+- **Documentation**: Added guide for obtaining Gemini API keys in `tests/gemini_guide.md`.
+
+### Fixed
+- **Network Resilience**: Implemented active SSH tunnel recovery. The agent now detects if the tunnel is down after network restoration and automatically attempts to restart it.
+- **SSH Stability**: Added retry logic (3 attempts with backoff) to the SSH tunnel startup process to handle transient connection failures.
+- **Discord Connectivity**: Wrapped the Discord client in a permanent reconnection loop to automatically recover from fatal errors (e.g., `ClientConnectionResetError`) without crashing the agent.
+
+
+
+## [Beta - CLOSED] - 2025-12-10
+
+### Fixed
+- **Critical Resource Instability**: Fixed system freezing/Discord disconnects by making Linux swap expansion idempotent (smart checking) and non-shrinking.
+- **Resource Monitoring Sensitivity**: Increased CPU measurement interval from 0.1s to 1.0s to prevent false "Emergency" triggers.
+- **Log Cleanliness**: Filtered "Thinking..." and "Reasoning..." animation updates from `!live logs` and dashboard to prevent spam.
+- **Diagnostics**: Enhanced post-restart diagnostics (`quick` mode) to include `resources`, `filesystem`, `loops`, and `tools` checks for better health assessment.
+
+
+
 ## [Beta - CLOSED] - 2025-12-09
 
 ### Added
@@ -16,6 +66,8 @@
 - **Daily Reporting Logic**: Implemented the missing scheduler loop to trigger daily reports at 23:59. Added logic to detect missed reports (e.g., due to downtime) and send them upon restart before resetting statistics, ensuring data continuity.
 - **Uptime Calculation**: Enable real-time uptime accumulation in daily stats (previously static 0).
 - **Error Tracking**: Implemented global error tracking. All internal errors (logged as ERROR/CRITICAL) now automatically increment the daily error count in reports.
+
+
 
 ## [Beta - CLOSED] - 2025-12-08
 

@@ -13,6 +13,14 @@ except ImportError:
     Llama = None
     hf_hub_download = None
 
+try:
+    import google.generativeai as genai
+except ImportError as e:
+    genai = None
+    # We can't log yet because logger is defined below, but we can print or store it
+    import sys
+    print(f"DEBUG: Failed to import google.generativeai: {e}", file=sys.stderr)
+
 logger = logging.getLogger(__name__)
 
 class LLMClient:
@@ -30,6 +38,72 @@ class LLMClient:
         # Verify model is downloaded
         self._verify_model_cache()
         self._load_model()
+
+        # Initialize Gemini
+        self._init_gemini()
+
+    def _init_gemini(self):
+        """Initialize Google Gemini API."""
+        try:
+            import config_secrets
+            if hasattr(config_secrets, 'GEMINI_API_KEY') and config_secrets.GEMINI_API_KEY:
+                if genai:
+                    genai.configure(api_key=config_secrets.GEMINI_API_KEY)
+                    logger.info("Gemini API initialized successfully.")
+                else:
+                    logger.warning("google-generativeai library not installed.")
+            else:
+                logger.info("GEMINI_API_KEY not found in secrets. Gemini features disabled.")
+        except Exception as e:
+            logger.error(f"Failed to initialize Gemini: {e}")
+
+    async def ask_gemini(self, prompt: str, image_data: bytes = None, model_type: str = "fast") -> str:
+        """
+        Ask Gemini model.
+        
+        Args:
+            prompt: Text prompt
+            image_data: Optional image bytes
+            model_type: 'fast' or 'high' (determines model from config)
+        """
+        if not genai:
+             return "❌ Error: Google Generative AI library not installed."
+
+        import config_secrets
+        if not hasattr(config_secrets, 'GEMINI_API_KEY') or not config_secrets.GEMINI_API_KEY:
+             return "❌ Error: Gemini API Key not configured."
+
+        try:
+            # Select model based on type using EFFECTIVE constants (mapped to real models)
+            if model_type == "high":
+                model_name = getattr(config_settings, 'GEMINI_MODEL_HIGH_EFFECTIVE', "gemini-1.5-pro")
+            else:
+                model_name = getattr(config_settings, 'GEMINI_MODEL_FAST_EFFECTIVE', "gemini-1.5-flash")
+
+            logger.info(f"Asking Gemini Model: {model_name}")
+            model = genai.GenerativeModel(model_name)
+            
+            # Prepare content
+            content = [prompt]
+            if image_data:
+                from PIL import Image
+                import io
+                image = Image.open(io.BytesIO(image_data))
+                content.append(image)
+            
+            # Run inference in executor to avoid blocking loop
+            loop = asyncio.get_running_loop()
+            
+            def _run_gemini():
+                response = model.generate_content(content)
+                return response.text
+
+            response_text = await loop.run_in_executor(None, _run_gemini)
+            return response_text.strip()
+
+        except Exception as e:
+            logger.error(f"Gemini API Error: {e}")
+            return f"❌ Gemini Error: {str(e)}"
 
     @property
     def provider_type(self) -> str:

@@ -46,7 +46,7 @@ Práce se souborovým systémem.
 <a name="webtool"></a>
 ### `WebTool`
 Vyhledávání na internetu a stahování obsahu.
-- **Akce**: `search`, `read`.
+- **Akce**: `search`, `read` (pokud chybí, automaticky detekováno z `query`/`url`).
 - **Lokalizace**: Prioritizuje `cs`, `sk`, `en` obsah.
 - **Automatizace**: Při `read` ukládá faktické shrnutí do paměti jako `web_knowledge`.
 
@@ -110,6 +110,6 @@ Monitoring aktivit uživatelů na Discordu.
 - [🧠 Core Documentation](../core/)
 - [📂 Source Code](../agent/)
 ---
-Poslední aktualizace: 2025-12-09  
+Poslední aktualizace: 2025-12-13  
 Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

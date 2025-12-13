@@ -40,7 +40,25 @@ Aktuálně nakonfigurovaný model (v `agent/llm.py`):
 - **Velikost**: ~350-400 MB
 - **Důvod**: Optimalizováno pro rychlou odezvu a nízkou spotřebu paměti na RPi.
 
+- **Důvod**: Optimalizováno pro rychlou odezvu a nízkou spotřebu paměti na RPi.
+
 ---
+
+<a name="cloud-models"></a>
+## ☁️ Cloud Models (Gemini)
+
+Agent integroval Google Gemini API pro náročnější úlohy.
+
+### Konfigurace
+V `config_settings.py`:
+```python
+# Používají se aliasy "latest" pro maximální kompatibilitu
+GEMINI_MODEL_FAST = "gemini-flash-latest"   # Rychlé odpovědi
+GEMINI_MODEL_HIGH = "gemini-pro-latest"     # Komplexní analýza
+```
+
+### Fallback
+Pokud lokální model (Local LLM) není dostupný (např. chybí binaries na RPi), agent automaticky přesměruje **všechny** dotazy na Gemini Fast model, aby zůstal funkční.
 
 <a name="správa"></a>
 ## 🔧 Správa

@@ -109,6 +109,18 @@ async def trigger_autonomous_action(self):
     await self.execute_action(decision)
 ```
 
+<a name="autonomous-fallback"></a>
+### 🔄 Autonomous Fallback
+
+Pokud lokální model (Local LLM) není dostupný (např. chyba binaries, nedostatek paměti), agent **neselže**, ale automaticky přepne na cloudový model:
+
+1. **Detekce chyby**: Agent zachytí stav `LLM not available`.
+2. **Gemini Fallback**: Pošle kontext a seznam nástrojů na **Gemini API** (Fast model).
+3. **Rozhodnutí**: Gemini vybere akci místo lokálního modelu.
+4. **Last Resort**: Pokud selže i Gemini, agent provede bezpečnou fallback akci (např. vyhledání novinek).
+
+Tím je zajištěna kontinuita "myšlení" agenta i při výpadku primárního mozku.
+
 <a name="decision-context"></a>
 ### 📝 Decision Context
 

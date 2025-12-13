@@ -142,12 +142,7 @@ class AutonomousAgent:
         """Gracefully shutdown agent, closing all resources safely."""
         logger.info("🔄 Starting graceful shutdown...")
         
-        # Create incomplete shutdown flag
-        try:
-            with open(".shutdown_incomplete", "w") as f:
-                f.write(str(time.time()))
-        except Exception as e:
-            logger.error(f"Failed to create shutdown flag: {e}")
+
         
         failed_services = []
         
@@ -390,6 +385,14 @@ class AutonomousAgent:
         else:
             self._incomplete_shutdown_detected = False
         
+        # Runtime Lock: Create flag immediately to detect crashes/power loss
+        try:
+            with open(".shutdown_incomplete", "w") as f:
+                f.write(str(time.time()))
+            logger.info("Runtime lock created (.shutdown_incomplete)")
+        except Exception as e:
+            logger.error(f"Failed to create runtime lock: {e}")
+
         # Cleanup old test files
         self._cleanup_old_tests()
         
@@ -424,6 +427,23 @@ class AutonomousAgent:
         # Check for restart flag and notify
         import json
         logger.info(f"Checking for restart flag at {os.path.abspath('.restart_flag')}")
+
+        # NOTIFY: Incomplete Shutdown (Crash)
+        if getattr(self, '_incomplete_shutdown_detected', False):
+            logger.info("Sending incomplete shutdown notification to admin...")
+            crash_time_str = "Unknown time"
+            if hasattr(self, '_incomplete_shutdown_time'):
+                crash_time_str = self._incomplete_shutdown_time.strftime("%Y-%m-%d %H:%M:%S")
+            
+            await self.send_admin_dm(
+                f"⚠️ **Unexpected Shutdown Detected**\n"
+                f"The agent appears to have crashed or was stopped forcefully.\n"
+                f"detected around: `{crash_time_str}`",
+                category="error"
+            )
+            # Reset flag
+            self._incomplete_shutdown_detected = False
+
         if os.path.exists(".restart_flag"):
             logger.info("Restart flag FOUND!")
             try:
@@ -436,6 +456,26 @@ class AutonomousAgent:
                 
                 if channel_id:
                     logger.info(f"Sending restart notification to {channel_id}")
+                    
+                    # Wait for Discord cache to populate
+                    channel = None
+                    for _ in range(10): # Try for 5 seconds
+                        try:
+                            channel = self.discord.client.get_channel(channel_id)
+                            if channel:
+                                break
+                        except:
+                            pass
+                        await asyncio.sleep(0.5)
+                        
+                    if not channel:
+                         # Fallback: Try to fetch it (API call)
+                         try:
+                            logger.info("Channel not in cache, fetching from API...")
+                            channel = await self.discord.client.fetch_channel(channel_id)
+                         except Exception as e:
+                            logger.error(f"Could not fetch channel {channel_id}: {e}")
+
                     await self.discord.send_message(channel_id, f"✅ **Agent restarted successfully!**\nAs requested by {author}\nRunning post-restart diagnostics...")
                     
                     # Run quick diagnostics
@@ -1270,10 +1310,34 @@ class AutonomousAgent:
             return
 
         if response == "LLM not available.":
-            logger.warning("LLM not available during autonomous action.")
-            await self.send_admin_dm("⚠️ **Alert:** LLM is unavailable during autonomous loop.", category="error")
-            # Fallback action to keep loop alive but not spam
-            response = "TOOL: web_tool | ARGS: action='search', query='latest raspberry pi news'"
+            logger.warning("LLM not available during autonomous action. Attempting Gemini fallback...")
+            
+            try:
+                # Fallback to Gemini for decision making
+                gemini_prompt = (
+                    f"You are an autonomous AI agent. \n"
+                    f"Current Context: {context}\n"
+                    f"Goal: Decide the next best action to reduce boredom or learn something new.\n"
+                    f"Tools Available:\n{tool_desc}\n\n"
+                    f"IMPORTANT: You must respond in the EXACT format:\n"
+                    f"TOOL: <tool_name> | ARGS: <python_dict_args>\n"
+                    f"Example: TOOL: web_tool | ARGS: {{'action': 'search', 'query': 'news'}}\n"
+                    f"Or if no tool needed, just a text response."
+                )
+                
+                response = await self.llm.ask_gemini(gemini_prompt, model_type="fast")
+                
+                # Check if Gemini failed too
+                if "Gemini Error" in response or "Error" in response:
+                     raise Exception("Gemini also failed")
+                     
+                logger.info(f"Gemini Fallback Decision: {response}")
+                
+            except Exception as e:
+                logger.error(f"Autonomous fallback failed: {e}")
+                await self.send_admin_dm("⚠️ **Alert:** Both Local LLM and Gemini are unavailable.", category="error")
+                # Ultimate safe fallback
+                response = "TOOL: web_tool | ARGS: {'action': 'search', 'query': 'latest raspberry pi news'}"
 
         
         # Track decision

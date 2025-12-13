@@ -27,12 +27,20 @@ The system now tracks critical errors:
 - **Runtime Errors**: Exceptions caught during normal operation.
 - **Global Counter**: Increments daily error stats automatically when `logger.error` or `logger.critical` is called.
 
+## Crash Detection (Runtime Lock)
+The system implements a robust mechanisms to detect ALL types of crashes (including power loss or `kill -9`):
+
+1.  **Runtime Lock**: On startup, a lock file is created.
+2.  **Graceful Shutdown**: The lock file is removed only when the agent shuts down gracefully (`!shutdown` or systemctl stop).
+3.  **Crash Detection**: If the agent starts and finds an existing lock file, it assumes the previous run crashed.
+4.  **Notification**: A DM is sent to the admin upon successful restart: "⚠️ **Agent Crashed!** Detected runtime lock from previous session...".
+
 ## Technical Details
 - **Class**: `agent.reports.DailyStats`
 - **Persistence**: Stats are saved to `daily_stats.json` to ensure continuity across agent restarts.
 - **Reset**: Stats are reset automatically when the date changes.
 - **Missed Reports**: Logic detects if a report was missed (e.g., due to downtime) and sends it immediately upon the next restart before resetting statistics.
 ---
-Poslední aktualizace: 2025-12-09  
+Poslední aktualizace: 2025-12-13  
 Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

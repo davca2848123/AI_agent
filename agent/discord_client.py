@@ -93,7 +93,11 @@ class DiscordClient:
                         "timestamp": time.time(),
                         "content": after.content
                     })
-                    logger.debug(f"Tracked message edit: {after.content[:50]}...")
+                    
+                    # Filter animation spam from logs
+                    is_animation = after.content.startswith("🤔 Thinking") or after.content.startswith("🧠 Reasoning")
+                    if not is_animation:
+                        logger.debug(f"Tracked message edit: {after.content[:50]}...")
             
             # Also update in current_command_messages
             for msg_entry in self.current_command_messages:
@@ -104,14 +108,21 @@ class DiscordClient:
                     })
                     break
 
-        # Run client in background
+        # Run client in background with reconnection loop
         async def run_client():
-            try:
-                await self.client.start(self.token)
-            except Exception as e:
-                logger.critical(f"Discord client failed to start: {e}")
-                self.is_ready = False # Ensure it stays false
-        
+            while True:
+                try:
+                    logger.info("Starting Discord client...")
+                    await self.client.start(self.token)
+                except Exception as e:
+                    logger.critical(f"Discord client crashed/disconnected: {e}")
+                    self.is_ready = False
+                    
+                    # Backoff before reconnecting
+                    delay = 10
+                    logger.info(f"Reconnecting to Discord in {delay}s...")
+                    await asyncio.sleep(delay)
+
         asyncio.create_task(run_client())
 
     def clear_message_history(self):

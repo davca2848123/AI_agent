@@ -7,7 +7,7 @@ Wants=network-online.target
 Type=simple
 User=davca
 WorkingDirectory=/home/davca/rpi_ai/rpi_ai
-ExecStart=/bin/bash -c "pip3 install -r requirements.txt --break-system-packages && python3 main.py"
+ExecStart=/home/davca/rpi_ai/rpi_ai/venv/bin/python main.py
 Restart=always
 RestartSec=5
 

@@ -115,6 +115,9 @@ Vyhledává na webu pomocí DuckDuckGo a čte obsah webových stránek.
 - `read` - Přečti webovou stránku
 
 **Parametry:**
+- `action` *(optional)* - Typ akce. Pokud chybí, automaticky detekováno:
+    - `"read"` pokud je přítomno `url`
+    - `"search"` pokud je přítomno `query`
 - `query` - Vyhledávací dotaz (pro search)
 - `url` - URL stránky (pro read)
 - `limit` - Max délka textu (default 1000)
@@ -123,16 +126,20 @@ Vyhledává na webu pomocí DuckDuckGo a čte obsah webových stránek.
 ### 💡 Příklady
 
 ```python
-# Search
+# Search (explicit action)
 web_tool.execute(action="search", query="Python tutorial")
 
-# Read webpage
-web_tool.execute(action="read", url="https://example.com")
+# Search (implicit action)
+web_tool.execute(query="Jak uvařit guláš?")
+
+# Read webpage (implicit action)
+web_tool.execute(url="https://example.com")
 ```
 
 <a name="poznámky"></a>
 ### ⚠️ Poznámky
 - Vyžaduje `duckduckgo_search`, `bs4`, `aiohttp`
+- **Robustness**: Tool automaticky doplňuje chybějící `action` na základě argumentů, což zabraňuje pádům při autonomním volání LLM.
 - **Lokální vyhledávání**: Automaticky upravuje dotazy pro preferenci obsahu v češtině, slovenštině a angličtině (přidává filtr `lang:cs OR lang:sk OR lang:en`).
 - Search vrací max 3 výsledky
 - Read extrahuje text pomocí BeautifulSoup
@@ -571,6 +578,6 @@ INFO: web_tool: Completed in 1.23s - Result: Search Results:
 - [📖 LLM Integration](../core/llm-integration.md) - Jak LLM volá nástroje
 - [🏗️ Architektura](../architecture.md)
 ---
-Poslední aktualizace: 2025-12-09  
+Poslední aktualizace: 2025-12-13  
 Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

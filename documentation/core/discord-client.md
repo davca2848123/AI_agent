@@ -306,8 +306,24 @@ async def send_message(self, channel_id, content, ...):
 
 ---
 
-<a name="integration"></a>
-## Integration
+---
+
+<a name="connectivity"></a>
+## Connectivity & Resilience
+
+<a name="auto-reconnect"></a>
+### 🔄 Reconnection Loop
+The client is wrapped in a permanent **reconnection loop** to handle network failures and critical errors (e.g., `ClientConnectionResetError`).
+- If the connection drops or the client crashes internally, the agent waits 5 seconds and attempts to restart the client entirely (`connector.start()`).
+- This ensures the agent stays online even after temporary internet outages or API glitches.
+
+<a name="startup-notifications"></a>
+### 🔔 Reliable Notifications
+Startup notifications (sent when agent comes online) have enhanced reliability:
+- **Resilient Channel Cache**: If the Discord channel cache isn't ready immediately after login (common race condition), the agent fetches the channel directly from the API.
+- **Retry Logic**: If sending the startup notification fails, it retries with exponential backoff (up to 3 times).
+
+---
 
 <a name="v-corepy"></a>
 ### 🔧 V core.py
@@ -340,6 +356,6 @@ while True:
 - [📚 API Reference](../api/discord-client.md)
 - [🏗️ Architektura](../architecture.md)
 ---
-Poslední aktualizace: 2025-12-09  
+Poslední aktualizace: 2025-12-13  
 Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

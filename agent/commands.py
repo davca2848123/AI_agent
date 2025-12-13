@@ -47,6 +47,38 @@ def levenshtein_distance(s1: str, s2: str) -> int:
         previous_row = current_row
     
     return previous_row[-1]
+    return previous_row[-1]
+
+class TypingAnimation:
+    """Context manager for discord typing animation (editing message)."""
+    def __init__(self, message, base_text="🤔 Thinking"):
+        self.message = message
+        self.base_text = base_text
+        self.is_running = True
+        self.task = None
+
+    async def __aenter__(self):
+        self.task = asyncio.create_task(self._animate())
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        self.is_running = False
+        if self.task:
+            try:
+                await self.task
+            except asyncio.CancelledError:
+                pass
+
+    async def _animate(self):
+        dots = 0
+        while self.is_running:
+            try:
+                dots = (dots + 1) % 4
+                text = f"{self.base_text}{'.' * dots}"
+                await self.message.edit(content=text)
+                await asyncio.sleep(1.0)
+            except Exception:
+                break
 
 class SSHView(discord.ui.View):
     def __init__(self, ssh_command, net_use_command):
@@ -736,7 +768,8 @@ class CommandHandler:
         elif command == "!export":
             await self.cmd_export(channel_id, args)
         elif command == "!ask":
-            await self.cmd_ask(channel_id, ' '.join(args))
+            # Pass full message object to support attachments
+            await self.cmd_ask(channel_id, ' '.join(args), message_obj=msg)
         elif command == "!teach":
             await self.cmd_teach(channel_id, ' '.join(args))
         elif command == "!search":
@@ -1212,6 +1245,21 @@ class CommandHandler:
                     results.append("🔴 **LLM**: Not initialized")
             except Exception as e:
                 results.append(f"❌ **LLM**: Error - {e}")
+            
+            # 1.5 Gemini Check
+            try:
+                import google.generativeai as genai
+                import config_secrets
+                
+                if not getattr(config_secrets, 'GEMINI_API_KEY', None):
+                    results.append("⚠️ **Gemini**: API Key missing")
+                elif not genai:
+                    results.append("⚠️ **Gemini**: Library not installed")
+                else:
+                    # Basic configuration check
+                    results.append("✅ **Gemini**: Library & Key configured")
+            except Exception as e:
+                results.append(f"❌ **Gemini**: Error - {e}")
             
             # 2. Discord Check
             if self.agent.discord and self.agent.discord.client:
@@ -2112,7 +2160,174 @@ _{desc}_"""
         else:
             await self.agent.discord.send_message(channel_id, 
                 f"📦 **Export ({export_type}):**\n```json\n{json_output}\n```")
-    async def cmd_ask(self, channel_id: int, question: str):
+    async def cmd_ask(self, channel_id: int, question: str, message_obj=None):
+        """Ask the AI a question (Smart Routing: Local vs Gemini)."""
+        self.agent.is_processing = True
+        
+        # 1. Initial "Thinking" message
+        thinking_msg = await self.agent.discord.send_message(channel_id, "🤔 Thinking...")
+        if not thinking_msg:
+             # Fallback if we can't get the message object (shouldn't happen usually)
+             logger.error("Failed to send thinking message.")
+             self.agent.is_processing = False
+             return
+
+        try:
+            # 2. Check for attachments (Images)
+            image_data = None
+            if message_obj and message_obj.get('attachments'):
+                for attachment in message_obj['attachments']:
+                    if attachment.get('content_type', '').startswith('image/'):
+                        try:
+                            # Download image
+                            async with aiohttp.ClientSession() as session:
+                                async with session.get(attachment.get('url')) as resp:
+                                    if resp.status == 200:
+                                        image_data = await resp.read()
+                                        await thinking_msg.edit(content="🖼️ Analyzing image...")
+                                        break
+                        except Exception as e:
+                            logger.error(f"Failed to download image: {e}")
+            
+            # 3. Calculate Difficulty Score
+            # Factors: Length, Keywords, Image presence
+            difficulty_score = 0
+            
+            # Length
+            if len(question) > config_settings.DIFFICULTY_LENGTH_THRESHOLD:
+                difficulty_score += 1
+            
+            # Keywords
+            if any(keyword in question.lower() for keyword in config_settings.DIFFICULTY_KEYWORDS):
+                difficulty_score += 1
+            
+            # Image (Always high difficulty)
+            if image_data:
+                difficulty_score += 10
+                
+            # Determine Route
+            # Factors: Length, Keywords, Image presence
+            difficulty_score = 0
+            
+            # Length
+            if len(question) > config_settings.DIFFICULTY_LENGTH_THRESHOLD:
+                difficulty_score += 1
+            
+            # Keywords
+            if any(keyword in question.lower() for keyword in config_settings.DIFFICULTY_KEYWORDS):
+                difficulty_score += 1
+            
+            # Image (Always high difficulty)
+            if image_data:
+                difficulty_score += 10
+            
+            # Check availability of Local LLM
+            local_available = self.agent.llm.llm is not None
+            
+            # Determine Route
+            # Use Gemini if:
+            # 1. High difficulty/Image
+            # 2. OR Local LLM is NOT available (Fallback to Gemini Fast)
+            use_gemini = (difficulty_score >= 1 or image_data is not None) or (not local_available)
+            
+            model_type = "high" if difficulty_score >= 2 else "fast"
+            
+            # If using Gemini purely as fallback for simple queries, force 'fast' model
+            if use_gemini and difficulty_score < 1 and not image_data:
+                model_type = "fast"
+            
+            # 4. Process Request
+            response_text = ""
+            
+            if use_gemini:
+                # GEMINI ROUTE (With Animation)
+                async with TypingAnimation(thinking_msg, "🧠 Reasoning"):
+                    logger.info(f"Routing to GEMINI ({model_type}) - Difficulty: {difficulty_score}")
+                    response_text = await self.agent.llm.ask_gemini(
+                        prompt=question if question else "Describe this image.",
+                        image_data=image_data, 
+                        model_type=model_type
+                    )
+            else:
+                # LOCAL LLM ROUTE (No Animation, Standard Chat)
+                logger.info("Routing to LOCAL LLM")
+                
+                if not question:
+                    await thinking_msg.edit(content="❓ Usage: `!ask <your question>`")
+                    self.agent.is_processing = False
+                    return
+
+                # RAG Logic
+                memories = []
+                try:
+                    memories = self.agent.memory.search_relevant_memories(question, limit=3)
+                except Exception as e:
+                    logger.error(f"Memory search error: {e}")
+
+                # Determine context
+                system_prompt = "You are a helpful AI assistant. Answer the user's question clearly and concisely."
+                context_prompt = f"User Question: {question}"
+                
+                # Add memories to context
+                if memories:
+                    memory_text = "\n".join([f"- {m['content']}" for m in memories])
+                    context_prompt = f"Context from memory:\n{memory_text}\n\n{context_prompt}"
+                
+                if self.agent.last_message_content:
+                     context_prompt += f"\nLast User Message: {self.agent.last_message_content}"
+                
+                # Direct generation without tool-forcing `decide_action`
+                response_text = await self.agent.llm.generate_response(
+                    prompt=context_prompt,
+                    system_prompt=system_prompt
+                )
+
+            # 5. Send Response
+            # If too long (>1900), send as file instead of splitting
+            if len(response_text) > 1900:
+                # Create temp file
+                filename = f"answer_{int(time.time())}.txt" # or .md for code? let's stick to txt or generic
+                if "```" in response_text:
+                     filename = f"code_answer_{int(time.time())}.md"
+                     
+                with open(filename, 'w', encoding='utf-8') as f:
+                    f.write(response_text)
+                
+                await thinking_msg.edit(content=f"🗣️ **Answer:** (Result too long, sent as file)")
+                await self.agent.discord.send_message(channel_id, "📄 **Full Response:**", file_path=filename)
+                
+                # Cleanup
+                try:
+                    os.remove(filename)
+                except:
+                    pass
+            else:
+                await thinking_msg.edit(content=f"🗣️ **Answer:**\n{response_text}")
+
+            # Save to memory (if significant)
+            if len(response_text) > 50:
+                self.agent.action_history.append(f"Answered: {question[:50]}...")
+                # Try to save interaction
+                try:
+                    self.agent.memory.save_memory(
+                        content=f"Q: {question}\nA: {response_text}",
+                        memory_type="interaction",
+                        score=min(len(response_text)//10, 80)
+                    )
+                except:
+                     pass
+
+        except Exception as e:
+            logger.error(f"Error in cmd_ask: {e}", exc_info=True)
+            try:
+                await thinking_msg.edit(content=f"❌ Error: {e}")
+            except:
+                pass
+            
+        finally:
+            self.agent.is_processing = False
+
+    async def cmd_ask_legacy(self, channel_id: int, question: str):
         """Ask the AI a question."""
         self.agent.is_processing = True
         
@@ -2695,7 +2910,7 @@ _{desc}_"""
             test_areas = ['llm', 'network', 'database', 'filesystem', 'tools', 'memory', 'ngrok', 'discord', 'resources', 'loops']
             verify_only = True
         elif area == 'quick':
-            test_areas = ['llm', 'network', 'database', 'discord']
+            test_areas = ['llm', 'network', 'database', 'discord', 'resources', 'filesystem', 'loops', 'tools']
             verify_only = False
         elif area == 'deep':
             # DEEP DEBUG MODE
@@ -3771,9 +3986,20 @@ _{description}_
             # This uses the same process as the web interface!
             loop = asyncio.get_running_loop()
             
-            # Use run_in_executor for blocking ngrok.connect
-            # Note: ngrok.connect might not be thread-safe if pyngrok isn't, but usually it is for separate tunnels
-            self.ngrok_process = await loop.run_in_executor(None, lambda: ngrok.connect(22, "tcp"))
+            # Retry logic for ngrok connection
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    # Use run_in_executor for blocking ngrok.connect
+                    # Note: ngrok.connect might not be thread-safe if pyngrok isn't, but usually it is for separate tunnels
+                    self.ngrok_process = await loop.run_in_executor(None, lambda: ngrok.connect(22, "tcp"))
+                    break # Success
+                except Exception as e:
+                    if attempt < max_retries - 1:
+                        logger.warning(f"Ngrok connection attempt {attempt+1} failed: {e}. Retrying in 2s...")
+                        await asyncio.sleep(2)
+                    else:
+                        raise e # Re-raise last exception
             
             logger.info(f"SSH tunnel started: {self.ngrok_process.public_url}")
             
@@ -3790,8 +4016,16 @@ _{description}_
             
         except Exception as e:
             logger.exception("SSH tunnel setup failed")
+            # Try to get ngrok logs if possible
+            error_details = str(e)
+            try:
+                if hasattr(e, 'ngrok_logs'):
+                     error_details += f"\nLogs: {e.ngrok_logs}"
+            except:
+                pass
+
             if channel_id:
-                await self.agent.discord.send_message(channel_id, f"✖️ Failed to start ngrok: {e}")
+                await self.agent.discord.send_message(channel_id, f"✖️ Failed to start ngrok: {error_details}")
             self.ngrok_process = None
             return
 

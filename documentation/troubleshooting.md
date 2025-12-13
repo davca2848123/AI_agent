@@ -273,6 +273,41 @@ pip3 install llama-cpp-python --break-system-packages
 
 ---
 
+<a name="gemini-issues"></a>
+## ☁️ Gemini Problémy
+
+<a name="symptom-404-model-not-found"></a>
+### Symptom: 404 Model Not Found
+
+**Chyba:**
+```
+Gemini Error: 404 models/gemini-1.5-flash is not found
+```
+
+**Řešení:**
+Váš API klíč pravděpodobně nemá přístup k této specifické verzi modelu.
+Použijte aliasy `latest` v `config_settings.py`:
+```python
+GEMINI_MODEL_FAST = "gemini-flash-latest"
+GEMINI_MODEL_HIGH = "gemini-pro-latest"
+```
+
+<a name="symptom-api-key-missing"></a>
+### Symptom: API Key Missing
+
+**Chyba:**
+```
+Gemini Error: API Key not configured
+```
+
+**Řešení:**
+Ykontrolujte `config_secrets.py`:
+```python
+GEMINI_API_KEY = "AIzaSy..."
+```
+
+---
+
 <a name="memory--database"></a>
 
 <a name="memory-database"></a>

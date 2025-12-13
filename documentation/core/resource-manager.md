@@ -171,11 +171,11 @@ def update_parameters(self, resource_tier: int):
 
 **Linux:**
 ```bash
-# Create/expand swap file
-sudo dd if=/dev/zero of=/swapfile bs=1M count=2048  # 2GB
-sudo chmod 600 /swapfile
-sudo mkswap /swapfile
-sudo swapon /swapfile
+# Create/expand swap file (Smart Check implemented)
+# Only runs massive I/O if swap doesn't exist or is too small.
+# Will NOT shrink swap if it's already larger than target.
+sudo dd if=/dev/zero of=/swapfile bs=1M count=2048 ...
+
 ```
 
 **Windows:**
@@ -405,7 +405,8 @@ def check_resources(self):
     """Get current resource usage."""
     
     return ResourceUsage(
-        cpu_percent=psutil.cpu_percent(interval=0.1),
+    return ResourceUsage(
+        cpu_percent=psutil.cpu_percent(interval=1.0),
         ram_percent=psutil.virtual_memory().percent,
         disk_percent=psutil.disk_usage('/').percent,
         swap_percent=psutil.swap_memory().percent,
@@ -449,6 +450,6 @@ async def handle_resource_tier(self, tier: int, usage):
 - [📚 API Reference](../api/agent-core.md)
 - [🏗️ Architektura](../architecture.md)
 ---
-Poslední aktualizace: 2025-12-09  
+Poslední aktualizace: 2025-12-10  
 Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

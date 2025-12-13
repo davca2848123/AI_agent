@@ -223,10 +223,19 @@ class WebTool(Tool):
     def description(self) -> str:
         return "Search/read web. Args: action='search'|'read', query='...', url='...'"
 
-    async def execute(self, action: str, query: str = None, url: str = None, limit: int = 1000, **kwargs) -> str:
+    async def execute(self, action: str = None, query: str = None, url: str = None, limit: int = 1000, **kwargs) -> str:
         if not WEB_TOOLS_AVAILABLE:
             return "Error: Web tools dependencies not installed."
         
+        # Infer action if not provided
+        if not action:
+            if url:
+                action = "read"
+            elif query:
+                action = "search"
+            else:
+                return "Error: Action, query, or url required."
+
         # Filter out unexpected arguments (e.g., 'site')
         if kwargs:
             logger.debug(f"web_tool: Ignoring unexpected arguments: {list(kwargs.keys())}")

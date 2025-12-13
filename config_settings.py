@@ -128,3 +128,15 @@ DEFAULT_AGENT_GOALS = [
     "Build knowledge base"
 ]
 GOALS_FILE = "agent_goals.json"
+
+# Gemini API Configuration
+GEMINI_MODEL_FAST = "gemini-flash-latest"
+GEMINI_MODEL_HIGH = "gemini-pro-latest"
+
+# Effective models (Using 'latest' alias prevents 404 on version mismatch)
+GEMINI_MODEL_FAST_EFFECTIVE = "gemini-flash-latest" 
+GEMINI_MODEL_HIGH_EFFECTIVE = "gemini-pro-latest"
+
+# Smart Difficulty Recognition
+DIFFICULTY_KEYWORDS = ["code", "script", "analyze", "complex", "vysvětli", "navrhni", "detail", "image", "obrázek"]
+DIFFICULTY_LENGTH_THRESHOLD = 50 # Characters

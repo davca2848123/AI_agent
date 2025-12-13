@@ -2,7 +2,7 @@
 
 > **Navigace:** [📂 Dokumentace](../README.md) | [🧠 Core](../README.md#core-jádro) | [LLM Integrace](llm-integration.md)
 
-> Lokální LLM pomocí llama-cpp-python.
+> Lokální LLM + Cloud Gemini Hybrid.
 > **Verze:** Beta - CLOSED
 
 ---
@@ -10,7 +10,9 @@
 <a name="přehled"></a>
 ## 📋 Přehled
 
-Agent používá lokální LLM model (Qwen 2.5) běžící přes `llama-cpp-python` pro rozhodování a generování odpovědí.
+Agent používá hybridní systém:
+1. **Lokální LLM** (Qwen 2.5 via `llama-cpp-python`) pro rychlé, soukromé rozhodování a jednoduché dotazy.
+2. **Cloud LLM** (Google Gemini) pro komplexní dotazy (`!ask`), obrázky a jako **fallback** při výpadku lokálního modelu.
 
 ---
 
@@ -367,6 +369,47 @@ Pokud LLM selže:
 
 ---
 
+<a name="cloud-integration"></a>
+## ☁️ Cloud Integration (Gemini)
+
+Agent implementuje hybridní model, kde kombinuje lokální LLM s cloudovým Google Gemini API pro zvýšení robustnosti a schopností.
+
+<a name="konfigurace"></a>
+### 🔧 Konfigurace
+Modely jsou konfigurovány v `config_settings.py` (s mapováním na `latest` verze):
+*   **Fast Model** (`gemini-flash-latest`): Pro rychlé odpovědi a fallback.
+*   **High Model** (`gemini-pro-latest`): Pro komplexní analýzu a `!ask` s obrázky.
+
+<a name="smart-routing"></a>
+### 🧠 Smart Routing (`!ask`)
+Příkaz `!ask` automaticky volí nejvhodnější model:
+1.  **Local LLM**: Pro jednoduché dotazy (< 50 znaků).
+2.  **Gemini (High)**: Pro:
+    *   Dlouhé/komplexní dotazy (> 50 znaků)
+    *   Dotazy s obrázky (Vision capabilities)
+    *   Když uživatel explicitně požádá
+
+<a name="autonomous-fallback"></a>
+### 🛡️ Autonomous Fallback
+Pro zajištění nepřetržitého provozu i při výpadku lokálního modelu (např. chybějící binaries, přetížení):
+1.  Pokud `decide_action` (lokální LLM) selže (`LLM not available`), agent zachytí chybu.
+2.  Automaticky přepne na **Gemini (Fast)** pro rozhodovací proces.
+3.  Tato záloha umožňuje agentovi pokračovat v autonomní činnosti ("Thinking...") i bez lokálního mozku.
+
+<a name="api-metody"></a>
+### 💻 API Metody
+Použití v kódu (`LLMClient`):
+
+```python
+response = await llm.ask_gemini(
+    prompt="Describe this image",
+    image_data=bytes_data,
+    model_type="high" # 'high' or 'fast'
+)
+```
+
+---
+
 <a name="související"></a>
 ## 🔗 Související
 
@@ -376,6 +419,6 @@ Pokud LLM selže:
 - [📚 API Reference](../api/llm-integration.md) - Technická dokumentace tříd a metod
 - [🏗️ Architektura](../architecture.md)
 ---
-Poslední aktualizace: 2025-12-09  
+Poslední aktualizace: 2025-12-13  
 Verze: Beta - CLOSED  
 Tip: Použij Ctrl+F pro vyhledávání

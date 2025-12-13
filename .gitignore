@@ -20,6 +20,7 @@ ENV/
 # Secrets and config
 config_secrets.py
 
+
 # Runtime state files
 tool_stats.json
 tool_timestamps.json
@@ -66,6 +67,10 @@ dist/
 *.swo
 *~
 .tmp/
+*.tmp
+
+# Runtime Statistics
+daily_stats.json
 
 # OS specific
 .DS_Store
@@ -79,6 +84,7 @@ release_*.txt
 __pycache__
 venv
 tests/
+!tests/gemini_guide.md
 models/
 release.zip
 boredom_topics.json.test_backup

@@ -3,6 +3,7 @@ import asyncio
 import psutil
 import platform
 import subprocess
+import os
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
 import config_settings
@@ -60,7 +61,7 @@ class ResourceManager:
     
     def check_resources(self) -> ResourceUsage:
         """Get current resource usage."""
-        cpu = psutil.cpu_percent(interval=0.1)
+        cpu = psutil.cpu_percent(interval=1.0)
         ram = psutil.virtual_memory().percent
         disk = psutil.disk_usage('/').percent
         
@@ -294,8 +295,42 @@ class ResourceManager:
     async def _expand_swap_linux(self, force_max: bool = False):
         """Expand swap file on Linux."""
         target_size_gb = self.swap_max_gb if force_max else (self.swap_min_gb + 2)
+        target_size_bytes = target_size_gb * 1024 * 1024 * 1024
         
-        logger.info(f"Expanding Linux swap to {target_size_gb}GB")
+        logger.info(f"Checking Linux swap requirements (Target: {target_size_gb}GB)...")
+
+        # 1. Check current swap usage
+        try:
+            swap = psutil.swap_memory()
+            # If we already have enough swap (>= target), don't mess with it.
+            # This prevents shrinking swap when dropping from Tier 3 -> Tier 2
+            if swap.total >= target_size_bytes:
+                 logger.info(f"Current swap ({swap.total / 1024**3:.2f}GB) is sufficient for target {target_size_gb}GB. Keeping existing configuration.")
+                 return
+            
+            # If we are close enough to target (within 512MB), skip
+            if abs(swap.total - target_size_bytes) < (512 * 1024 * 1024):
+                 logger.info(f"Swap size ({swap.total / 1024**3:.2f}GB) matches target. Skipping expansion.")
+                 return
+        except Exception as e:
+            logger.debug(f"Failed to check swap memory: {e}")
+
+        # 2. Check if /swapfile exists and has correct size
+        if os.path.exists("/swapfile"):
+            try:
+                size = os.path.getsize("/swapfile")
+                # If file is large enough (>= target), just enable it
+                if size >= target_size_bytes:
+                    logger.info(f"/swapfile exists and is sufficient ({size/1024**3:.2f}GB >= {target_size_gb}GB). Verifying swapon...")
+                    # Just ensure it's on
+                    cmd = "sudo -n swapon /swapfile"
+                    proc = await asyncio.create_subprocess_shell(cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+                    await proc.communicate()
+                    return
+            except Exception as e:
+                logger.warning(f"Error checking /swapfile: {e}")
+
+        logger.info(f"Expanding Linux swap to {target_size_gb}GB (This involves heavy I/O)...")
         
         # Check if we have sudo access without password
         try:
@@ -521,7 +556,7 @@ class NetworkMonitor:
             logger.info("Priority 1: Checking ngrok...")
             if hasattr(self.agent, 'command_handler'):
                 handler = self.agent.command_handler
-                if hasattr(handler, 'ngrok_process') and handler.ngrok_process:
+            if hasattr(handler, 'ngrok_process') and handler.ngrok_process:
                     # Check if ngrok tunnel is still active by querying tunnels
                     try:
                         from pyngrok import ngrok
@@ -535,8 +570,11 @@ class NetworkMonitor:
                                     break
                         
                         if not tunnel_active:
-                            logger.warning("ngrok tunnel stopped - manual restart needed")
-                            failed_recoveries.append("ngrok (manual restart needed)")
+                            logger.warning("ngrok tunnel stopped - attempting active restart...")
+                            # Active Recovery
+                            handler.ngrok_process = None # Clear old process ref
+                            asyncio.create_task(handler.start_ssh_tunnel())
+                            failed_recoveries.append("ngrok (restarting...)")
                         else:
                             logger.info("✅ ngrok still running")
                     except Exception as ngrok_err:
