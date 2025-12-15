@@ -15,9 +15,16 @@ class DailyStats:
             "date": datetime.date.today().isoformat(),
             "uptime_seconds": 0,
             "messages_processed": 0,
+            "tokens": {"input": 0, "output": 0},
+            "llm_generations": {"local": 0, "gemini": 0},
+            "commands_used": {},
+            "active_users": [],
             "tools_used": {},
             "knowledge_acquired": [],
             "errors_count": 0,
+            "restarts_planned": 0,
+            "restarts_unplanned": 0,
+            "boredom_actions": 0,
             "report_sent": False,
             "last_save": time.time()
         }
@@ -60,9 +67,16 @@ class DailyStats:
             "date": new_date,
             "uptime_seconds": 0,
             "messages_processed": 0,
+            "tokens": {"input": 0, "output": 0},
+            "llm_generations": {"local": 0, "gemini": 0},
+            "commands_used": {},
+            "active_users": [],
             "tools_used": {},
             "knowledge_acquired": [],
             "errors_count": 0,
+            "restarts_planned": 0,
+            "restarts_unplanned": 0,
+            "boredom_actions": 0,
             "report_sent": False,
             "last_save": time.time()
         }
@@ -71,6 +85,37 @@ class DailyStats:
     def increment_message(self):
         self.stats["messages_processed"] += 1
         self.save()
+
+    def record_tokens(self, input_count: int, output_count: int):
+        if "tokens" not in self.stats:
+            self.stats["tokens"] = {"input": 0, "output": 0}
+        self.stats["tokens"]["input"] += input_count
+        self.stats["tokens"]["output"] += output_count
+        self.save()
+
+    def record_llm_generation(self, provider: str):
+        if "llm_generations" not in self.stats:
+            self.stats["llm_generations"] = {"local": 0, "gemini": 0}
+        if provider in self.stats["llm_generations"]:
+            self.stats["llm_generations"][provider] += 1
+        else:
+            self.stats["llm_generations"][provider] = 1
+        self.save()
+
+    def record_command(self, command_name: str):
+        if "commands_used" not in self.stats:
+            self.stats["commands_used"] = {}
+        if command_name not in self.stats["commands_used"]:
+            self.stats["commands_used"][command_name] = 0
+        self.stats["commands_used"][command_name] += 1
+        self.save()
+
+    def record_active_user(self, user_id: int):
+        if "active_users" not in self.stats:
+            self.stats["active_users"] = []
+        if user_id not in self.stats["active_users"]:
+            self.stats["active_users"].append(user_id)
+            self.save()
 
     def record_tool_usage(self, tool_name: str):
         if tool_name not in self.stats["tools_used"]:
@@ -85,6 +130,30 @@ class DailyStats:
 
     def record_error(self):
         self.stats["errors_count"] += 1
+        self.save()
+
+    def increment_planned_restart(self):
+        if "restarts_planned" not in self.stats:
+            self.stats["restarts_planned"] = 0
+        self.stats["restarts_planned"] += 1
+        self.save()
+
+    def increment_unplanned_restart(self):
+        if "restarts_unplanned" not in self.stats:
+            self.stats["restarts_unplanned"] = 0
+        self.stats["restarts_unplanned"] += 1
+        self.save()
+        
+    def increment_boredom_action(self):
+        if "boredom_actions" not in self.stats:
+            self.stats["boredom_actions"] = 0
+        self.stats["boredom_actions"] += 1
+        self.save()
+
+    def increment_internet_disconnect(self):
+        if "internet_disconnects" not in self.stats:
+            self.stats["internet_disconnects"] = 0
+        self.stats["internet_disconnects"] += 1
         self.save()
     
     def add_uptime(self, seconds: float):
@@ -108,7 +177,28 @@ class DailyStats:
         
         embed.add_field(name="⏱️ Uptime", value=uptime_str, inline=True)
         embed.add_field(name="📩 Messages", value=str(self.stats["messages_processed"]), inline=True)
+        
+        # User Stats
+        active_users_count = len(self.stats.get("active_users", []))
+        embed.add_field(name="👥 Active Users", value=str(active_users_count), inline=True)
+        
+        # Token Stats
+        tokens = self.stats.get("tokens", {"input": 0, "output": 0})
+        token_str = f"In: {tokens.get('input', 0)}\nOut: {tokens.get('output', 0)}"
+        embed.add_field(name="🪙 Tokens", value=token_str, inline=True)
+        
+        # LLM Generation Stats
+        gens = self.stats.get("llm_generations", {"local": 0, "gemini": 0})
+        gen_str = f"Local: {gens.get('local', 0)}\nGemini: {gens.get('gemini', 0)}"
+        embed.add_field(name="🤖 Generations", value=gen_str, inline=True)
+        
         embed.add_field(name="❌ Errors", value=str(self.stats["errors_count"]), inline=True)
+        
+        # Restarts & Boredom row
+        restarts_str = f"Planned: {self.stats.get('restarts_planned', 0)}\nCrashes: {self.stats.get('restarts_unplanned', 0)}"
+        embed.add_field(name="🔄 Restarts", value=restarts_str, inline=True)
+        embed.add_field(name="🥱 Boredom Actions", value=str(self.stats.get('boredom_actions', 0)), inline=True)
+        embed.add_field(name="📡 Disconnects", value=str(self.stats.get('internet_disconnects', 0)), inline=True)
         
         # Tools
         if self.stats["tools_used"]:
@@ -116,6 +206,15 @@ class DailyStats:
         else:
             tools_str = "No tools used."
         embed.add_field(name="🛠️ Tools Activity", value=tools_str, inline=False)
+
+        # Commands Stats (Top 3)
+        commands = self.stats.get("commands_used", {})
+        if commands:
+            sorted_commands = sorted(commands.items(), key=lambda item: item[1], reverse=True)[:3]
+            cmds_str = "\n".join([f"• {k}: {v}" for k, v in sorted_commands])
+        else:
+            cmds_str = "No commands used."
+        embed.add_field(name="⌨️ Top Commands", value=cmds_str, inline=False)
         
         # Knowledge
         if self.stats["knowledge_acquired"]:

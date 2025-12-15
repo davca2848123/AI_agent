@@ -110,18 +110,36 @@ class DiscordClient:
 
         # Run client in background with reconnection loop
         async def run_client():
+            import aiohttp
+            backoff = 5
             while True:
                 try:
                     logger.info("Starting Discord client...")
                     await self.client.start(self.token)
+                except (aiohttp.client_exceptions.ClientConnectorDNSError, aiohttp.client_exceptions.ClientError) as e:
+                    logger.warning(f"Network/DNS error in Discord client: {e}")
+                    self.is_ready = False
+                    
+                    # Backoff
+                    logger.info(f"Reconnecting to Discord in {backoff}s...")
+                    await asyncio.sleep(backoff)
+                    backoff = min(backoff * 2, 60) # Cap at 60s
+
                 except Exception as e:
                     logger.critical(f"Discord client crashed/disconnected: {e}")
                     self.is_ready = False
                     
-                    # Backoff before reconnecting
-                    delay = 10
-                    logger.info(f"Reconnecting to Discord in {delay}s...")
-                    await asyncio.sleep(delay)
+                    # Backoff
+                    logger.info(f"Reconnecting to Discord in {backoff}s...")
+                    await asyncio.sleep(backoff)
+                    backoff = min(backoff * 2, 60)
+                
+                # Reset backoff on successful run (if we get here, it means start() returned safely, which implies clean disconnect or logic error)
+                # But start() usually blocks. If it returns, it's a disconnect.
+                else:
+                    backoff = 5 # Reset if it ran for a while? Or keep if it behaved oddly?
+                    logger.info("Discord client stopped. Restarting...")
+                    await asyncio.sleep(5)
 
         asyncio.create_task(run_client())
 
@@ -151,20 +169,17 @@ class DiscordClient:
         try:
             channel = self.client.get_channel(channel_id)
             
+            # Helper to check if this is an admin DM
+            is_admin_dm = False
+            if channel and isinstance(channel, discord.DMChannel):
+                if hasattr(channel, 'recipient') and channel.recipient.id in config_settings.ADMIN_USER_IDS:
+                    is_admin_dm = True
+
             # Apply IP sanitization if enabled
             should_sanitize = getattr(config_settings, 'IP_SANITIZATION_ENABLED', True)
             
-            if should_sanitize and content:
-                # Default to True
-                is_safe_admin_dm = False
-                
-                if channel and isinstance(channel, discord.DMChannel):
-                    # Check if recipient is admin
-                    if hasattr(channel, 'recipient') and channel.recipient.id in config_settings.ADMIN_USER_IDS:
-                        is_safe_admin_dm = True
-                
-                if not is_safe_admin_dm:
-                    content = sanitize_output(content)
+            if should_sanitize and content and not is_admin_dm:
+                content = sanitize_output(content)
             
             if channel:
                 if file_path and os.path.exists(file_path):
@@ -182,6 +197,17 @@ class DiscordClient:
                     msg_logger.info(f"Channel: {channel_id} | Type: {'Embed' if embed else 'Text'} | Content: {log_content}")
                 except Exception as e:
                     logger.error(f"Failed to log to discord_messages.log: {e}")
+
+                # Auto-pin in Admin DM
+                if is_admin_dm:
+                    try:
+                        pins = await channel.pins()
+                        for pin in pins:
+                            if pin.author == self.client.user:
+                                await pin.unpin()
+                        await msg.pin()
+                    except Exception as e:
+                        logger.error(f"Failed to manage pins in Admin DM: {e}")
                 
                 # Store last sent message for reporting
                 self.last_sent_message = content # Keep for backward compatibility

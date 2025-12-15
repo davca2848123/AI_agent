@@ -1,9 +1,36 @@
 # Changelog
 
-## [Beta - Ongoing] - 2025-12-13
+## [Beta - Ongoing] - 2025-12-15
 
-### Changed
-- **Gitignore Update**: Added `daily_stats.json` and `*.tmp` files to `.gitignore` to prevent committing runtime statistics and temporary files.
+### Fixed
+- **Web Interface Version**: Updated the web dashboard "System Info" to display the correct project version dynamically from `config_settings.AGENT_VERSION` instead of a hardcoded string.
+- **Web Log Viewer**: Fixed log line sanitization to preserve indentation (using `rstrip` instead of `strip`). This ensures that stack traces and formatted logs are displayed correctly in the web dashboard.
+- **Daily Stats Pinning**: Implemented automatic pinning of Daily Reports in the Admin DM. The agent now automatically unpins previous reports and pins the new one, keeping the latest stats easily accessible.
+- **Agent Tools Error**: Fixed a critical `TypeError` in `WebTool` where missing optional arguments caused crashes during autonomous execution. The tool now safely handles dynamic arguments.
+- **LLM Initialization**: Downgraded "llama-cpp-python not installed" from ERROR to WARNING when Gemini is successfully configured, preventing false alarms for users relying on cloud models.
+- **Restart Notification**: Fixed "Channel not found" error during restart. The agent now validates the channel existence before attempting to send the "Restarted successfully" message.
+- **Network Resilience**: Enhanced Discord client stability by adding specific handling and exponential backoff for `ClientConnectorDNSError` and `ConnectionClosed` events, preventing crash loops during temporary network outages.
+- **WebTool Search**: Improved result consistency. Removed broken `lang:xx` filters and implemented Python-side content filtering. We now fetch a broader result set (10 items) and actively reject Asian (CJK) spam while focusing on European/American (Latin script) content.
+ 
+
+## [Beta - Ongoing] - 2025-12-14
+
+### Added
+- **Enhanced Daily Statistics**:
+    - **Restart Tracking**: Daily reports now distinguish between "Planned Restarts" (user-initiated) and "Unplanned Restarts" (crashes/power loss).
+    - **Boredom Tracking**: Added a counter for "Boredom Actions" to track how many times the agent autonomously triggered an activity.
+    - **Disconnect Tracking**: Added a counter for "Internet Disconnects" to track network stability events.
+    - **Daily Report**: Discord embed updated to display these new metrics in a dedicated "Restarts" row and alongside tools usage.
+    - **Cost & Usage**: Added tracking for LLM Tokens (Input/Output), Generations (Local vs Cloud), Command Usage, and Active Users.
+- **Admin DM Auto-Pin**: The agent now automatically pins the latest message it sends in the Admin DM channel and unpins its previous messages, ensuring the most recent context is always prominent.
+
+
+### Fixed
+- **Log Cleanup Logic**: Refactored `cleanup_logs` script to properly handle log files. It now uses a checkpoint system to identify the first valid log entry older than the cutoff date and keeps everything after it, ensuring that undated lines (e.g., stack traces) from old logs are correctly deleted while preserving those from recent logs.
+- **WebTool Robustness**: Fixed issue where autonomous `web_tool` calls failed with missing arguments. Tool now defaults to a random generic search if no query/URL is provided.
+- **WebTool Topics**: The default search topics for `web_tool` fallback are now loaded from `boredom_topics.json` instead of being hardcoded.
+- **Gitignore Update**: Added `daily_stats.json` and `*.tmp` files to `.gitignore` to prevent committing runtime statistics and prevent frequent restart loops.
+- **Diagnostic Crash**: Fixed `Undefined variable 'genai'` in `!debug` command by removing the unused variable alias and refactoring the import check to catch `ImportError`.
 
 ## [Beta - CLOSED] - 2025-12-13
 

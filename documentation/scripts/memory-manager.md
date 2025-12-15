@@ -51,5 +51,5 @@ python scripts/internal/memory_manager.py
 - [🏗️ Architektura](../architecture.md)
 ---
 Poslední aktualizace: 2025-12-09  
-Verze: Beta - CLOSED  
+Verze: Beta - Ongoing  
 Tip: Použij Ctrl+F pro vyhledávání

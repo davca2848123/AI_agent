@@ -70,8 +70,8 @@ Skript automaticky detekuje operační systém a přizpůsobí obsluhu signálů
 
 - [🏗️ Architektura](../architecture.md)
 - [🚀 Deployment Guide](../scripts/deployment-guide.md)
-- [📂 Source Code](../agent/)
+- **📂 Source Code:** `agent/`
 ---
 Poslední aktualizace: 2025-12-09  
-Verze: Beta - CLOSED  
+Verze: Beta - Ongoing  
 Tip: Použij Ctrl+F pro vyhledávání

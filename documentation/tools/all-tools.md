@@ -139,11 +139,13 @@ web_tool.execute(url="https://example.com")
 <a name="poznámky"></a>
 ### ⚠️ Poznámky
 - Vyžaduje `duckduckgo_search`, `bs4`, `aiohttp`
-- **Robustness**: Tool automaticky doplňuje chybějící `action` na základě argumentů, což zabraňuje pádům při autonomním volání LLM.
-- **Lokální vyhledávání**: Automaticky upravuje dotazy pro preferenci obsahu v češtině, slovenštině a angličtině (přidává filtr `lang:cs OR lang:sk OR lang:en`).
-- Search vrací max 3 výsledky
+- **Robustness**: Tool automaticky doplňuje chybějící `action` na základě argumentů. Opraven `TypeError` při kompletování argumentů, tool nyní bezpečně zpracovává i neúplná volání.
+- **Lokální vyhledávání**: Automaticky upravuje dotazy pro preferenci obsahu v češtině, slovenštině a angličtině (přidává filtr `lang:cs OR lang:sk OR lang:en` nebo filtruje výsledky lokálně).
+- **Search Filtering**: Výsledky vyhledávání jsou filtrovány pro odstranění irelevantního obsahu (např. CJK znaky) a preferenci latinky.
+- Search vrací max 3-10 výsledků (podle kontextu).
 - Read extrahuje text pomocí BeautifulSoup
 - **Smart Memory Integration**: Při čtení stránky (`action='read'`) je obsah automaticky zpracován LLM (filtered) a uložen do paměti agenta jako `web_knowledge`.
+- **Dynamic Topics**: Záložní vyhledávací témata (pro případ, kdy se agent nudí a neví co hledat) jsou načítána z konfiguračního souboru `boredom_topics.json`.
 
 ---
 
@@ -578,6 +580,6 @@ INFO: web_tool: Completed in 1.23s - Result: Search Results:
 - [📖 LLM Integration](../core/llm-integration.md) - Jak LLM volá nástroje
 - [🏗️ Architektura](../architecture.md)
 ---
-Poslední aktualizace: 2025-12-13  
-Verze: Beta - CLOSED  
+Poslední aktualizace: 2025-12-15  
+Verze: Beta - Ongoing  
 Tip: Použij Ctrl+F pro vyhledávání

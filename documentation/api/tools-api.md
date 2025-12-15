@@ -47,6 +47,7 @@ Práce se souborovým systémem.
 ### `WebTool`
 Vyhledávání na internetu a stahování obsahu.
 - **Akce**: `search`, `read` (pokud chybí, automaticky detekováno z `query`/`url`).
+- **Robustness**: Pokud chybí argumenty, provede fallback hledání náhodného tématu z `boredom_topics.json`.
 - **Lokalizace**: Prioritizuje `cs`, `sk`, `en` obsah.
 - **Automatizace**: Při `read` ukládá faktické shrnutí do paměti jako `web_knowledge`.
 
@@ -108,8 +109,8 @@ Monitoring aktivit uživatelů na Discordu.
 
 - [🏗️ Architektura](../architecture.md)
 - [🧠 Core Documentation](../core/)
-- [📂 Source Code](../agent/)
+- **📂 Source Code:** `agent/`
 ---
-Poslední aktualizace: 2025-12-13  
-Verze: Beta - CLOSED  
+Poslední aktualizace: 2025-12-14  
+Verze: Beta - Ongoing  
 Tip: Použij Ctrl+F pro vyhledávání

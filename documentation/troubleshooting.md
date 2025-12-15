@@ -170,6 +170,8 @@ python3 main.py
 • LLM: ❌ Offline (LLM not available)
 ```
 
+> **Note:** If **Gemini API** is configured, this functionality is downgraded from **ERROR** to **WARNING**. The agent will automatically fallback to Gemini for `!ask` commands even if the local LLM is missing or fails to load. The status might show Offline for Local LLM, but `!ask` will still function via Cloud.
+
 <a name="solution-1-check-model-file"></a>
 ### Solution 1: Check Model File
 
@@ -979,11 +981,11 @@ cd rpi_ai/rpi_ai
 <a name="related-documentation"></a>
 ## 🔗 Related Documentation
 
-- [Deployment Guide](deployment-guide.md) - Setup and configuration
-- [Batch Scripts Reference](batch-scripts-reference.md) - Windows maintenance tools
-- [Resource Manager](../core/resource-manager.md) - Resource tier system
-- [Memory System](../core/memory-system.md) - Database internals
-- [LLM Integration](../core/llm-integration.md) - LLM troubleshooting
+- [Deployment Guide](scripts/deployment-guide.md) - Setup and configuration
+- [Batch Scripts Reference](scripts/batch-scripts-reference.md) - Windows maintenance tools
+- [Resource Manager](core/resource-manager.md) - Resource tier system
+- [Memory System](core/memory-system.md) - Database internals
+- [LLM Integration](core/llm-integration.md) - LLM troubleshooting
 
 ---
 
@@ -1044,6 +1046,6 @@ sudo journalctl -u rpi-agent.service | grep -i "warning"
 - [⚙️ Konfigurace](configuration/complete-configuration-guide.md)
 - [📜 Scripts Reference](scripts/batch-scripts-reference.md)
 ---
-Poslední aktualizace: 2025-12-09  
-Verze: Beta - CLOSED  
+Poslední aktualizace: 2025-12-15  
+Verze: Beta - Ongoing  
 Tip: Použij Ctrl+F pro vyhledávání

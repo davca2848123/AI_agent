@@ -44,6 +44,8 @@ logging.getLogger("discord.http").setLevel(logging.WARNING)
 logging.getLogger("pyngrok").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
+logging.getLogger("cookie_store").setLevel(logging.WARNING)
+logging.getLogger("duckduckgo_search").setLevel(logging.WARNING)
 
 # Configure separate logger for tools (no duplication)
 tools_logger = logging.getLogger('agent.tools')

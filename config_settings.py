@@ -34,7 +34,7 @@ TOPICS_FILE = "boredom_topics.json"  # Path to topics JSON file
 
 # Memory Scoring System
 MEMORY_CONFIG = {
-    "MIN_SCORE_TO_SAVE": 70,           # Minimum score required to save memory
+    "MIN_SCORE_TO_SAVE": 60,           # Minimum score required to save memory
     "KEYWORDS": ["def", "class", "api", "návod", "fix", "tool", "python", "code"],
     "KEYWORD_BONUS": 10,                # Points per matching keyword
     "BLACKLIST": ["error", "chyba"],
@@ -103,7 +103,7 @@ ONLY_ADMIN_RESTRICTED_COMMANDS = [
 ]
 
 # Agent Version
-AGENT_VERSION = "Beta - CLOSED"
+AGENT_VERSION = "Beta - Ongoing"
 
 # Discord Activity Tool Settings
 DISCORD_ACTIVITY_IGNORE_USERS = []  # List of user IDs to ignore in activity checks

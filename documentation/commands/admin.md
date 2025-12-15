@@ -394,7 +394,7 @@ async with aiohttp.ClientSession() as session:
 
 <a name="popis"></a>
 ### 📋 Popis
-Pokročilá diagnostika systému s detailními kontrolami integrity a dostupnosti služeb.
+Pokročilá diagnostika systému s detailní instrukce v [RPI Sudoers Guide](../scripts/RPI_Sudoers_NOPASSWD_Guide.md).
 
 <a name="použití"></a>
 ### ⚙️ Použití
@@ -896,6 +896,6 @@ Seznam je definován v `config_settings.py` jako `ONLY_ADMIN_RESTRICTED_COMMANDS
 - [🏗️ Command Architecture](../architecture.md#command-layer)
 - [🆘 Troubleshooting](../troubleshooting.md#command-errors)
 ---
-Poslední aktualizace: 2025-12-09  
-Verze: Beta - CLOSED  
+Poslední aktualizace: 2025-12-15  
+Verze: Beta - Ongoing  
 Tip: Použij Ctrl+F pro vyhledávání

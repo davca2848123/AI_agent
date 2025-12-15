@@ -66,7 +66,7 @@ def _load_model(self, n_ctx=2048, n_threads=4):
     """Loads the LLM model with dynamic parameters."""
     
     if not Llama:
-        logger.error("llama-cpp-python not installed!")
+        logger.warning("llama-cpp-python not installed! Using Cloud fallback.")
         return
     
     # Get model path from cache
@@ -419,6 +419,6 @@ response = await llm.ask_gemini(
 - [📚 API Reference](../api/llm-integration.md) - Technická dokumentace tříd a metod
 - [🏗️ Architektura](../architecture.md)
 ---
-Poslední aktualizace: 2025-12-13  
-Verze: Beta - CLOSED  
+Poslední aktualizace: 2025-12-15  
+Verze: Beta - Ongoing  
 Tip: Použij Ctrl+F pro vyhledávání

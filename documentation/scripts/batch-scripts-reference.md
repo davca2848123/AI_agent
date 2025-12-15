@@ -538,10 +538,10 @@ pause
 ## 🔗 Související
 
 - [📖 Deployment Guide](deployment-guide.md) - Kompletní deployment proces
-- [Windows SSH Permissions](../scripts/Windows_SSH_Permissions_Fix.md) - SSH troubleshooting
-- [RPI Sudoers Guide](../scripts/RPI_Sudoers_NOPASSWD_Guide.md) - Detailed sudo setup
+- [Windows SSH Permissions](Windows_SSH_Permissions_Fix.md) (Markdown)
+- [RPI Sudoers Guide](RPI_Sudoers_NOPASSWD_Guide.md) (Markdown)- Detailed sudo setup
 - [🏗️ Architektura](../architecture.md)
 ---
 Poslední aktualizace: 2025-12-09  
-Verze: Beta - CLOSED  
+Verze: Beta - Ongoing  
 Tip: Použij Ctrl+F pro vyhledávání

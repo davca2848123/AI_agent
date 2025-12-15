@@ -54,21 +54,13 @@ rpi_cleanup_logs.bat
 5. **Přepíše soubory** - S čistými logy
 
 <a name="logika"></a>
-### 🔧 Logika
-
-**Cutoff datum:**
-```python
-cutoff_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=2)
-```
-
-**Parsování timestampu:**
-```python
-timestamp_match = re.match(r'(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})', line)
-if timestamp_match:
-    log_timestamp = datetime.strptime(timestamp_match.group(1), '%Y-%m-%d %H:%M:%S')
-    if log_timestamp >= cutoff_date:
-        kept_lines.append(line)
-```
+### 🔧 **Checkpoint Logika:**
+1. **Validace linek:** Načte všechny řádky logu.
+2. **Hledání checkpointu:** Prochází soubor od začátku a hledá *první platný log entry* (řádek s datem), který je starší než cutoff datum.
+3. **Inteligentní ořez:** 
+   - Všechny řádky *před* tímto checkpointem jsou smazány (stará data).
+   - Všechny řádky *od* tohoto checkpointu (včetně) jsou zachovány.
+   - To zajišťuje, že se zachovají i řádky bez data (stack traces, multiline logs) patří-li k "novým" záznamům.
 
 **Zpracované soubory:**
 - `agent.log` - Hlavní log agenta
@@ -213,6 +205,6 @@ Plánované utility skripty:
 - [🆘 Troubleshooting](../troubleshooting.md)
 - [🏗️ Architektura](../architecture.md)
 ---
-Poslední aktualizace: 2025-12-09  
-Verze: Beta - CLOSED  
+Poslední aktualizace: 2025-12-15  
+Verze: Beta - Ongoing  
 Tip: Použij Ctrl+F pro vyhledávání

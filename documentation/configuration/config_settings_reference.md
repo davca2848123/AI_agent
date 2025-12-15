@@ -108,6 +108,7 @@ Soubor s tématy, o kterých agent přemýšlí nebo mluví, když se nudí.
 ```python
 TOPICS_FILE = "boredom_topics.json"
 ```
+Pokud soubor existuje, `web_tool` (při autonomním fallbacku) vybírá témata z něj. Pokud ne, použije interní seznam.
 
 ---
 
@@ -274,5 +275,5 @@ GOALS_FILE = "agent_goals.json"
 - [📜 Scripts](../scripts/batch-scripts-reference.md)
 ---
 Poslední aktualizace: 2025-12-09  
-Verze: Beta - CLOSED  
+Verze: Beta - Ongoing  
 Tip: Použij Ctrl+F pro vyhledávání

@@ -89,5 +89,5 @@ agent.log
 - [📜 Scripts](../scripts/batch-scripts-reference.md)
 ---
 Poslední aktualizace: 2025-12-09  
-Verze: Beta - CLOSED  
+Verze: Beta - Ongoing  
 Tip: Použij Ctrl+F pro vyhledávání

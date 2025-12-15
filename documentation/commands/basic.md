@@ -640,6 +640,6 @@ Bot: ℹ️ **System & Agent Information**
 - [🏗️ Command Architecture](../architecture.md#command-layer)
 - [🆘 Troubleshooting](../troubleshooting.md#command-errors)
 ---
-Poslední aktualizace: 2025-12-09  
-Verze: Beta - CLOSED  
+Poslední aktualizace: 2025-12-15  
+Verze: Beta - Ongoing  
 Tip: Použij Ctrl+F pro vyhledávání

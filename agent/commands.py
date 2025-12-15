@@ -628,6 +628,8 @@ class CommandHandler:
                 logger.info(f"Ignoring command from {author} (Interaction Disabled)")
                 return
 
+
+
         logger.info(f"Executing command from {author} ({author_id}): {content}")
         
 
@@ -648,6 +650,13 @@ class CommandHandler:
         parts = content.split()
         original_command = parts[0].lower()
         args = parts[1:] if len(parts) > 1 else []
+
+        # Record Stats
+        if hasattr(self.agent, 'daily_stats'):
+            self.agent.daily_stats.record_command(original_command)
+            # Record active user (ignore system/0 ids if any, though usually real users)
+            if author_id: 
+                self.agent.daily_stats.record_active_user(author_id)
         
         # Try fuzzy matching if command not recognized
         # First try matching the full command with first argument (for subcommands)
@@ -1248,16 +1257,16 @@ class CommandHandler:
             
             # 1.5 Gemini Check
             try:
-                import google.generativeai as genai
+                import google.generativeai
                 import config_secrets
                 
                 if not getattr(config_secrets, 'GEMINI_API_KEY', None):
                     results.append("⚠️ **Gemini**: API Key missing")
-                elif not genai:
-                    results.append("⚠️ **Gemini**: Library not installed")
                 else:
                     # Basic configuration check
                     results.append("✅ **Gemini**: Library & Key configured")
+            except ImportError:
+                results.append("⚠️ **Gemini**: Library not installed")
             except Exception as e:
                 results.append(f"❌ **Gemini**: Error - {e}")
             

@@ -30,26 +30,40 @@ def cleanup_logs():
             deleted_count = 0
             
             # Process each line and check timestamp
+            # Process lines and only keep them once we hit a checkpoint (timestamp >= cutoff)
+            found_checkpoint = False
+            
             for line in lines:
                 # Try to extract timestamp from log line
                 # Expected format: YYYY-MM-DD HH:MM:SS or similar at the start of the line
                 timestamp_match = re.match(r'(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})', line)
                 
+                # If we have already found a valid recent log line (checkpoint), keep everything following it
+                # This assumes logs are chronological, so everything after a recent log is also recent/relevant
+                if found_checkpoint:
+                    kept_lines.append(line)
+                    continue
+
                 if timestamp_match:
                     try:
                         log_timestamp = datetime.strptime(timestamp_match.group(1), '%Y-%m-%d %H:%M:%S')
                         
-                        # Keep lines that are newer than or equal to cutoff date
+                        # If this line is the start of the valid range (>= cutoff), trigger checkpoint
                         if log_timestamp >= cutoff_date:
+                            found_checkpoint = True
                             kept_lines.append(line)
                         else:
+                            # Old timestamp, discard
                             deleted_count += 1
                     except ValueError:
-                        # If timestamp parsing fails, keep the line to be safe
-                        kept_lines.append(line)
+                        # Parsing failed but regex matched? Dangerous. 
+                        # If we haven't found a checkpoint yet, better to discard it to be safe 
+                        # or keep it if we are unsure? Current plan: discard unless checkpoint found.
+                        deleted_count += 1
                 else:
-                    # If no timestamp found, keep the line (might be multi-line log entry)
-                    kept_lines.append(line)
+                    # No timestamp found. 
+                    # If we haven't found a checkpoint yet, this is likely old junk/stack trace. Discard.
+                    deleted_count += 1
             
             print(f"Total lines: {total_lines}")
             print(f"Deleted lines: {deleted_count}")

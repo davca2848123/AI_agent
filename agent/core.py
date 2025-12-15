@@ -91,7 +91,18 @@ class AutonomousAgent:
         
         
         self.memory = VectorStore()
-        self.llm = LLMClient()
+        self.memory = VectorStore()
+        # Initial stats early for LLM
+        if daily_stats:
+            self.daily_stats = daily_stats
+        else:
+            self.daily_stats = DailyStats()
+            from .reports import DailyStatsLoggingHandler
+            stats_handler = DailyStatsLoggingHandler(self.daily_stats)
+            stats_handler.setLevel(logging.ERROR)
+            logging.getLogger().addHandler(stats_handler)
+
+        self.llm = LLMClient(daily_stats=self.daily_stats)
         self.discord = DiscordClient(token=discord_token)
         self.hardware = HardwareMonitor()
         self.led = LedIndicator()
@@ -100,17 +111,7 @@ class AutonomousAgent:
         self.error_tracker = get_error_tracker()  # Add error tracker
         self.web_server = WebServer(self) # Add web interface
         
-        # Use provided stats or create new
-        if daily_stats:
-            self.daily_stats = daily_stats
-            # Assume handler is already attached if stats passed from main
-        else:
-            self.daily_stats = DailyStats() # Add daily stats tracking
-            # Register Error Counting Handler locally if not passed
-            from .reports import DailyStatsLoggingHandler
-            stats_handler = DailyStatsLoggingHandler(self.daily_stats)
-            stats_handler.setLevel(logging.ERROR)
-            logging.getLogger().addHandler(stats_handler)
+        # self.daily_stats handled above before LLM init
         
         # Tools
         self.agent_workspace = os.path.abspath("agent_workspace")
@@ -441,6 +442,10 @@ class AutonomousAgent:
                 f"detected around: `{crash_time_str}`",
                 category="error"
             )
+            # Record Unplanned Restart (Crash)
+            if hasattr(self, 'daily_stats'):
+                self.daily_stats.increment_unplanned_restart()
+                
             # Reset flag
             self._incomplete_shutdown_detected = False
 
@@ -476,34 +481,41 @@ class AutonomousAgent:
                          except Exception as e:
                             logger.error(f"Could not fetch channel {channel_id}: {e}")
 
-                    await self.discord.send_message(channel_id, f"✅ **Agent restarted successfully!**\nAs requested by {author}\nRunning post-restart diagnostics...")
-                    
-                    # Run quick diagnostics
-                    try:
-                        logger.info("Running post-restart diagnostics...")
-                        results = await self.command_handler._run_diagnostics('quick')
-                        logger.info("Diagnostics complete.")
+                    if channel:
+                        await self.discord.send_message(channel_id, f"✅ **Agent restarted successfully!**\nAs requested by {author}\nRunning post-restart diagnostics...")
                         
-                        # Check for failures
-                        failures = []
-                        for system, data in results.items():
-                            for key, value in data.items():
-                                if "❌" in str(value) or "Error" in str(value) or "Failed" in str(value):
-                                    failures.append(f"{system}: {key} ({value})")
-                        
-                        if not failures:
-                            await self.discord.send_message(channel_id, "🚀 **Restart completed. All systems OK.**")
-                        else:
-                            failure_msg = "\n".join([f"- {f}" for f in failures])
-                            await self.discord.send_message(channel_id, f"⚠️ **Restart completed, but some systems reported errors:**\n{failure_msg}")
+                        # Run quick diagnostics
+                        try:
+                            logger.info("Running post-restart diagnostics...")
+                            results = await self.command_handler._run_diagnostics('quick')
+                            logger.info("Diagnostics complete.")
                             
-                    except Exception as e:
-                        logger.error(f"Post-restart diagnostics failed: {e}")
-                        await self.discord.send_message(channel_id, f"⚠️ **Restart completed, but diagnostics failed:** {e}")
+                            # Check for failures
+                            failures = []
+                            for system, data in results.items():
+                                for key, value in data.items():
+                                    if "❌" in str(value) or "Error" in str(value) or "Failed" in str(value):
+                                        failures.append(f"{system}: {key} ({value})")
+                            
+                            if not failures:
+                                await self.discord.send_message(channel_id, "🚀 **Restart completed. All systems OK.**")
+                            else:
+                                failure_msg = "\n".join([f"- {f}" for f in failures])
+                                await self.discord.send_message(channel_id, f"⚠️ **Restart completed, but some systems reported errors:**\n{failure_msg}")
+                                
+                        except Exception as e:
+                            logger.error(f"Post-restart diagnostics failed: {e}")
+                            await self.discord.send_message(channel_id, f"⚠️ **Restart completed, but diagnostics failed:** {e}")
+                    else:
+                        logger.warning(f"Restart notification incomplete: Channel {channel_id} not found/accessible.")
                 
                 # Remove flag file
                 logger.info("Removing restart flag file")
                 os.remove(".restart_flag")
+                
+                # Record Planned Restart
+                if hasattr(self, 'daily_stats'):
+                    self.daily_stats.increment_planned_restart()
             except Exception as e:
                 logger.error(f"Error processing restart flag: {e}")
         else:
@@ -661,7 +673,30 @@ class AutonomousAgent:
                  logger.info("Triggering scheduled daily report")
                  try:
                      embed = self.daily_stats.generate_report_embed()
-                     await self.send_admin_dm("📊 **Daily Report**", category="report", embed=embed)
+                     msg = await self.send_admin_dm("📊 **Daily Report**", category="report", embed=embed)
+                     
+                     if msg:
+                        try:
+                            # Auto-pinning logic
+                            channel = msg.channel
+                            pins = await channel.pins()
+                            
+                            # Unpin old daily reports
+                            for pin in pins:
+                                if pin.embeds and "Daily Report" in (pin.embeds[0].title or ""):
+                                    try:
+                                        await pin.unpin()
+                                        logger.info(f"Unpinned old report: {pin.id}")
+                                    except:
+                                        pass
+                                        
+                            # Pin new report
+                            await msg.pin()
+                            logger.info(f"Pinned new daily report: {msg.id}")
+                            
+                        except Exception as e:
+                            logger.error(f"Failed to update pins for daily report: {e}")
+
                      self.daily_stats.mark_report_sent()
                  except Exception as e:
                      logger.error(f"Failed to send scheduled daily report: {e}")
@@ -709,6 +744,10 @@ class AutonomousAgent:
             
             if self.boredom_score > self.BOREDOM_THRESHOLD_HIGH:
                 logger.debug("Boredom threshold exceeded. Triggering autonomous action.")
+                
+                # Record Boredom Action
+                if hasattr(self, 'daily_stats'):
+                    self.daily_stats.increment_boredom_action()
                 
                 self.led.set_state("BUSY")
                 try:
@@ -886,6 +925,10 @@ class AutonomousAgent:
                         # Went offline
                         await self.network_monitor.handle_disconnect()
                         self.network_monitor.is_online = False
+                        
+                        # Record Disconnect
+                        if hasattr(self, 'daily_stats'):
+                            self.daily_stats.increment_internet_disconnect()
                     elif is_online and not self.network_monitor.is_online:
                         # Came back online
                         await self.network_monitor.handle_reconnect()
@@ -1807,6 +1850,7 @@ class AutonomousAgent:
                         "timestamp": current_time
                     }
                     self._save_agent_state()
+                    return msg_obj # Return for further actions (pinning)
                     
             else:
                 logger.warning(f"Discord not ready, admin message: {message[:100]}...")

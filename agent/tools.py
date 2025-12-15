@@ -223,10 +223,16 @@ class WebTool(Tool):
     def description(self) -> str:
         return "Search/read web. Args: action='search'|'read', query='...', url='...'"
 
-    async def execute(self, action: str = None, query: str = None, url: str = None, limit: int = 1000, **kwargs) -> str:
+    async def execute(self, **kwargs) -> str:
         if not WEB_TOOLS_AVAILABLE:
             return "Error: Web tools dependencies not installed."
         
+        # Extract arguments safely
+        action = kwargs.get('action')
+        query = kwargs.get('query')
+        url = kwargs.get('url')
+        limit = kwargs.get('limit', 1000)
+
         # Infer action if not provided
         if not action:
             if url:
@@ -234,7 +240,30 @@ class WebTool(Tool):
             elif query:
                 action = "search"
             else:
-                return "Error: Action, query, or url required."
+
+                # Default behavior: Search for something interesting
+                action = "search"
+                import random
+                import json
+                
+                # Try to load topics from file
+                try:
+                    topics_file = getattr(config_settings, 'TOPICS_FILE', 'boredom_topics.json')
+                    if os.path.exists(topics_file):
+                         with open(topics_file, 'r', encoding='utf-8') as f:
+                            topics = json.load(f)
+                    else:
+                        topics = []
+                except Exception as e:
+                    logger.warning(f"WebTool: Failed to load topics from file: {e}")
+                    topics = []
+                
+                # Fallback to defaults if file topics are missing or empty
+                if not topics:
+                    topics = ["latest AI news", "Raspberry Pi projects", "Python programming tips", "SpaceX news", "scientific discoveries"]
+                
+                query = random.choice(topics)
+                logger.info(f"WebTool: Missing arguments. Defaulting to search for: '{query}'")
 
         # Filter out unexpected arguments (e.g., 'site')
         if kwargs:
@@ -244,16 +273,49 @@ class WebTool(Tool):
             if action == "search":
                 if not query: return "Error: Query required."
                 
-                # Append language filter: Czech, Slovak, English
-                # Using standard OR operator for languages/sites to guide the search engine
-                enhanced_query = f"{query} (lang:cs OR lang:sk OR lang:en)"
+                # Use native query without appended filters to get broad results
+                # We fetch more results (10) and filter them client-side to ensure quality
+                raw_results = DDGS().text(query, max_results=10)
                 
-                results = DDGS().text(enhanced_query, max_results=3)
-                output = f"Search Results (Query: {query}):\n"
-                if not results:
-                    output += "(No results found with language filter)\n"
+                filtered_results = []
+                import re
+                
+                # Regex to detect CJK (Chinese, Japanese, Korean) characters
+                # ranges: 4E00-9FFF (Common), 3400-4DBF (Ext A), 20000-2A6DF (Ext B), ...
+                # Simplified check for common ranges
+                cjk_pattern = re.compile(r'[\u4e00-\u9fff\u3400-\u4dbf\u3040-\u309f\u30a0-\u30ff\uac00-\ud7af]')
+                
+                for r in raw_results:
+                    title = r.get('title', '')
+                    body = r.get('body', '')
+                    text_content = title + " " + body
                     
-                for i, r in enumerate(results, 1):
+                    # 1. Reject if contains CJK characters (Asian spam filter)
+                    if cjk_pattern.search(text_content):
+                        continue
+                        
+                    # 2. Prefer Latin script (European/American)
+                    # Check if at least 50% of characters are ASCII/Latin (approximate)
+                    # This avoids Russian/Arabic only results if not desired, though user said "European" which includes Cyrillic.
+                    # User said "European and American", implying mostly Latin/Cyrillic. 
+                    # For now, the CJK rejection is the strongest signal against the spam we saw.
+                    
+                    filtered_results.append(r)
+                    if len(filtered_results) >= 3:
+                        break
+                
+                output = f"Search Results (Query: {query}):\n"
+                if not filtered_results:
+                    # If strict filtering killed everything, fallback to raw top 3 but warn
+                    # Or just return empty to force agent to try different query
+                    # Let's return raw first result if available as last resort, or empty
+                    if raw_results and not filtered_results:
+                         output += "(No European/American matches found, showing best raw result)\n"
+                         filtered_results = [raw_results[0]]
+                    else:
+                         output += "(No results found)\n"
+                    
+                for i, r in enumerate(filtered_results, 1):
                     output += f"\n{i}. {r['title']}\n"
                     output += f"   URL: {r['href']}\n"
                     output += f"   {r.get('body', 'No description available')}\n"

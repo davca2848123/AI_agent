@@ -103,8 +103,8 @@ Server posílá klientovi komplexní objekt se stavem agenta.
 
 - [🏗️ Architektura](../architecture.md)
 - [🧠 Core Documentation](../core/)
-- [📂 Source Code](../agent/)
+- **📂 Source Code:** `agent/`
 ---
-Poslední aktualizace: 2025-12-09  
-Verze: Beta - CLOSED  
+Poslední aktualizace: 2025-12-15  
+Verze: Beta - Ongoing  
 Tip: Použij Ctrl+F pro vyhledávání

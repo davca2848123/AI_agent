@@ -234,10 +234,10 @@ Tento projekt je pro osobní použití.
 <a name="související"></a>
 ## 🔗 Související
 
-- [📚 Přehled Dokumentace](documentation/OVERVIEW.md)
-- [🏗️ Architektura](documentation/architecture.md)
-- [🚀 Quick Start](documentation/README.md#quick-start)
+- [📚 Přehled Dokumentace](OVERVIEW.md)
+- [🏗️ Architektura](architecture.md)
+- [🚀 Quick Start](README.md#quick-start)
 ---
-Poslední aktualizace: 2025-12-09  
-Verze: Beta - CLOSED  
+Poslední aktualizace: 2025-12-15  
+Verze: Beta - Ongoing  
 Tip: Použij Ctrl+F pro vyhledávání

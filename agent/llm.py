@@ -24,7 +24,8 @@ except ImportError as e:
 logger = logging.getLogger(__name__)
 
 class LLMClient:
-    def __init__(self, model_repo: str = "Qwen/Qwen2.5-0.5B-Instruct-GGUF", model_filename: str = "qwen2.5-0.5b-instruct-q4_k_m.gguf"):
+    def __init__(self, daily_stats=None, model_repo: str = "Qwen/Qwen2.5-0.5B-Instruct-GGUF", model_filename: str = "qwen2.5-0.5b-instruct-q4_k_m.gguf"):
+        self.daily_stats = daily_stats
         self.model_repo = model_repo
         self.model_filename = model_filename
         self.llm = None
@@ -99,6 +100,28 @@ class LLMClient:
                 return response.text
 
             response_text = await loop.run_in_executor(None, _run_gemini)
+            
+            # Record stats if available
+            # Note: We can't easily get usage from _run_gemini return without refactoring slightly.
+            # But the response object has it. We returned text only.
+            # Let's refactor _run_gemini to return object or handle stats there?
+            # Actually, let's just do it in the executor function for simplicity, 
+            # OR better: change _run_gemini to return (text, usage)
+            
+            # Correct approach:
+            def _run_gemini_full():
+                response = model.generate_content(content)
+                usage = response.usage_metadata
+                return response.text, usage
+
+            response_text, usage_data = await loop.run_in_executor(None, _run_gemini_full)
+
+            if self.daily_stats:
+                self.daily_stats.record_llm_generation("gemini")
+                if usage_data:
+                    # usage_data has prompt_token_count, candidates_token_count, total_token_count
+                    self.daily_stats.record_tokens(usage_data.prompt_token_count, usage_data.candidates_token_count)
+
             return response_text.strip()
 
         except Exception as e:
@@ -137,7 +160,11 @@ class LLMClient:
     def _load_model(self, n_ctx: Optional[int] = None, n_threads: Optional[int] = None):
         """Loads the LLM model with dynamic parameters."""
         if Llama is None:
-            logger.error("llama-cpp-python not installed. LLM functionality disabled.")
+            # Check if Gemini is available as fallback
+            if genai and hasattr(config_settings, 'GEMINI_API_KEY'):
+                logger.warning("llama-cpp-python not installed. Local LLM disabled (Using Gemini fallback).")
+            else:
+                logger.error("llama-cpp-python not installed and Gemini not configured. No LLM available!")
             return
         
         # Use provided n_ctx or current setting
@@ -232,6 +259,15 @@ class LLMClient:
 
             # Run blocking inference in executor
             output = await loop.run_in_executor(None, run_inference)
+            
+            # Record usage
+            if self.daily_stats:
+                self.daily_stats.record_llm_generation("local")
+                if "usage" in output:
+                     usage = output["usage"]
+                     # usage: {'prompt_tokens': 10, 'completion_tokens': 5, 'total_tokens': 15}
+                     self.daily_stats.record_tokens(usage.get('prompt_tokens', 0), usage.get('completion_tokens', 0))
+
             return output['choices'][0]['text'].strip()
         except Exception as e:
             logger.error(f"Inference failed: {e}")

@@ -57,7 +57,7 @@ history_count = len(agent.action_history)
 <a name="související"></a>
 ### 🔗 Související
 - [📖 Memory System](../core/memory-system.md) - Jak paměť funguje
-- [VectorStore API](../api/vector-store.md) - Memory API
+- [VectorStore API](../api/memory-system.md) - Memory API
 
 ---
 
@@ -412,6 +412,6 @@ Bot: 📦 Exporting all data...
 - [🏗️ Command Architecture](../architecture.md#command-layer)
 - [🆘 Troubleshooting](../troubleshooting.md#command-errors)
 ---
-Poslední aktualizace: 2025-12-09  
-Verze: Beta - CLOSED  
+Poslední aktualizace: 2025-12-15  
+Verze: Beta - Ongoing  
 Tip: Použij Ctrl+F pro vyhledávání

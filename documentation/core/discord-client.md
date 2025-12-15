@@ -105,6 +105,12 @@ msg = await discord.send_message(
 **Vrací:**
 - Discord Message object (pro editaci)
 
+**Auto-Pinning (Admin DM):**
+Pokud je zpráva odeslána do **Direct Message (DM)** kanálu s **Adminem** (definovaným v `ADMIN_USER_IDS` settings), agent automaticky:
+1. 📌 Připne (Pin) tuto nově odeslanou zprávu.
+2. 📍 Odepne (Unpin) předchozí zprávy, které sám odeslal.
+Tím se zajistí, že aktuální kontext zprávy je vždy zvýrazněný.
+
 <a name="příklady"></a>
 ### 💡 Příklady
 
@@ -314,13 +320,15 @@ async def send_message(self, channel_id, content, ...):
 <a name="auto-reconnect"></a>
 ### 🔄 Reconnection Loop
 The client is wrapped in a permanent **reconnection loop** to handle network failures and critical errors (e.g., `ClientConnectionResetError`).
-- If the connection drops or the client crashes internally, the agent waits 5 seconds and attempts to restart the client entirely (`connector.start()`).
+- **Enhanced Error Handling**: Specifically handles `ClientConnectorDNSError` and `ConnectionClosed` events with exponential backoff strategies to prevent crash loops during temporary network or DNS outages.
+- If the connection drops or the client crashes internally, the agent waits 5 seconds (increasing up to 60s for repeated failures) and attempts to restart the client entirely (`connector.start()`).
 - This ensures the agent stays online even after temporary internet outages or API glitches.
 
 <a name="startup-notifications"></a>
 ### 🔔 Reliable Notifications
 Startup notifications (sent when agent comes online) have enhanced reliability:
 - **Resilient Channel Cache**: If the Discord channel cache isn't ready immediately after login (common race condition), the agent fetches the channel directly from the API.
+- **Channel Validation**: Before attempting to send a message, validation checks are performed to ensure the channel exists and is accessible, preventing "Channel not found" crashes.
 - **Retry Logic**: If sending the startup notification fails, it retries with exponential backoff (up to 3 times).
 
 ---
@@ -356,6 +364,6 @@ while True:
 - [📚 API Reference](../api/discord-client.md)
 - [🏗️ Architektura](../architecture.md)
 ---
-Poslední aktualizace: 2025-12-13  
-Verze: Beta - CLOSED  
+Poslední aktualizace: 2025-12-15  
+Verze: Beta - Ongoing  
 Tip: Použij Ctrl+F pro vyhledávání

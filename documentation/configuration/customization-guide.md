@@ -176,5 +176,5 @@ Pokud je `True`, všechny IPv4 adresy (např. `192.168.1.20`) budou nahrazeny za
 - [📜 Scripts](../scripts/batch-scripts-reference.md)
 ---
 Poslední aktualizace: 2025-12-09  
-Verze: Beta - CLOSED  
+Verze: Beta - Ongoing  
 Tip: Použij Ctrl+F pro vyhledávání

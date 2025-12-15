@@ -267,7 +267,7 @@ class Tool(ABC):
 - Restart attempt limity
 - Critical error notifications
 - Startup recovery mechanism
-- [📖 Detailní API Dokumentace](../api/error-tracker.md)
+- [📖 Detailní API Dokumentace](api/error-tracker.md)
 
 ---
 
@@ -443,5 +443,5 @@ if author_id not in config_settings.ADMIN_USER_IDS:
 - [🚀 Deployment](scripts/deployment-guide.md)
 ---
 Poslední aktualizace: 2025-12-09  
-Verze: Beta - CLOSED  
+Verze: Beta - Ongoing  
 Tip: Použij Ctrl+F pro vyhledávání

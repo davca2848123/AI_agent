@@ -19,7 +19,19 @@ The report is sent as a Discord Embed containing:
 2.  **Messages Processed**: Total number of messages seen by the agent.
 3.  **Errors**: Count of critical errors logged (includes Startup & Runtime errors).
 4.  **Tools Activity**: Breakdown of which tools were used and how many times.
-5.  **Knowledge Acquired**: Summary of new skills or facts learned during the day.
+5.  **Restarts**: Count of Planned (manual) vs Unplanned (crash) restarts.
+6.  **Boredom Actions**: Number of times the agent autonomously triggered an action due to boredom.
+7.  **Disconnects**: Number of times the internet connection was lost and recovered.
+8.  **Knowledge Acquired**: Summary of new skills or facts learned during the day.
+9.  **Active Users**: Number of unique users who interacted with the agent.
+10. **Tokens**: Total LLM tokens processed (Input/Output).
+11. **Generations**: Count of LLM generations by provider (Local vs Gemini).
+12. **Top Commands**: The top 3 most frequently used commands.
+
+## Auto-Pinning
+To ensure the administrator always sees the latest status:
+- The agent automatically **pins** the newly sent Daily Report in the Admin DM channel.
+- It scans for and **unpins** any previous "Daily Report" messages to keep the pinned messages clean.
 
 ## Error Tracking
 The system now tracks critical errors:
@@ -41,6 +53,7 @@ The system implements a robust mechanisms to detect ALL types of crashes (includ
 - **Reset**: Stats are reset automatically when the date changes.
 - **Missed Reports**: Logic detects if a report was missed (e.g., due to downtime) and sends it immediately upon the next restart before resetting statistics.
 ---
-Poslední aktualizace: 2025-12-13  
-Verze: Beta - CLOSED  
+---
+Poslední aktualizace: 2025-12-15
+Verze: Beta - Ongoing  
 Tip: Použij Ctrl+F pro vyhledávání

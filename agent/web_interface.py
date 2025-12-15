@@ -43,7 +43,7 @@ def sanitize_log_line(line: str) -> str:
     line = ansi_escape.sub('', line)
     
     # Escape HTML special characters
-    safe_line = html.escape(line.strip())
+    safe_line = html.escape(line.rstrip())
     
     # regex for standard log format: YYYY-MM-DD HH:MM:SS,mmm - [Host] - Logger - Level - Message
     # Allow dot or comma for milliseconds
@@ -1161,7 +1161,7 @@ class WebServer:
             <div class="status-item"><span class="status-label">OS:</span> {self._get_os_info()} running on {self._get_hardware_info()}</div>
             <div class="status-item"><span class="status-label">Python:</span> {platform.python_version()}</div>
             <div class="status-item"><span class="status-label">LLM Model:</span> {self._get_llm_display_name()}</div>
-            <div class="status-item"><span class="status-label">Project Version:</span> Beta - CLOSED</div>
+            <div class="status-item"><span class="status-label">Project Version:</span> {getattr(config_settings, 'AGENT_VERSION', 'Unknown')}</div>
         </div>
         
         <h3>Recent Activity</h3>

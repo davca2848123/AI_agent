@@ -451,5 +451,5 @@ async def handle_resource_tier(self, tier: int, usage):
 - [🏗️ Architektura](../architecture.md)
 ---
 Poslední aktualizace: 2025-12-10  
-Verze: Beta - CLOSED  
+Verze: Beta - Ongoing  
 Tip: Použij Ctrl+F pro vyhledávání

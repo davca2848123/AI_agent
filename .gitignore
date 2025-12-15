@@ -84,7 +84,8 @@ release_*.txt
 __pycache__
 venv
 tests/
-!tests/gemini_guide.md
+
+
 models/
 release.zip
 boredom_topics.json.test_backup

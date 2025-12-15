@@ -31,10 +31,12 @@
 
 Hlavní stránka zobrazuje klíčové metriky:
 - **Status Agenta:** (Running/Stopped, Boredom Score, Uptime)
+- **System Info:** OS, Python verze, LLM model a **verze projektu** (načítaná dynamicky).
 - **Loops Status:** Stav jednotlivých smyček (Observation, Action, etc.)
 - **System Resources:** CPU, RAM, Disk usage.
 - **Recent Activity:** Real-time log posledních 5 akcí (zaměřeno na použití nástrojů a autonomní akce).
 - **Log Viewer:** Real-time stream logů (posledních 100 řádků).
+  - **Vylepšení:** Log viewer zachovává odsazení řádků (indentation), což je klíčové pro čitelnost Python stack traces a formátovaných výpisů.
 
 <a name="dokumentace"></a>
 ### 📚 Dokumentace (`/docs`)
@@ -113,6 +115,6 @@ WEB_ENABLED = True                 # Povolení/Zákaz webu
 - [📚 API Reference](../api/api-logs.md)
 - [🏗️ Architektura](../architecture.md)
 ---
-Poslední aktualizace: 2025-12-09  
-Verze: Beta - CLOSED  
+Poslední aktualizace: 2025-12-15  
+Verze: Beta - Ongoing  
 Tip: Použij Ctrl+F pro vyhledávání

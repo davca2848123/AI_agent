@@ -492,5 +492,5 @@ Zohlednit, jak blízko jsou klávesy:
 - Dynamic programming approach for O(n) space complexity
 ---
 Poslední aktualizace: 2025-12-09  
-Verze: Beta - CLOSED  
+Verze: Beta - Ongoing  
 Tip: Použij Ctrl+F pro vyhledávání

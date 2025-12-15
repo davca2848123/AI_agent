@@ -73,6 +73,11 @@ def reduce_boredom(self, amount: float):
 - Zpracování zprávy (observation): -0.1
 - Vykonání akce (execute_action): -0.3
 
+- Vykonání akce (execute_action): -0.3
+
+<a name="statistics"></a>
+### 📈 Statistiky
+Počet autonomně spuštěných akcí ("Boredom Actions") je sledován a reportován v denním souhrnu (`Daily Stats`), což umožňuje monitorovat míru autonomie agenta.
 
 ---
 
@@ -118,6 +123,8 @@ Pokud lokální model (Local LLM) není dostupný (např. chyba binaries, nedost
 2. **Gemini Fallback**: Pošle kontext a seznam nástrojů na **Gemini API** (Fast model).
 3. **Rozhodnutí**: Gemini vybere akci místo lokálního modelu.
 4. **Last Resort**: Pokud selže i Gemini, agent provede bezpečnou fallback akci (např. vyhledání novinek).
+
+> **Update 2025-12-15:** Pokud je Gemini API nakonfigurováno, timeouty nebo nedostupnost lokálního LLM již nejsou logovány jako kritické chyby (ERROR), ale pouze jako varování (WARNING), protože agent je plně schopen operovat v cloudu.
 
 Tím je zajištěna kontinuita "myšlení" agenta i při výpadku primárního mozku.
 
@@ -405,6 +412,7 @@ def _simplify_action(self, action: str) -> str:
 - [🏗️ Architektura](../architecture.md)
 - [🆘 Troubleshooting](../troubleshooting.md)
 ---
-Poslední aktualizace: 2025-12-09  
-Verze: Beta - CLOSED  
+---
+Poslední aktualizace: 2025-12-15  
+Verze: Beta - Ongoing  
 Tip: Použij Ctrl+F pro vyhledávání
